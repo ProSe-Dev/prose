@@ -1,8 +1,7 @@
 package cmd
 
 import (
-	"fmt"
-
+	"github.com/ProSe-Dev/prose/blockchain/node"
 	"github.com/spf13/cobra"
 )
 
@@ -15,6 +14,12 @@ var createMinerCmd = &cobra.Command{
 	Short: "Creates a new miner",
 	Long:  `Creates a new ProSe blockchain miner.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("TODO")
+		// TODO: validate args
+		if len(args) >= 3 {
+			node.Start(args[0], args[1], args[2])
+		} else {
+			// we probably don't want to call this...
+			node.Start(args[0], "", "")
+		}
 	},
 }
