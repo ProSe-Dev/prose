@@ -56,5 +56,6 @@ func NewNode(port uint16, initNode string, isMiner bool) (pnode *ProSeNode, err 
 		peers := skademlia.FindNode(node, protocol.NodeID(node).(skademlia.ID), skademlia.BucketSize(), 8)
 		log.Warn().Msgf("Bootstrapped with peers: %+v", peers)
 	}
+	node.Listen()
 	return
 }

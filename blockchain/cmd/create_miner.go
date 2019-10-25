@@ -33,8 +33,7 @@ var createMinerCmd = &cobra.Command{
 		)
 		port, err = strconv.ParseUint(args[0], 10, 32)
 		initializationNode := viper.GetString("initNode")
-		pnode, err = node.NewNode(uint16(port), initializationNode, true)
-		pnode.listen()
+		_, err = node.NewNode(uint16(port), initializationNode, true)
 		return
 	},
 }
