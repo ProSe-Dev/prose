@@ -1,45 +1,49 @@
 package consensus
 
 import (
+	"github.com/ProSe-Dev/prose/prose/mining"
+	"github.com/ProSe-Dev/prose/prose/proto"
 	"github.com/ProSe-Dev/prose/prose/statemachine"
-	"github.com/perlin-network/noise"
-	"github.com/perlin-network/noise/log"
+	"github.com/perlin-network/noise/skademlia"
+	"google.golang.org/grpc"
 )
 
-// Mode is the consensus mode
-type Mode interface {
-	registerMessages(*noise.Node)
-	begin(*noise.Node)
-}
+// Mode is a consensus mode
+type Mode string
 
 const (
-	nodeConsensusModeKey = "@CONSENSUS_MODE"
+	// TrivialMode is the trivial consensus mode
+	TrivialMode Mode = "trivial"
+
+	// PBFTMode is the PBFT consensus mode
+	PBFTMode Mode = "pbft"
+
+	// DefaultConsensus is the default consensus mode
+	DefaultConsensus Mode = PBFTMode
 )
 
-var (
-	// StateConsensusComplete describes completed consensus
-	StateConsensusComplete = statemachine.NextAvailableStateCode("ConsensusComplete")
-)
-
-// GetMode returns the consensus mode of a node
-func GetMode(node *noise.Node) Mode {
-	return node.Get(nodeConsensusModeKey).(Mode)
+// Consensus is a consensus implementation
+type Consensus interface {
+	HandleAddBlock(string) bool
 }
 
-// SetMode sets the consensus mode of a node
-func SetMode(node *noise.Node, consensus Mode) {
-	node.Set(nodeConsensusModeKey, consensus)
+// RegisterConsensusServer registers the server using the desired consensus mode
+func RegisterConsensusServer(blockchain *mining.Blockchain, statemachine *statemachine.StateMachine, server *grpc.Server, client *skademlia.Client, mode Mode) Consensus {
+	switch mode {
+	case PBFTMode:
+		pbft := PBFTConsensus{Client: client, Blockchain: blockchain, StateMachine: statemachine}
+		proto.RegisterPBFTServer(server, &pbft)
+		return &pbft
+	case TrivialMode:
+		t := TrivialConsensus{Client: client, Blockchain: blockchain}
+		return &t
+	}
+	return nil
 }
 
-// RegisterMessages registers the messages for a node
-func RegisterMessages(node *noise.Node) {
-	consensus := GetMode(node)
-	consensus.registerMessages(node)
-}
-
-// Begin starts consensus
-func Begin(node *noise.Node) {
-	log.Info().Msg("Starting consensus")
-	consensus := GetMode(node)
-	consensus.begin(node)
+// GetConsensusModes returns all active consensus modes
+func GetConsensusModes() []Mode {
+	return []Mode{
+		PBFTMode,
+	}
 }

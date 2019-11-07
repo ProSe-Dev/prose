@@ -1,20 +1,31 @@
 package cmd
 
 import (
+	"context"
 	"strconv"
 
+	"log"
+
+	"github.com/ProSe-Dev/prose/prose/consensus"
+	"github.com/ProSe-Dev/prose/prose/gossip"
 	"github.com/ProSe-Dev/prose/prose/node"
-	"github.com/perlin-network/noise"
-	"github.com/perlin-network/noise/log"
+	"github.com/ProSe-Dev/prose/prose/proto"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"google.golang.org/grpc"
 )
 
 func init() {
 	createRelayCmd.PersistentFlags().StringP("initNode", "i", "", "initialization node")
 	createRelayCmd.PersistentFlags().StringP("consensus", "c", "", "consensus mode")
+	// TODO: these shouldn't be flags
+	createRelayCmd.PersistentFlags().StringP("addBlock", "a", "", "Add new block")
+	createRelayCmd.PersistentFlags().BoolP("blockchain", "b", false, "Retrieve blockchain")
+
 	viper.BindPFlag("rinitNode", createRelayCmd.PersistentFlags().Lookup("initNode"))
 	viper.BindPFlag("rconsensus", createRelayCmd.PersistentFlags().Lookup("consensus"))
+	viper.BindPFlag("addBlock", createRelayCmd.PersistentFlags().Lookup("addBlock"))
+	viper.BindPFlag("blockchain", createRelayCmd.PersistentFlags().Lookup("blockchain"))
 	rootCmd.AddCommand(createRelayCmd)
 }
 
@@ -25,20 +36,54 @@ var createRelayCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		var (
-			n    *noise.Node
-			port uint64
-			err  error
+			n             *node.Node
+			port          uint64
+			err           error
+			consensusMode consensus.Mode = consensus.DefaultConsensus
 		)
 		if port, err = strconv.ParseUint(args[0], 10, 32); err != nil {
-			log.Panic().Err(err)
+			log.Fatal(err)
 		}
 		initializationNode := viper.GetString("rinitNode")
-		if n, err = node.NewNode(uint16(port), initializationNode, false); err != nil {
-			log.Panic().Err(err)
+		c := viper.GetString("mconsensus")
+		if c != "" {
+			consensusMode = consensus.Mode(c)
 		}
-		log.Info().Msg("Initialized relay node")
-		node.MakeTransaction(n, "abcdefg", "Paul Wang")
-		n.Listen()
+		if n, err = node.NewNode(uint16(port), initializationNode, false, consensusMode); err != nil {
+			log.Fatal(err)
+		}
+		addBlock := viper.GetString("addBlock")
+
+		if addBlock != "" {
+			gossip.Broadcast(n.Client, func(conn *grpc.ClientConn) {
+				m := &proto.AddBlockRequest{Data: addBlock}
+				client := proto.NewBlockchainClient(conn)
+				resp, err := client.AddBlock(context.Background(), m)
+				if err != nil {
+					log.Printf("[ERROR] unable to add block: %v", err)
+				}
+				log.Printf("[%s] block submitted: %v\n", conn.Target(), resp.ACK)
+			})
+		}
+
+		blockchain := viper.GetBool("blockchain")
+		if blockchain {
+			var resp *proto.GetBlockchainResponse
+			gossip.Broadcast(n.Client, func(conn *grpc.ClientConn) {
+				m := &proto.GetBlockchainRequest{}
+				client := proto.NewBlockchainClient(conn)
+				resp, err = client.GetBlockchain(context.Background(), m)
+				if err != nil {
+					log.Printf("[ERROR] unable to get blockchain: %v", err)
+				}
+				log.Println("blocks:")
+				for _, b := range resp.Blocks {
+					log.Printf("[%s] hash %s, prev hash: %s, data: %s\n", conn.Target(), b.Hash, b.PrevBlockHash, b.Data)
+				}
+			})
+		}
+		log.Print("Initialized relay node")
+		n.Serve()
 		return
 	},
 }

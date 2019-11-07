@@ -1,109 +1,98 @@
 package node
 
 import (
+	"context"
+	"fmt"
+	"log"
+	"net"
 	"strconv"
 
 	"github.com/ProSe-Dev/prose/prose/consensus"
 	"github.com/ProSe-Dev/prose/prose/gossip"
+	"github.com/ProSe-Dev/prose/prose/mining"
+	"github.com/ProSe-Dev/prose/prose/proto"
 	"github.com/ProSe-Dev/prose/prose/statemachine"
 	"github.com/perlin-network/noise"
-	"github.com/perlin-network/noise/cipher/aead"
-	"github.com/perlin-network/noise/handshake/ecdh"
-	"github.com/perlin-network/noise/log"
-	"github.com/perlin-network/noise/protocol"
+	"github.com/perlin-network/noise/cipher"
+	"github.com/perlin-network/noise/handshake"
 	"github.com/perlin-network/noise/skademlia"
-)
-
-const (
-	defaultHost = "0.0.0.0"
+	"google.golang.org/grpc"
 )
 
 var (
-	stateRelayStandby = statemachine.NextAvailableStateCode("RelayStandby")
-	stateMinerStandby = statemachine.NextAvailableStateCode("MinerStandby")
-
-	// DefaultConsensus is the default consensus protocol
-	DefaultConsensus = consensus.NewPBFT()
+	stateNascent statemachine.StateCode = statemachine.NextAvailableStateCode("nascent")
+	stateIdle    statemachine.StateCode = statemachine.NextAvailableStateCode("idle")
 )
 
-func registerMessages(node *noise.Node) {
-	statemachine.RegisterMessage(node, (*newTransactionMessage)(nil), newTransactionMessageHandler,
-		statemachine.StateTransition{
-			SrcState: stateMinerStandby, // dst set by consensus.Begin
-		})
+// Node implements proto.BlockchainServer interface
+type Node struct {
+	Blockchain   *mining.Blockchain
+	Client       *skademlia.Client
+	Server       *grpc.Server
+	Serve        func() error
+	Consensus    consensus.Consensus
+	StateMachine *statemachine.StateMachine
 }
 
-func setup(node *noise.Node, isMiner bool) {
-
-	opcodeTransaction := noise.RegisterMessage(noise.NextAvailableOpcode(), (*newTransactionMessage)(nil))
-	opcodePreprepare := noise.RegisterMessage(noise.NextAvailableOpcode(), (*consensus.PrePrepareMessage)(nil))
-
-	consensus.SetMode(node, DefaultConsensus)
-	//registerMessages(node)
-	//consensus.RegisterMessages(node)
-	// make sure we set the proper state and thus set of message listeners / handlers
-	if isMiner {
-		statemachine.SetState(node, stateMinerStandby)
-	} else {
-		statemachine.SetState(node, stateRelayStandby)
+// AddBlock : adds new block to blockchain
+func (n *Node) AddBlock(ctx context.Context, in *proto.AddBlockRequest) (resp *proto.AddBlockResponse, err error) {
+	if err = n.StateMachine.Enforce(stateIdle); err != nil {
+		return
 	}
-	node.OnPeerInit(func(node *noise.Node, peer *noise.Peer) error {
-		peer.OnConnError(func(node *noise.Node, peer *noise.Peer, err error) error {
-			log.Warn().Msgf("Got an error: %v", err)
-			return nil
-		})
-		peer.OnDisconnect(func(node *noise.Node, peer *noise.Peer) error {
-			log.Info().Msgf("Peer %v has disconnected.", peer.RemoteIP().String()+":"+strconv.Itoa(int(peer.RemotePort())))
-			return nil
-		})
-		//go statemachine.NewHandler(node, peer)
-
-		go func() {
-			for {
-				select {
-				case msg := <-peer.Receive(opcodePreprepare):
-					consensus.PrePrepareMessageHandler(node, peer, msg)
-				case msg := <-peer.Receive(opcodeTransaction):
-					newTransactionMessageHandler(node, peer, msg)
-				}
-			}
-		}()
-
-		return nil
-	})
+	// TODO: use a queue and also handle more data than just a string
+	mining.UpdateLatestTransactionData(in.Data)
+	result := n.Consensus.HandleAddBlock(in.Data)
+	resp = &proto.AddBlockResponse{
+		ACK: result,
+	}
+	return
 }
 
-func bootstrapNode(node *noise.Node, initNode string) error {
-	if initNode != "" {
-		peer, err := node.Dial(initNode)
-		if err != nil {
-			return err
-		}
-		skademlia.WaitUntilAuthenticated(peer)
-		gossip.BootstrapNetwork(node)
-		log.Info().Msgf("Bootstrapped using %s", gossip.GetNodeID(peer.Node()))
+// GetBlockchain : returns blockchain
+func (n *Node) GetBlockchain(ctx context.Context, in *proto.GetBlockchainRequest) (*proto.GetBlockchainResponse, error) {
+	resp := new(proto.GetBlockchainResponse)
+	for _, b := range n.Blockchain.Blocks {
+		resp.Blocks = append(resp.Blocks, &proto.Block{
+			PrevBlockHash: b.PrevBlockHash,
+			Data:          b.Data,
+			Hash:          b.Hash,
+		})
 	}
-	return nil
+	return resp, nil
 }
 
 // NewNode creates a new Node that is ready to listen
-func NewNode(port uint16, initNode string, isMiner bool) (node *noise.Node, err error) {
-	params := noise.DefaultParams()
-	params.Keys = skademlia.RandomKeys()
-	params.Host = defaultHost
-	params.Port = port
-	if node, err = noise.NewNode(params); err != nil {
+func NewNode(port uint16, initNode string, isMiner bool, consensusMode consensus.Mode) (node *Node, err error) {
+	node = &Node{
+		Blockchain:   mining.NewBlockchain(),
+		StateMachine: statemachine.NewStateMachine(stateNascent),
+	}
+	listener, err := net.Listen("tcp", ":"+fmt.Sprint(port))
+	if err != nil {
 		return
 	}
-	p := protocol.New()
-	p.Register(ecdh.New())
-	p.Register(aead.New())
-	p.Register(skademlia.New())
-	p.Register(NewProSeVersionBlock(DefaultConsensus))
-	p.Enforce(node)
-	if err = bootstrapNode(node, initNode); err != nil {
-		return nil, err
+	keys, err := skademlia.NewKeys(1, 2)
+	if err != nil {
+		return
 	}
-	setup(node, isMiner)
+	addr := net.JoinHostPort("127.0.0.1", strconv.Itoa(listener.Addr().(*net.TCPAddr).Port))
+	node.Client = skademlia.NewClient(addr, keys, skademlia.WithC1(1), skademlia.WithC2(1))
+	node.Client.SetCredentials(noise.NewCredentials(addr, handshake.NewECDH(), cipher.NewAEAD(), node.Client.Protocol()))
+
+	if initNode != "" {
+		if _, err = node.Client.Dial(initNode); err != nil {
+			return
+		}
+		log.Printf("Dialed %s", initNode)
+		node.Client.Bootstrap()
+		log.Printf("Bootstrapped with network: %s", gossip.GetNetwork(node.Client))
+	}
+	node.Server = node.Client.Listen()
+	proto.RegisterBlockchainServer(node.Server, node)
+	node.Consensus = consensus.RegisterConsensusServer(node.Blockchain, node.StateMachine, node.Server, node.Client, consensusMode)
+	node.Serve = func() error {
+		node.StateMachine.SetState(stateIdle)
+		return node.Server.Serve(listener)
+	}
 	return
 }

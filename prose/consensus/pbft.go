@@ -1,281 +1,158 @@
 package consensus
 
 import (
+	"context"
+	"log"
+
 	"github.com/ProSe-Dev/prose/prose/gossip"
 	"github.com/ProSe-Dev/prose/prose/mining"
+	"github.com/ProSe-Dev/prose/prose/proto"
 	"github.com/ProSe-Dev/prose/prose/statemachine"
-	"github.com/mitchellh/hashstructure"
-	"github.com/perlin-network/noise"
-	"github.com/perlin-network/noise/log"
-	"github.com/perlin-network/noise/payload"
+	"github.com/perlin-network/noise/skademlia"
+	"google.golang.org/grpc"
 )
-
-const (
-	nodeLeaderIDKey       = "@PBFT_LEADER_ID"
-	nodeViewIDKey         = "@PBFT_VIEW_ID"
-	nodePrepareTupleKey   = "@PBFT_PREPARE_TUPLE"
-	nodeFaultToleranceKey = "@PBFT_FAULT_TOLERANCE"
-)
-
-// PBFT represents the practical byzantine fault tolerance algorithm
-type PBFT struct{}
-
-// NewPBFT returns a new instance of PBFT
-func NewPBFT() *PBFT {
-	return new(PBFT)
-}
 
 var (
-	stateNewRoundStarted = statemachine.NextAvailableStateCode("NewRoundStarted")
-	statePrePrepared     = statemachine.NextAvailableStateCode("PrePrepared")
-	statePrepared        = statemachine.NextAvailableStateCode("Prepared")
-	stateCommitted       = statemachine.NextAvailableStateCode("Committed")
+	stateNewRound    statemachine.StateCode = statemachine.NextAvailableStateCode("new round")
+	statePrePrepared statemachine.StateCode = statemachine.NextAvailableStateCode("pre-prepared")
+	statePrepared    statemachine.StateCode = statemachine.NextAvailableStateCode("prepared")
+	stateCommitted   statemachine.StateCode = statemachine.NextAvailableStateCode("committed")
 )
 
-func (pbft *PBFT) registerMessages(node *noise.Node) {
-	statemachine.RegisterMessage(node, (*PrePrepareMessage)(nil), PrePrepareMessageHandler,
-		statemachine.StateTransition{
-			SrcState: stateNewRoundStarted,
-			DstState: statePrePrepared,
-		})
-	statemachine.RegisterMessage(node, (*prepareMessage)(nil), prepareMessageHandler,
-		statemachine.StateTransition{
-			SrcState: statePrePrepared,
-			DstState: statePrepared,
-		})
-	statemachine.RegisterMessage(node, (*commitMessage)(nil), commitMessageHandler,
-		statemachine.StateTransition{
-			SrcState: statePrepared,
-			DstState: stateCommitted,
-		})
+// PBFTConsensus is consensus using the Practical Byzantine Fault Tolerance algorithm
+type PBFTConsensus struct {
+	Client       *skademlia.Client
+	ViewNumber   int64
+	Blockchain   *mining.Blockchain
+	StateMachine *statemachine.StateMachine
+	// TODO: tally on block ID, IP, hash and view number
+	ResultTally            map[string]struct{}
+	FaultToleranceConstant int
 }
 
-func (pbft *PBFT) begin(node *noise.Node) {
-	newRound(node)
+// HandleAddBlock handles adding a new blockchain block
+func (p *PBFTConsensus) HandleAddBlock(data string) bool {
+	log.Printf("[PBFT] Adding new block")
+	mining.UpdateLatestTransactionData(data)
+	// start the new round in the background
+	go p.NewRound()
+	return true
 }
 
-func newRound(node *noise.Node) (err error) {
-	var viewNumber uint64 = 0
-	network := gossip.GetNetwork(node)
-	if node.Has(nodeViewIDKey) {
-		viewNumber = node.Get(nodeViewIDKey).(uint64) + 1
-	}
-	leaderID := network[viewNumber%uint64(len(network))]
-	f := (len(network) - 1) / 3
-	node.Set(nodeLeaderIDKey, leaderID)
-	node.Set(nodeViewIDKey, viewNumber)
-	node.Set(nodeFaultToleranceKey, f)
-	log.Info().Msgf("Started new round for node=%s with leader=%s view=%d f=%d\n", gossip.GetNodeID(node), leaderID, viewNumber, f)
-	statemachine.SetState(node, stateNewRoundStarted)
+// NewRound starts a new PBFT round
+func (p *PBFTConsensus) NewRound() {
+	log.Printf("[PBFT] New round")
+	p.StateMachine.SetState(stateNewRound)
+	p.ResultTally = map[string]struct{}{}
 
-	// are we the leader?
-	if leaderID != gossip.GetNodeID(node) {
+	network := gossip.GetNetwork(p.Client)
+	leaderID := network[p.ViewNumber%int64(len(network))]
+	p.FaultToleranceConstant = (len(network) - 1) / 3
+	log.Printf("Network: %s\nLeader: %s\nF: %d", network, leaderID, p.FaultToleranceConstant)
+
+	if leaderID != p.Client.ID().Address() {
 		return
 	}
 
-	transaction := node.Get(mining.NodeTransactionDataKey).(mining.Transaction)
-	block := mining.ProcessNewBlock(transaction.CommitHash, transaction.Signature)
-	log.Info().Msgf("Broadcasting new block with hash %s", block.ComputeHash())
-	gossip.BroadcastAsync(node, PrePrepareMessage{
-		BlockHash: block.ComputeHash(),
-		//Block:       *block,
-		BlockNumber: mining.GetBlockchain().Length,
-		ViewNumber:  viewNumber,
-		LeaderID:    leaderID,
+	transaction := mining.GetLatestTransactionData()
+	b := p.Blockchain.ProcessNewBlock(transaction)
+	log.Printf("Broadcasting new block with f = %v", p.FaultToleranceConstant)
+	gossip.Broadcast(p.Client, func(conn *grpc.ClientConn) {
+		m := &proto.PrePrepareRequest{
+			Block: &proto.Block{
+				PrevBlockHash: b.PrevBlockHash,
+				Data:          b.Data,
+				Hash:          b.Hash,
+			},
+			BlockNumber: int64(len(p.Blockchain.Blocks)),
+			ViewNumber:  p.ViewNumber,
+			LeaderID:    leaderID,
+		}
+		client := proto.NewPBFTClient(conn)
+		resp, err := client.PrePrepare(context.Background(), m)
+		if err != nil {
+			log.Printf("[ERROR] unable to send pre-prepare: %v", err)
+		}
+		log.Printf("[%s] pre-prepare received: %v\n", conn.Target(), resp)
 	})
-	statemachine.SetState(node, statePrePrepared)
-	return
+	p.StateMachine.SetState(statePrePrepared)
 }
 
-type PrePrepareMessage struct {
-	//Block       mining.Block
-	BlockHash   string
-	BlockNumber uint64
-	ViewNumber  uint64
-	LeaderID    string
-}
-
-func (m PrePrepareMessage) Read(reader payload.Reader) (nm noise.Message, err error) {
-	/*if err = m.Block.Read(reader); err != nil {
-		return
-	}*/
-
-	if m.BlockHash, err = reader.ReadString(); err != nil {
+// PrePrepare stages the generated block
+func (p *PBFTConsensus) PrePrepare(ctx context.Context, in *proto.PrePrepareRequest) (a *proto.Ack, err error) {
+	log.Printf("[PBFT] Pre-prepare")
+	if err = p.StateMachine.Enforce(stateNewRound); err != nil {
 		return
 	}
-
-	if m.BlockNumber, err = reader.ReadUint64(); err != nil {
-		return
-	}
-
-	if m.ViewNumber, err = reader.ReadUint64(); err != nil {
-		return
-	}
-
-	if m.LeaderID, err = reader.ReadString(); err != nil {
-		return
-	}
-	nm = m
-	//log.Info().Msg("Successfully read preprepare message")
-	//debug.PrintStack()
-	return
-}
-
-func (m PrePrepareMessage) Write() []byte {
-	//return m.Block.Write(payload.NewWriter(nil)).
-
-	return payload.NewWriter(nil).WriteString(m.BlockHash).
-		WriteUint64(m.BlockNumber).
-		WriteUint64(m.ViewNumber).
-		WriteString(m.LeaderID).Bytes()
-}
-
-type prepareTuple struct {
-	BlockHash   string
-	BlockNumber uint64
-	ViewNumber  uint64
-}
-
-func PrePrepareMessageHandler(node *noise.Node, peer *noise.Peer, message noise.Message) (err error) {
-	log.Info().Msg("Handling preprepare")
-	m := message.(PrePrepareMessage)
-
-	// make sure we have the right view number
-	if node.Get(nodeViewIDKey).(uint64) != m.ViewNumber {
-		return
-	}
-
-	// make sure this is the leader we expect
-	if node.Get(nodeLeaderIDKey).(string) != m.LeaderID || gossip.GetNodeID(peer.Node()) != m.LeaderID {
-		return
-	}
-
-	// TODO: if the client isn't up to date with us, maybe we should just ignore it?
-	if m.BlockNumber != mining.GetBlockchain().Length {
-		return
-	}
-
-	// if we fail to validate the block then ignore it
-	/*if err = mining.ValidateBlock(&m.Block); err != nil {
-		return nil
-	}*/
-
-	// everything looks okay, so stage the block
-	//mining.StageBlock(&m.Block)
-
-	gossip.BroadcastAsync(node, prepareMessage{
-		BlockHash:   m.BlockHash,
-		BlockNumber: m.BlockNumber,
-		ViewNumber:  m.ViewNumber,
-		NodeID:      gossip.GetNodeID(node),
+	p.Blockchain.StageBlock(&mining.Block{Data: in.Block.Hash, PrevBlockHash: in.Block.PrevBlockHash, Hash: in.Block.Hash})
+	gossip.Broadcast(p.Client, func(conn *grpc.ClientConn) {
+		m := &proto.PrepareRequest{
+			BlockHash:   in.Block.Hash,
+			BlockNumber: int64(len(p.Blockchain.Blocks)),
+			ViewNumber:  p.ViewNumber,
+			NodeID:      gossip.GetNodeID(p.Client),
+		}
+		client := proto.NewPBFTClient(conn)
+		resp, err := client.Prepare(context.Background(), m)
+		if err != nil {
+			log.Printf("[ERROR] unable to send pre-prepare: %v", err)
+		}
+		log.Printf("[%s] prepare received: %v\n", conn.Target(), resp)
 	})
-
-	prepareTupleMap := map[uint64]struct{}{}
-	hash, err := hashstructure.Hash(prepareTuple{BlockHash: m.BlockHash, BlockNumber: m.BlockNumber, ViewNumber: m.ViewNumber}, nil)
-	if _, ok := prepareTupleMap[hash]; !ok {
-		prepareTupleMap[hash] = struct{}{}
-	}
-	node.Set(nodePrepareTupleKey, prepareTupleMap)
-	statemachine.SetState(node, statePrePrepared)
-	return
-}
-
-type prepareMessage struct {
-	BlockHash   string
-	BlockNumber uint64
-	ViewNumber  uint64
-	NodeID      string
-}
-
-func (m prepareMessage) Read(reader payload.Reader) (nm noise.Message, err error) {
-	if m.BlockHash, err = reader.ReadString(); err != nil {
-		return
-	}
-
-	if m.BlockNumber, err = reader.ReadUint64(); err != nil {
-		return
-	}
-
-	if m.ViewNumber, err = reader.ReadUint64(); err != nil {
-		return
-	}
-
-	if m.NodeID, err = reader.ReadString(); err != nil {
-		return
-	}
-	nm = m
-	return
-}
-
-func (m prepareMessage) Write() []byte {
-	return payload.NewWriter(nil).
-		WriteString(m.BlockHash).
-		WriteUint64(m.BlockNumber).
-		WriteUint64(m.ViewNumber).
-		WriteString(m.NodeID).Bytes()
-}
-
-func prepareMessageHandler(node *noise.Node, peer *noise.Peer, message noise.Message) (err error) {
-	m := message.(prepareMessage)
-	prepareTupleMap := node.Get(nodePrepareTupleKey).(map[uint64]struct{})
-	hash, err := hashstructure.Hash(prepareTuple{BlockHash: m.BlockHash, BlockNumber: m.BlockNumber, ViewNumber: m.ViewNumber}, nil)
-	if _, ok := prepareTupleMap[hash]; !ok {
-		prepareTupleMap[hash] = struct{}{}
-	}
-	node.Set(nodePrepareTupleKey, prepareTupleMap)
-	f := node.Get(nodeFaultToleranceKey).(uint64)
-	if uint64(len(prepareTupleMap)) > 2*f+1 {
-		statemachine.SetState(node, statePrepared)
+	p.StateMachine.SetState(statePrePrepared)
+	a = &proto.Ack{
+		Received: true,
 	}
 	return
 }
 
-type commitMessage struct {
-	BlockHash   string
-	BlockNumber uint64
-	ViewNumber  uint64
-	NodeID      string
-}
-
-func (m commitMessage) Read(reader payload.Reader) (nm noise.Message, err error) {
-	if m.BlockHash, err = reader.ReadString(); err != nil {
+// Prepare requires 2*f+1 responses
+func (p *PBFTConsensus) Prepare(ctx context.Context, in *proto.PrepareRequest) (a *proto.Ack, err error) {
+	log.Printf("[PBFT] Prepare")
+	if err = p.StateMachine.Enforce(statePrePrepared); err != nil {
 		return
 	}
-	if m.BlockNumber, err = reader.ReadUint64(); err != nil {
+	p.ResultTally[gossip.NormalizeLocalhost(in.NodeID)] = struct{}{}
+	a = &proto.Ack{
+		Received: true,
+	}
+	gossip.Broadcast(p.Client, func(conn *grpc.ClientConn) {
+		m := &proto.CommitRequest{
+			BlockHash:   in.BlockHash,
+			BlockNumber: int64(len(p.Blockchain.Blocks)),
+			ViewNumber:  p.ViewNumber,
+			NodeID:      gossip.GetNodeID(p.Client),
+		}
+		client := proto.NewPBFTClient(conn)
+		resp, err := client.Commit(context.Background(), m)
+		if err != nil {
+			log.Printf("[ERROR] unable to send pre-prepare: %v", err)
+		}
+		log.Printf("[%s] commit received: %v\n", conn.Target(), resp)
+	})
+	if len(p.ResultTally) < 2*p.FaultToleranceConstant+1 {
 		return
 	}
-
-	if m.ViewNumber, err = reader.ReadUint64(); err != nil {
-		return
-	}
-	nm = m
+	p.ResultTally = map[string]struct{}{}
+	p.StateMachine.SetState(statePrepared)
 	return
 }
 
-func (m commitMessage) Write() []byte {
-	return payload.NewWriter(nil).
-		WriteString(m.BlockHash).
-		WriteUint64(m.BlockNumber).
-		WriteUint64(m.ViewNumber).
-		WriteString(m.NodeID).Bytes()
-}
-
-func commitMessageHandler(node *noise.Node, peer *noise.Peer, message noise.Message) (err error) {
-	m := message.(commitMessage)
-	prepareTupleMap := node.Get(nodePrepareTupleKey).(map[uint64]struct{})
-	hash, err := hashstructure.Hash(prepareTuple{BlockHash: m.BlockHash, BlockNumber: m.BlockNumber, ViewNumber: m.ViewNumber}, nil)
-	if _, ok := prepareTupleMap[hash]; !ok {
-		prepareTupleMap[hash] = struct{}{}
+// Commit requires 2*f+1 responses
+func (p *PBFTConsensus) Commit(ctx context.Context, in *proto.CommitRequest) (a *proto.Ack, err error) {
+	log.Printf("[PBFT] Commit")
+	if err = p.StateMachine.Enforce(statePrePrepared); err != nil {
+		return
 	}
-	node.Set(nodePrepareTupleKey, prepareTupleMap)
-	f := node.Get(nodeFaultToleranceKey).(uint64)
-	if uint64(len(prepareTupleMap)) > 2*f+1 {
-		mining.CommitBlock()
-		node.Delete(nodeLeaderIDKey)
-		node.Delete(nodeFaultToleranceKey)
-		node.Delete(nodePrepareTupleKey)
-		node.Delete(mining.NodeTransactionDataKey)
-		statemachine.SetState(node, StateConsensusComplete)
+	p.ResultTally[gossip.NormalizeLocalhost(in.NodeID)] = struct{}{}
+	a = &proto.Ack{
+		Received: true,
 	}
+	if len(p.ResultTally) < 2*p.FaultToleranceConstant+1 {
+		return
+	}
+	p.ResultTally = map[string]struct{}{}
+	p.StateMachine.SetState(stateCommitted)
+	p.Blockchain.Commit()
 	return
 }

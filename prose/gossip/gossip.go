@@ -1,59 +1,48 @@
 package gossip
 
-// TODO: We may eventually want to manually extend the broadcasting capabilities of noise here
-
 import (
-	"fmt"
 	"sort"
+	"strings"
 
-	"github.com/perlin-network/noise"
-	"github.com/perlin-network/noise/log"
-	"github.com/perlin-network/noise/protocol"
 	"github.com/perlin-network/noise/skademlia"
+	"google.golang.org/grpc"
 )
 
-// BroadcastAsync TODO: actually broadcast to everyone in network
-func BroadcastAsync(node *noise.Node, message noise.Message) {
-	errs := skademlia.Broadcast(node, message)
-	fmt.Println(errs)
+// NormalizeLocalhost ensures that we only have 127.0.0.1 so we can remove duplicates
+func NormalizeLocalhost(id string) string {
+	return strings.Replace(id, "localhost", "127.0.0.1", -1)
 }
 
-// GetNodeID returns the address of a node
-func GetNodeID(node *noise.Node) string {
-	return node.ExternalAddress()
-}
-
-// BootstrapNetwork bootstraps a node's network
-func BootstrapNetwork(node *noise.Node) {
-	skademlia.FindNode(node, protocol.NodeID(node).(skademlia.ID), skademlia.BucketSize(), 8)
-}
-
-// GetNetwork returns a sorted list of network IDs
-func GetNetwork(node *noise.Node) (networkIDs []string) {
-	networkIDs = getNetworkIDs(node)
-	sort.Strings(networkIDs)
-	log.Info().Msgf("Got network: %s", networkIDs)
+func getUniqueConnectionsMap(client *skademlia.Client) (m map[string]*grpc.ClientConn) {
+	m = map[string]*grpc.ClientConn{}
+	for _, c := range client.AllPeers() {
+		id := NormalizeLocalhost(c.Target())
+		m[id] = c
+	}
 	return
 }
 
-func getPeers(node *noise.Node) []*noise.Peer {
-	var (
-		peers []*noise.Peer
-	)
-	for _, peerID := range skademlia.FindNode(node, protocol.NodeID(node).(skademlia.ID), skademlia.BucketSize(), 8) {
-		peer := protocol.Peer(node, peerID)
-		if peer == nil {
-			continue
-		}
-		peers = append(peers, peer)
-	}
-	return peers
+// GetNodeID returns the ID of the current node
+func GetNodeID(client *skademlia.Client) string {
+	return client.ID().Address()
 }
 
-func getNetworkIDs(node *noise.Node) []string {
-	var (
-		networkIDs = []string{GetNodeID(node)}
-	)
-	networkIDs = append(networkIDs, skademlia.Table(node).GetPeers()...)
-	return networkIDs
+// GetNetwork returns the complete network
+func GetNetwork(client *skademlia.Client) (ids []string) {
+	// include self
+	ids = []string{GetNodeID(client)}
+	m := getUniqueConnectionsMap(client)
+	for k := range m {
+		ids = append(ids, k)
+	}
+	sort.Strings(ids)
+	return
+}
+
+// Broadcast broadcasts a generic message using a provided handler
+func Broadcast(client *skademlia.Client, sendMessage func(*grpc.ClientConn)) {
+	m := getUniqueConnectionsMap(client)
+	for _, conn := range m {
+		sendMessage(conn)
+	}
 }

@@ -1,11 +1,11 @@
 package cmd
 
 import (
+	"log"
 	"strconv"
 
+	"github.com/ProSe-Dev/prose/prose/consensus"
 	"github.com/ProSe-Dev/prose/prose/node"
-	"github.com/perlin-network/noise"
-	"github.com/perlin-network/noise/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -25,19 +25,24 @@ var createMinerCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		var (
-			n    *noise.Node
-			port uint64
-			err  error
+			n             *node.Node
+			port          uint64
+			err           error
+			consensusMode consensus.Mode = consensus.DefaultConsensus
 		)
 		if port, err = strconv.ParseUint(args[0], 10, 32); err != nil {
-			log.Panic().Err(err)
+			log.Fatal(err)
+		}
+		c := viper.GetString("mconsensus")
+		if c != "" {
+			consensusMode = consensus.Mode(c)
 		}
 		initializationNode := viper.GetString("minitNode")
-		if n, err = node.NewNode(uint16(port), initializationNode, true); err != nil {
-			log.Panic().Err(err)
+		if n, err = node.NewNode(uint16(port), initializationNode, true, consensusMode); err != nil {
+			log.Fatal(err)
 		}
-		log.Info().Msg("Initialized miner node")
-		n.Listen()
+		log.Print("Initialized miner node")
+		n.Serve()
 		return
 	},
 }
