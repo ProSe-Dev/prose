@@ -1,4 +1,5 @@
 # Client
+to run the client app: `npm start`
 
 ## React Web Server
 To start only the react web server: `npm run react-start`
