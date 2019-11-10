@@ -1,10 +1,17 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import './Sidebar.css';
 
 function Sidebar() {
   return (
     <div className="Sidebar">
-      Cillum et et esse elit reprehenderit. Proident ullamco deserunt adipisicing pariatur incididunt elit adipisicing proident ea consequat pariatur anim ad amet. Lorem anim occaecat elit nulla. Exercitation eu anim culpa incididunt velit pariatur. Eiusmod officia ut sunt quis minim duis.
+      <div>
+        <Link to="/project"> go to project</Link>
+      </div>
+
+      <div>
+        <Link to="/file-search"> go to file search</Link>
+      </div>
     </div>
   );
 }
