@@ -1,0 +1,29 @@
+session_name: 4-pane-split
+windows:
+- window_name: dev window
+  layout: tiled
+  shell_command_before:
+    - cd ..
+    - ./gen-protoc.sh
+    - go build
+  panes:
+    - shell_command:           # pane no. 1
+        - printf '\033]2;%s\033\\' '[MINER]localhost:3000'
+        - ./prose mine 3000 |& tee log/1.log 
+    - shell_command:           # pane no. 2
+        - printf '\033]2;%s\033\\' '[MINER]localhost:3001'
+        - sleep 3
+        - ./prose mine 3001 -i localhost:3000 |& tee log/2.log
+    - shell_command:           # pane no. 3
+        - printf '\033]2;%s\033\\' '[MINER]localhost:3002'
+        - sleep 3
+        - ./prose mine 3002 -i localhost:3000 |& tee log/3.log
+    - shell_command:           # pane no. 4
+        - printf '\033]2;%s\033\\' '[MINER]localhost:3003'
+        - sleep 3
+        - ./prose mine 3003 -i localhost:3000 |& tee log/4.log
+    - shell_command:
+        - printf '\033]2;%s\033\\' '[RELAY]localhost:3004'
+        - sleep 6
+        - ./prose relay 3004 -i localhost:3000 -a second_block
+

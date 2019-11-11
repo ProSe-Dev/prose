@@ -21,11 +21,13 @@ func init() {
 	// TODO: these shouldn't be flags
 	createRelayCmd.PersistentFlags().StringP("addBlock", "a", "", "Add new block")
 	createRelayCmd.PersistentFlags().BoolP("blockchain", "b", false, "Retrieve blockchain")
+	createRelayCmd.PersistentFlags().BoolP("ephemeral", "e", false, "Don't block on listen")
 
 	viper.BindPFlag("rinitNode", createRelayCmd.PersistentFlags().Lookup("initNode"))
 	viper.BindPFlag("rconsensus", createRelayCmd.PersistentFlags().Lookup("consensus"))
 	viper.BindPFlag("addBlock", createRelayCmd.PersistentFlags().Lookup("addBlock"))
 	viper.BindPFlag("blockchain", createRelayCmd.PersistentFlags().Lookup("blockchain"))
+	viper.BindPFlag("ephemeral", createRelayCmd.PersistentFlags().Lookup("ephemeral"))
 	rootCmd.AddCommand(createRelayCmd)
 }
 
@@ -76,14 +78,16 @@ var createRelayCmd = &cobra.Command{
 				if err != nil {
 					log.Printf("[ERROR] unable to get blockchain: %v", err)
 				}
-				log.Println("blocks:")
-				for _, b := range resp.Blocks {
-					log.Printf("[%s] hash %s, prev hash: %s, data: %s\n", conn.Target(), b.Hash, b.PrevBlockHash, b.Data)
+				for idx, b := range resp.Blocks {
+					log.Printf("[%s - NODE #%d]\n==================\nHASH: %s\nPREV_HASH: %s\nDATA: %s\n==================\n", conn.Target(), idx, b.Hash, b.PrevBlockHash, b.Data)
 				}
 			})
 		}
 		log.Print("Initialized relay node")
-		n.Serve()
+		ephemeral := viper.GetBool("ephemeral")
+		if !ephemeral {
+			n.Serve()
+		}
 		return
 	},
 }

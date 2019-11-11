@@ -1,22 +1,26 @@
 package consensus
 
+// Credit: https://www.hyperledger.org/blog/2019/02/13/introduction-to-sawtooth-pbft
+
 import (
 	"context"
 	"log"
+	"sync"
 
 	"github.com/ProSe-Dev/prose/prose/gossip"
 	"github.com/ProSe-Dev/prose/prose/mining"
 	"github.com/ProSe-Dev/prose/prose/proto"
 	"github.com/ProSe-Dev/prose/prose/statemachine"
+	"github.com/mitchellh/hashstructure"
 	"github.com/perlin-network/noise/skademlia"
 	"google.golang.org/grpc"
 )
 
 var (
-	stateNewRound    statemachine.StateCode = statemachine.NextAvailableStateCode("new round")
-	statePrePrepared statemachine.StateCode = statemachine.NextAvailableStateCode("pre-prepared")
-	statePrepared    statemachine.StateCode = statemachine.NextAvailableStateCode("prepared")
-	stateCommitted   statemachine.StateCode = statemachine.NextAvailableStateCode("committed")
+	stateNewRoundStarted statemachine.StateCode = statemachine.NextAvailableStateCode("new round started")
+	statePrePrepared     statemachine.StateCode = statemachine.NextAvailableStateCode("pre-prepared")
+	statePrepared        statemachine.StateCode = statemachine.NextAvailableStateCode("prepared")
+	stateCommitted       statemachine.StateCode = statemachine.NextAvailableStateCode("committed")
 )
 
 // PBFTConsensus is consensus using the Practical Byzantine Fault Tolerance algorithm
@@ -26,8 +30,35 @@ type PBFTConsensus struct {
 	Blockchain   *mining.Blockchain
 	StateMachine *statemachine.StateMachine
 	// TODO: tally on block ID, IP, hash and view number
-	ResultTally            map[string]struct{}
+	ResultTally            map[uint64]struct{}
+	ResultMutex            sync.Mutex
 	FaultToleranceConstant int
+}
+
+// MessageKey is a struct used to generate MD5 hashes for uniqueness keying
+type MessageKey struct {
+	BlockID    int64
+	BlockHash  string
+	NodeID     string
+	ViewNumber int64
+}
+
+// AddMessageToTally adds a unique combination to the result tally set
+func (p *PBFTConsensus) AddMessageToTally(key MessageKey) {
+	p.ResultMutex.Lock()
+	defer p.ResultMutex.Unlock()
+	hash, err := hashstructure.Hash(key, nil)
+	if err != nil {
+		panic(err) // should not error here
+	}
+	p.ResultTally[hash] = struct{}{}
+}
+
+// ResetMessageTally clears all entries in the result tally for the next round
+func (p *PBFTConsensus) ResetMessageTally() {
+	p.ResultMutex.Lock()
+	defer p.ResultMutex.Unlock()
+	p.ResultTally = map[uint64]struct{}{}
 }
 
 // HandleAddBlock handles adding a new blockchain block
@@ -42,8 +73,8 @@ func (p *PBFTConsensus) HandleAddBlock(data string) bool {
 // NewRound starts a new PBFT round
 func (p *PBFTConsensus) NewRound() {
 	log.Printf("[PBFT] New round")
-	p.StateMachine.SetState(stateNewRound)
-	p.ResultTally = map[string]struct{}{}
+	p.StateMachine.SetState(stateNewRoundStarted)
+	p.ResetMessageTally()
 
 	network := gossip.GetNetwork(p.Client)
 	leaderID := network[p.ViewNumber%int64(len(network))]
@@ -73,21 +104,11 @@ func (p *PBFTConsensus) NewRound() {
 		if err != nil {
 			log.Printf("[ERROR] unable to send pre-prepare: %v", err)
 		}
-		log.Printf("[%s] pre-prepare received: %v\n", conn.Target(), resp)
+		log.Printf("[%s] pre-prepare %v\n", conn.Target(), resp)
 	})
-	p.StateMachine.SetState(statePrePrepared)
-}
-
-// PrePrepare stages the generated block
-func (p *PBFTConsensus) PrePrepare(ctx context.Context, in *proto.PrePrepareRequest) (a *proto.Ack, err error) {
-	log.Printf("[PBFT] Pre-prepare")
-	if err = p.StateMachine.Enforce(stateNewRound); err != nil {
-		return
-	}
-	p.Blockchain.StageBlock(&mining.Block{Data: in.Block.Hash, PrevBlockHash: in.Block.PrevBlockHash, Hash: in.Block.Hash})
 	gossip.Broadcast(p.Client, func(conn *grpc.ClientConn) {
 		m := &proto.PrepareRequest{
-			BlockHash:   in.Block.Hash,
+			BlockHash:   b.PrevBlockHash,
 			BlockNumber: int64(len(p.Blockchain.Blocks)),
 			ViewNumber:  p.ViewNumber,
 			NodeID:      gossip.GetNodeID(p.Client),
@@ -97,9 +118,34 @@ func (p *PBFTConsensus) PrePrepare(ctx context.Context, in *proto.PrePrepareRequ
 		if err != nil {
 			log.Printf("[ERROR] unable to send pre-prepare: %v", err)
 		}
-		log.Printf("[%s] prepare received: %v\n", conn.Target(), resp)
+		log.Printf("[%s] prepare %v\n", conn.Target(), resp)
 	})
 	p.StateMachine.SetState(statePrePrepared)
+}
+
+// PrePrepare stages the generated block
+func (p *PBFTConsensus) PrePrepare(ctx context.Context, in *proto.PrePrepareRequest) (a *proto.Ack, err error) {
+	log.Printf("[PBFT] Pre-prepare")
+	go func() {
+		p.StateMachine.EnforceWait(stateNewRoundStarted)
+		p.Blockchain.StageBlock(&mining.Block{Data: in.Block.Data, PrevBlockHash: in.Block.PrevBlockHash, Hash: in.Block.Hash})
+		log.Printf("[PBFT] Staged block with data: %s\n", in.Block.Data)
+		gossip.Broadcast(p.Client, func(conn *grpc.ClientConn) {
+			m := &proto.PrepareRequest{
+				BlockHash:   in.Block.Hash,
+				BlockNumber: int64(len(p.Blockchain.Blocks)),
+				ViewNumber:  p.ViewNumber,
+				NodeID:      gossip.GetNodeID(p.Client),
+			}
+			client := proto.NewPBFTClient(conn)
+			resp, err := client.Prepare(context.Background(), m)
+			if err != nil {
+				log.Printf("[ERROR] unable to send prepare: %v", err)
+			}
+			log.Printf("[%s] prepare %v\n", conn.Target(), resp)
+		})
+		p.StateMachine.SetState(statePrePrepared)
+	}()
 	a = &proto.Ack{
 		Received: true,
 	}
@@ -108,51 +154,61 @@ func (p *PBFTConsensus) PrePrepare(ctx context.Context, in *proto.PrePrepareRequ
 
 // Prepare requires 2*f+1 responses
 func (p *PBFTConsensus) Prepare(ctx context.Context, in *proto.PrepareRequest) (a *proto.Ack, err error) {
-	log.Printf("[PBFT] Prepare")
-	if err = p.StateMachine.Enforce(statePrePrepared); err != nil {
-		return
-	}
-	p.ResultTally[gossip.NormalizeLocalhost(in.NodeID)] = struct{}{}
+	log.Printf("[PBFT] prepare message from %s\n", in.NodeID)
+	go func() {
+		p.StateMachine.EnforceWait(statePrePrepared)
+		p.AddMessageToTally(MessageKey{
+			BlockID:    in.BlockNumber,
+			BlockHash:  in.BlockHash,
+			NodeID:     gossip.NormalizeLocalhost(in.NodeID),
+			ViewNumber: in.ViewNumber})
+		log.Printf("[PBFT] message from %s, need %d more prepare messages\n", in.NodeID, 2*p.FaultToleranceConstant+1-len(p.ResultTally))
+		if len(p.ResultTally) < 2*p.FaultToleranceConstant+1 {
+			return
+		}
+		p.ResetMessageTally()
+		gossip.Broadcast(p.Client, func(conn *grpc.ClientConn) {
+			m := &proto.CommitRequest{
+				BlockHash:   in.BlockHash,
+				BlockNumber: int64(len(p.Blockchain.Blocks)),
+				ViewNumber:  p.ViewNumber,
+				NodeID:      gossip.GetNodeID(p.Client),
+			}
+			client := proto.NewPBFTClient(conn)
+			resp, err := client.Commit(context.Background(), m)
+			if err != nil {
+				log.Printf("[ERROR] unable to send commit: %v", err)
+			}
+			log.Printf("[%s] commit %v\n", conn.Target(), resp)
+		})
+		p.StateMachine.SetState(statePrepared)
+	}()
 	a = &proto.Ack{
 		Received: true,
 	}
-	gossip.Broadcast(p.Client, func(conn *grpc.ClientConn) {
-		m := &proto.CommitRequest{
-			BlockHash:   in.BlockHash,
-			BlockNumber: int64(len(p.Blockchain.Blocks)),
-			ViewNumber:  p.ViewNumber,
-			NodeID:      gossip.GetNodeID(p.Client),
-		}
-		client := proto.NewPBFTClient(conn)
-		resp, err := client.Commit(context.Background(), m)
-		if err != nil {
-			log.Printf("[ERROR] unable to send pre-prepare: %v", err)
-		}
-		log.Printf("[%s] commit received: %v\n", conn.Target(), resp)
-	})
-	if len(p.ResultTally) < 2*p.FaultToleranceConstant+1 {
-		return
-	}
-	p.ResultTally = map[string]struct{}{}
-	p.StateMachine.SetState(statePrepared)
 	return
 }
 
 // Commit requires 2*f+1 responses
 func (p *PBFTConsensus) Commit(ctx context.Context, in *proto.CommitRequest) (a *proto.Ack, err error) {
-	log.Printf("[PBFT] Commit")
-	if err = p.StateMachine.Enforce(statePrePrepared); err != nil {
-		return
-	}
-	p.ResultTally[gossip.NormalizeLocalhost(in.NodeID)] = struct{}{}
+	log.Printf("[PBFT] commit message from %s\n", in.NodeID)
+	go func() {
+		p.StateMachine.EnforceWait(statePrepared)
+		p.AddMessageToTally(MessageKey{
+			BlockID:    in.BlockNumber,
+			BlockHash:  in.BlockHash,
+			NodeID:     gossip.NormalizeLocalhost(in.NodeID),
+			ViewNumber: in.ViewNumber})
+		log.Printf("[PBFT] message from %s, need %d more commit messages\n", in.NodeID, 2*p.FaultToleranceConstant+1-len(p.ResultTally))
+		if len(p.ResultTally) < 2*p.FaultToleranceConstant+1 {
+			return
+		}
+		p.ResetMessageTally()
+		p.StateMachine.SetState(stateCommitted)
+		p.Blockchain.Commit()
+	}()
 	a = &proto.Ack{
 		Received: true,
 	}
-	if len(p.ResultTally) < 2*p.FaultToleranceConstant+1 {
-		return
-	}
-	p.ResultTally = map[string]struct{}{}
-	p.StateMachine.SetState(stateCommitted)
-	p.Blockchain.Commit()
 	return
 }
