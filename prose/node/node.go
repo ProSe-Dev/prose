@@ -39,9 +39,14 @@ func (n *Node) AddBlock(ctx context.Context, in *proto.AddBlockRequest) (resp *p
 	if err = n.StateMachine.Enforce(stateIdle); err != nil {
 		return
 	}
+	data := mining.BlockData{
+		Author:     in.Data.Author,
+		Timestamp:  in.Data.Timestamp,
+		CommitHash: in.Data.CommitHash,
+		FileHashes: in.Data.FileHashes,
+	}
 	// TODO: use a queue and also handle more data than just a string
-	mining.UpdateLatestTransactionData(in.Data)
-	result := n.Consensus.HandleAddBlock(in.Data)
+	result := n.Consensus.HandleAddBlock(data)
 	resp = &proto.AddBlockResponse{
 		ACK: result,
 	}
@@ -54,8 +59,13 @@ func (n *Node) GetBlockchain(ctx context.Context, in *proto.GetBlockchainRequest
 	for _, b := range n.Blockchain.Blocks {
 		resp.Blocks = append(resp.Blocks, &proto.Block{
 			PrevBlockHash: b.PrevBlockHash,
-			Data:          b.Data,
-			Hash:          b.Hash,
+			Data: &proto.BlockData{
+				Author:     b.Data.Author,
+				Timestamp:  b.Data.Timestamp,
+				CommitHash: b.Data.CommitHash,
+				FileHashes: b.Data.FileHashes,
+			},
+			Hash: b.Hash,
 		})
 	}
 	return resp, nil

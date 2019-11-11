@@ -62,7 +62,7 @@ func (p *PBFTConsensus) ResetMessageTally() {
 }
 
 // HandleAddBlock handles adding a new blockchain block
-func (p *PBFTConsensus) HandleAddBlock(data string) bool {
+func (p *PBFTConsensus) HandleAddBlock(data mining.BlockData) bool {
 	log.Printf("[PBFT] Adding new block")
 	mining.UpdateLatestTransactionData(data)
 	// start the new round in the background
@@ -87,13 +87,21 @@ func (p *PBFTConsensus) NewRound() {
 
 	transaction := mining.GetLatestTransactionData()
 	b := p.Blockchain.ProcessNewBlock(transaction)
+	if !p.Blockchain.IsBlockValid(b) {
+		return
+	}
 	log.Printf("Broadcasting new block with f = %v", p.FaultToleranceConstant)
 	gossip.Broadcast(p.Client, func(conn *grpc.ClientConn) {
 		m := &proto.PrePrepareRequest{
 			Block: &proto.Block{
 				PrevBlockHash: b.PrevBlockHash,
-				Data:          b.Data,
-				Hash:          b.Hash,
+				Data: &proto.BlockData{
+					Author:     b.Data.Author,
+					CommitHash: b.Data.CommitHash,
+					Timestamp:  b.Data.Timestamp,
+					FileHashes: b.Data.FileHashes,
+				},
+				Hash: b.Hash,
 			},
 			BlockNumber: int64(len(p.Blockchain.Blocks)),
 			ViewNumber:  p.ViewNumber,
@@ -128,7 +136,22 @@ func (p *PBFTConsensus) PrePrepare(ctx context.Context, in *proto.PrePrepareRequ
 	log.Printf("[PBFT] Pre-prepare")
 	go func() {
 		p.StateMachine.EnforceWait(stateNewRoundStarted)
-		p.Blockchain.StageBlock(&mining.Block{Data: in.Block.Data, PrevBlockHash: in.Block.PrevBlockHash, Hash: in.Block.Hash})
+		block := mining.Block{
+			Data: mining.BlockData{
+				Author:     in.Block.Data.Author,
+				CommitHash: in.Block.Data.CommitHash,
+				Timestamp:  in.Block.Data.Timestamp,
+				FileHashes: in.Block.Data.FileHashes,
+			},
+			PrevBlockHash: in.Block.PrevBlockHash,
+			Hash:          in.Block.Hash}
+		if !p.Blockchain.IsBlockValid(&block) {
+			a = &proto.Ack{
+				Received: false,
+			}
+			return
+		}
+		p.Blockchain.StageBlock(&block)
 		log.Printf("[PBFT] Staged block with data: %s\n", in.Block.Data)
 		gossip.Broadcast(p.Client, func(conn *grpc.ClientConn) {
 			m := &proto.PrepareRequest{

@@ -8,16 +8,23 @@ service Blockchain {
 }
 
 message AddBlockRequest {
-    string data = 1;
+    BlockData data = 1;
 }
 
 message AddBlockResponse {
 	bool ACK = 1;
 }
 
+message BlockData {
+	string timestamp = 1;
+	string author = 2;
+	string commitHash = 3;
+	map<string, string> fileHashes = 4;
+}
+
 message Block {
 	string prevBlockHash = 1;
-	string data = 2;
+	BlockData data = 2;
 	string hash = 3;
 }
 

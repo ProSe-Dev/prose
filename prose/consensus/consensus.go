@@ -24,7 +24,7 @@ const (
 
 // Consensus is a consensus implementation
 type Consensus interface {
-	HandleAddBlock(string) bool
+	HandleAddBlock(mining.BlockData) bool
 }
 
 // RegisterConsensusServer registers the server using the desired consensus mode

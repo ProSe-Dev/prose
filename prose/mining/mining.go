@@ -2,17 +2,35 @@ package mining
 
 import (
 	"crypto/sha256"
+	"encoding/binary"
 	"encoding/hex"
 	"errors"
+	"log"
+	"time"
+
+	"github.com/mitchellh/hashstructure"
+)
+
+const (
+	timeFormat   = "2006-01-02 15:04:05"
+	clockSkewMin = 5
 )
 
 var (
-	latestData string
+	latestData BlockData
 )
+
+// BlockData is the data for a block
+type BlockData struct {
+	Timestamp  string
+	Author     string
+	CommitHash string
+	FileHashes map[string]string
+}
 
 // Block keeps block headers
 type Block struct {
-	Data          string
+	Data          BlockData
 	PrevBlockHash string
 	Hash          string
 }
@@ -23,23 +41,34 @@ type Blockchain struct {
 	StagedBlock *Block
 }
 
-// setHash calculates and sets block hash
 func (b *Block) setHash() {
-	hash := sha256.Sum256([]byte(b.PrevBlockHash + b.Data))
-	b.Hash = hex.EncodeToString(hash[:])
+	b.Hash = b.ComputeHash()
+}
+
+// ComputeHash calculates the block hash
+func (b *Block) ComputeHash() string {
+	dHash, _ := hashstructure.Hash(b.Data, nil)
+	bytes := make([]byte, 8)
+	binary.LittleEndian.PutUint64(bytes, dHash)
+	hash := sha256.Sum256(append([]byte(b.PrevBlockHash), bytes...))
+	return hex.EncodeToString(hash[:])
 }
 
 // NewBlock creates and returns Block
-func NewBlock(data string, prevBlockHash string) *Block {
-	block := &Block{data, prevBlockHash, ""}
+func NewBlock(data BlockData, prevBlockHash string) *Block {
+	block := &Block{Data: data, PrevBlockHash: prevBlockHash}
 	block.setHash()
-
 	return block
 }
 
 // NewGenesisBlock creates and returns genesis Block
 func NewGenesisBlock() *Block {
-	return NewBlock("Genesis Block", "")
+	return NewBlock(BlockData{
+		Timestamp:  "",
+		Author:     "ProSe",
+		CommitHash: "421fdea6ec87b5531d196bb7498c96fb84f2880a",
+		FileHashes: nil,
+	}, "")
 }
 
 // StageBlock stages a block
@@ -58,7 +87,7 @@ func (bc *Blockchain) Commit() (err error) {
 }
 
 // ProcessNewBlock saves provided data as a block in the blockchain
-func (bc *Blockchain) ProcessNewBlock(data string) *Block {
+func (bc *Blockchain) ProcessNewBlock(data BlockData) *Block {
 	prevBlock := bc.Blocks[len(bc.Blocks)-1]
 	newBlock := NewBlock(data, prevBlock.Hash)
 	bc.StageBlock(newBlock)
@@ -71,11 +100,49 @@ func NewBlockchain() *Blockchain {
 }
 
 // GetLatestTransactionData returns the latest transaction data
-func GetLatestTransactionData() string {
+func GetLatestTransactionData() BlockData {
 	return latestData
 }
 
 // UpdateLatestTransactionData updates the latest transaction data
-func UpdateLatestTransactionData(data string) {
+func UpdateLatestTransactionData(data BlockData) {
 	latestData = data
+}
+
+// TimeToString returns the string representation of a time
+func TimeToString(t time.Time) string {
+	return t.Format(timeFormat)
+}
+
+// StringToTime returns the time representation of a string
+func StringToTime(s string) (t time.Time, err error) {
+	t, err = time.Parse(timeFormat, s)
+	return
+}
+
+// IsBlockValid determines if the newBlock is a valid successor to oldBlock
+func (bc *Blockchain) IsBlockValid(block *Block) bool {
+	prevHash := bc.Blocks[len(bc.Blocks)-1].Hash
+	if block.PrevBlockHash != prevHash {
+		log.Printf("Block failed validation for prev hash: expected %s but got %s\n", prevHash, block.PrevBlockHash)
+		return false
+	}
+	hash := block.ComputeHash()
+	if block.Hash != hash {
+		log.Printf("Block failed validation for hash: expected %s but got %s\n", hash, block.Hash)
+		return false
+	}
+	t, err := StringToTime(block.Data.Timestamp)
+	if err != nil {
+		log.Printf("Failed to parse time %s\n", block.Data.Timestamp)
+		return false
+	}
+	now := time.Now().UTC()
+	if now.Sub(t).Minutes() > clockSkewMin {
+		log.Printf("Block failed validation for clock skew: %s does not fall within %d minutes of %s\n",
+			block.Data.Timestamp,
+			clockSkewMin, TimeToString(now))
+		return false
+	}
+	return true
 }

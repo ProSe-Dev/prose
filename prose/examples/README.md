@@ -6,3 +6,6 @@
 ### Execute a session
 `tmuxp load <SESSION>`
 
+### Exiting a session
+CTRL + C -> CTRL + D for each pane
+

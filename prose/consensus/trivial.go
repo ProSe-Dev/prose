@@ -14,7 +14,7 @@ type TrivialConsensus struct {
 }
 
 // HandleAddBlock handles adding a new blockchain block
-func (t *TrivialConsensus) HandleAddBlock(data string) bool {
+func (t *TrivialConsensus) HandleAddBlock(data mining.BlockData) bool {
 	log.Printf("[TRIVIAL] Adding new block")
 	t.Blockchain.ProcessNewBlock(data)
 	t.Blockchain.Commit()
