@@ -1,0 +1,10 @@
+.App {
+  text-align: center;
+  display: grid;
+  grid-template-columns: 1fr 7fr;
+  height: 100vh;
+}
+
+.side-bar {
+  background: #ddd
+}
