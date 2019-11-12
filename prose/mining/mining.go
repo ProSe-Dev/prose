@@ -8,6 +8,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/golang-collections/go-datastructures/queue"
 	"github.com/mitchellh/hashstructure"
 )
 
@@ -17,7 +18,7 @@ const (
 )
 
 var (
-	latestData BlockData
+	latestDataQueue = queue.New(0)
 )
 
 // BlockData is the data for a block
@@ -67,7 +68,7 @@ func NewGenesisBlock() *Block {
 		Timestamp:  "",
 		Author:     "ProSe",
 		CommitHash: "421fdea6ec87b5531d196bb7498c96fb84f2880a",
-		FileHashes: nil,
+		FileHashes: map[string]string{},
 	}, "")
 }
 
@@ -100,13 +101,24 @@ func NewBlockchain() *Blockchain {
 }
 
 // GetLatestTransactionData returns the latest transaction data
-func GetLatestTransactionData() BlockData {
-	return latestData
+func GetLatestTransactionData() (data BlockData, err error) {
+	var val []interface{}
+	if val, err = latestDataQueue.Get(1); err != nil {
+		return
+	}
+	data = val[0].(BlockData)
+	return
 }
 
-// UpdateLatestTransactionData updates the latest transaction data
-func UpdateLatestTransactionData(data BlockData) {
-	latestData = data
+// EnqueueTransactionData enqueues the latest transaction data
+func EnqueueTransactionData(data BlockData) {
+	log.Printf("Enqueue %v", data)
+	latestDataQueue.Put(data)
+}
+
+// NewTransactionDataExists returns true if there is enqueued transaction data
+func NewTransactionDataExists() bool {
+	return latestDataQueue.Len() > 0
 }
 
 // TimeToString returns the string representation of a time

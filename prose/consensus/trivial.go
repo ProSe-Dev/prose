@@ -13,10 +13,13 @@ type TrivialConsensus struct {
 	Blockchain *mining.Blockchain
 }
 
-// HandleAddBlock handles adding a new blockchain block
-func (t *TrivialConsensus) HandleAddBlock(data mining.BlockData) bool {
-	log.Printf("[TRIVIAL] Adding new block")
+// Start handles adding a new blockchain block
+func (t *TrivialConsensus) Start() {
+	log.Printf("[TRIVIAL] Starting")
+	data, err := mining.GetLatestTransactionData()
+	if err != nil {
+		panic(err)
+	}
 	t.Blockchain.ProcessNewBlock(data)
 	t.Blockchain.Commit()
-	return true
 }

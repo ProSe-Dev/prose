@@ -20,8 +20,11 @@ import (
 )
 
 var (
-	stateNascent statemachine.StateCode = statemachine.NextAvailableStateCode("nascent")
-	stateIdle    statemachine.StateCode = statemachine.NextAvailableStateCode("idle")
+	// StateNascent is the state for node initialization
+	StateNascent statemachine.StateCode = statemachine.NextAvailableStateCode("nascent")
+
+	// StateIdle is the state for an idle node waiting for requests
+	StateIdle statemachine.StateCode = statemachine.NextAvailableStateCode("idle")
 )
 
 // Node implements proto.BlockchainServer interface
@@ -36,19 +39,19 @@ type Node struct {
 
 // AddBlock : adds new block to blockchain
 func (n *Node) AddBlock(ctx context.Context, in *proto.AddBlockRequest) (resp *proto.AddBlockResponse, err error) {
-	if err = n.StateMachine.Enforce(stateIdle); err != nil {
-		return
-	}
 	data := mining.BlockData{
 		Author:     in.Data.Author,
 		Timestamp:  in.Data.Timestamp,
 		CommitHash: in.Data.CommitHash,
 		FileHashes: in.Data.FileHashes,
 	}
-	// TODO: use a queue and also handle more data than just a string
-	result := n.Consensus.HandleAddBlock(data)
+	mining.EnqueueTransactionData(data)
+	// if we're in the middle of consensus already, skip
+	if n.StateMachine.State == StateIdle {
+		n.Consensus.Start()
+	}
 	resp = &proto.AddBlockResponse{
-		ACK: result,
+		ACK: true,
 	}
 	return
 }
@@ -75,7 +78,7 @@ func (n *Node) GetBlockchain(ctx context.Context, in *proto.GetBlockchainRequest
 func NewNode(port uint16, initNode string, isMiner bool, consensusMode consensus.Mode) (node *Node, err error) {
 	node = &Node{
 		Blockchain:   mining.NewBlockchain(),
-		StateMachine: statemachine.NewStateMachine(stateNascent),
+		StateMachine: statemachine.NewStateMachine(StateNascent),
 	}
 	listener, err := net.Listen("tcp", ":"+fmt.Sprint(port))
 	if err != nil {
@@ -101,7 +104,7 @@ func NewNode(port uint16, initNode string, isMiner bool, consensusMode consensus
 	proto.RegisterBlockchainServer(node.Server, node)
 	node.Consensus = consensus.RegisterConsensusServer(node.Blockchain, node.StateMachine, node.Server, node.Client, consensusMode)
 	node.Serve = func() error {
-		node.StateMachine.SetState(stateIdle)
+		node.StateMachine.SetState(StateIdle)
 		return node.Server.Serve(listener)
 	}
 	return

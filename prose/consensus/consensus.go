@@ -24,18 +24,31 @@ const (
 
 // Consensus is a consensus implementation
 type Consensus interface {
-	HandleAddBlock(mining.BlockData) bool
+	Start()
 }
 
 // RegisterConsensusServer registers the server using the desired consensus mode
-func RegisterConsensusServer(blockchain *mining.Blockchain, statemachine *statemachine.StateMachine, server *grpc.Server, client *skademlia.Client, mode Mode) Consensus {
+func RegisterConsensusServer(
+	blockchain *mining.Blockchain,
+	statemachine *statemachine.StateMachine,
+	server *grpc.Server,
+	client *skademlia.Client,
+	mode Mode,
+) Consensus {
 	switch mode {
 	case PBFTMode:
-		pbft := PBFTConsensus{Client: client, Blockchain: blockchain, StateMachine: statemachine}
+		pbft := PBFTConsensus{
+			Client:       client,
+			Blockchain:   blockchain,
+			StateMachine: statemachine,
+		}
 		proto.RegisterPBFTServer(server, &pbft)
 		return &pbft
 	case TrivialMode:
-		t := TrivialConsensus{Client: client, Blockchain: blockchain}
+		t := TrivialConsensus{
+			Client:     client,
+			Blockchain: blockchain,
+		}
 		return &t
 	}
 	return nil

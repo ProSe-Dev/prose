@@ -1,4 +1,4 @@
-session_name: 4-pane-split
+session_name: 4 miner PBFT
 windows:
 - window_name: dev window
   layout: tiled
@@ -27,5 +27,5 @@ windows:
         - cd ../relay
         - go build
         - sleep 8
-        - ./relay start 8080 3004 -i localhost:3000
+        - ./relay start 8080 3004 -i localhost:3000 |& tee ../prose/log/5.log
 

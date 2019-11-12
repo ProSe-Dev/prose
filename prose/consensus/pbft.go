@@ -20,16 +20,15 @@ var (
 	stateNewRoundStarted statemachine.StateCode = statemachine.NextAvailableStateCode("new round started")
 	statePrePrepared     statemachine.StateCode = statemachine.NextAvailableStateCode("pre-prepared")
 	statePrepared        statemachine.StateCode = statemachine.NextAvailableStateCode("prepared")
-	stateCommitted       statemachine.StateCode = statemachine.NextAvailableStateCode("committed")
 )
 
 // PBFTConsensus is consensus using the Practical Byzantine Fault Tolerance algorithm
 type PBFTConsensus struct {
-	Client       *skademlia.Client
-	ViewNumber   int64
-	Blockchain   *mining.Blockchain
-	StateMachine *statemachine.StateMachine
-	// TODO: tally on block ID, IP, hash and view number
+	Client                 *skademlia.Client
+	ViewNumber             int64
+	Blockchain             *mining.Blockchain
+	StateMachine           *statemachine.StateMachine
+	IdleState              statemachine.StateCode
 	ResultTally            map[uint64]struct{}
 	ResultMutex            sync.Mutex
 	FaultToleranceConstant int
@@ -61,18 +60,18 @@ func (p *PBFTConsensus) ResetMessageTally() {
 	p.ResultTally = map[uint64]struct{}{}
 }
 
-// HandleAddBlock handles adding a new blockchain block
-func (p *PBFTConsensus) HandleAddBlock(data mining.BlockData) bool {
-	log.Printf("[PBFT] Adding new block")
-	mining.UpdateLatestTransactionData(data)
+// Start handles adding a new blockchain block
+func (p *PBFTConsensus) Start() {
+	log.Printf("[PBFT] Starting")
 	// start the new round in the background
 	go p.NewRound()
-	return true
 }
 
 // NewRound starts a new PBFT round
 func (p *PBFTConsensus) NewRound() {
 	log.Printf("[PBFT] New round")
+	// cache the initial idle state to avoid dependency cycles
+	p.IdleState = p.StateMachine.State
 	p.StateMachine.SetState(stateNewRoundStarted)
 	p.ResetMessageTally()
 
@@ -81,11 +80,13 @@ func (p *PBFTConsensus) NewRound() {
 	p.FaultToleranceConstant = (len(network) - 1) / 3
 	log.Printf("Network: %s\nLeader: %s\nF: %d", network, leaderID, p.FaultToleranceConstant)
 
+	transaction, err := mining.GetLatestTransactionData()
+	if err != nil {
+		panic(err)
+	}
 	if leaderID != p.Client.ID().Address() {
 		return
 	}
-
-	transaction := mining.GetLatestTransactionData()
 	b := p.Blockchain.ProcessNewBlock(transaction)
 	if !p.Blockchain.IsBlockValid(b) {
 		return
@@ -185,8 +186,9 @@ func (p *PBFTConsensus) Prepare(ctx context.Context, in *proto.PrepareRequest) (
 			BlockHash:  in.BlockHash,
 			NodeID:     gossip.NormalizeLocalhost(in.NodeID),
 			ViewNumber: in.ViewNumber})
-		log.Printf("[PBFT] message from %s, need %d more prepare messages\n", in.NodeID, 2*p.FaultToleranceConstant+1-len(p.ResultTally))
-		if len(p.ResultTally) < 2*p.FaultToleranceConstant+1 {
+		remaining := 2*p.FaultToleranceConstant + 1 - len(p.ResultTally)
+		log.Printf("[PBFT] message from %s, need %d more prepare messages\n", in.NodeID, remaining)
+		if len(p.ResultTally) < 2*p.FaultToleranceConstant+1 || remaining < 0 {
 			return
 		}
 		p.ResetMessageTally()
@@ -222,13 +224,19 @@ func (p *PBFTConsensus) Commit(ctx context.Context, in *proto.CommitRequest) (a 
 			BlockHash:  in.BlockHash,
 			NodeID:     gossip.NormalizeLocalhost(in.NodeID),
 			ViewNumber: in.ViewNumber})
-		log.Printf("[PBFT] message from %s, need %d more commit messages\n", in.NodeID, 2*p.FaultToleranceConstant+1-len(p.ResultTally))
-		if len(p.ResultTally) < 2*p.FaultToleranceConstant+1 {
+		remaining := 2*p.FaultToleranceConstant + 1 - len(p.ResultTally)
+		log.Printf("[PBFT] message from %s, need %d more commit messages\n", in.NodeID, remaining)
+		if len(p.ResultTally) < 2*p.FaultToleranceConstant+1 || remaining < 0 {
 			return
 		}
 		p.ResetMessageTally()
-		p.StateMachine.SetState(stateCommitted)
 		p.Blockchain.Commit()
+		p.ViewNumber++
+		// make sure we restore the old idle state here
+		p.StateMachine.SetState(p.IdleState)
+		if mining.NewTransactionDataExists() {
+			p.NewRound()
+		}
 	}()
 	a = &proto.Ack{
 		Received: true,

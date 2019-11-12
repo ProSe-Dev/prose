@@ -49,6 +49,7 @@ var createRelayCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 		log.Print("Initialized relay node")
+		go n.Serve()
 		server.Start(n, sport)
 		return
 	},

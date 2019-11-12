@@ -55,39 +55,7 @@ func makeMuxRouter() http.Handler {
 }
 
 func handleGetBlockchain(w http.ResponseWriter, r *http.Request) {
-	blockchains := []mining.Blockchain{}
-	var (
-		resp *proto.GetBlockchainResponse
-		err  error
-	)
-	gossip.Broadcast(relayNode.Client, func(conn *grpc.ClientConn) {
-		m := &proto.GetBlockchainRequest{}
-		client := proto.NewBlockchainClient(conn)
-		resp, err = client.GetBlockchain(context.Background(), m)
-		if err != nil {
-			log.Printf("[ERROR] unable to get blockchain: %v", err)
-		}
-		blocks := []*mining.Block{}
-		for _, block := range resp.Blocks {
-			blocks = append(blocks, &mining.Block{
-				Data: mining.BlockData{
-					Author:     block.Data.Author,
-					CommitHash: block.Data.CommitHash,
-					Timestamp:  block.Data.Timestamp,
-					FileHashes: block.Data.FileHashes,
-				},
-				PrevBlockHash: block.PrevBlockHash,
-				Hash:          block.Hash,
-			})
-		}
-		blockchains = append(blockchains, mining.Blockchain{Blocks: blocks})
-	})
-	if len(blockchains) == 0 {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	// TODO: figure out which one to use?
-	bytes, err := json.MarshalIndent(blockchains[0], "", "  ")
+	bytes, err := json.MarshalIndent(relayNode.Blockchain, "", "  ")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -104,12 +72,13 @@ func handleWriteBlock(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer r.Body.Close()
+	timestamp := mining.TimeToString(time.Now().UTC())
 	gossip.Broadcast(relayNode.Client, func(conn *grpc.ClientConn) {
 		m := &proto.AddBlockRequest{Data: &proto.BlockData{
 			Author:     m.Author,
 			CommitHash: m.CommitHash,
 			FileHashes: m.FileHashes,
-			Timestamp:  mining.TimeToString(time.Now().UTC()),
+			Timestamp:  timestamp,
 		}}
 		client := proto.NewBlockchainClient(conn)
 		resp, err := client.AddBlock(context.Background(), m)
@@ -118,6 +87,17 @@ func handleWriteBlock(w http.ResponseWriter, r *http.Request) {
 		}
 		log.Printf("[%s] block submitted: %v\n", conn.Target(), resp.ACK)
 	})
+	// the relay node needs to participate too!
+	mining.EnqueueTransactionData(mining.BlockData{
+		Author:     m.Author,
+		CommitHash: m.CommitHash,
+		FileHashes: m.FileHashes,
+		Timestamp:  timestamp,
+	})
+	// if we're in the middle of consensus already, just do nothing
+	if relayNode.StateMachine.State == node.StateIdle {
+		relayNode.Consensus.Start()
+	}
 	respondWithJSON(w, r, http.StatusCreated, r.Body)
 }
 
