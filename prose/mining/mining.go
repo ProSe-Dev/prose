@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"log"
 	"time"
 
@@ -133,28 +134,24 @@ func StringToTime(s string) (t time.Time, err error) {
 }
 
 // IsBlockValid determines if the newBlock is a valid successor to oldBlock
-func (bc *Blockchain) IsBlockValid(block *Block) bool {
+func (bc *Blockchain) IsBlockValid(block *Block) error {
 	prevHash := bc.Blocks[len(bc.Blocks)-1].Hash
 	if block.PrevBlockHash != prevHash {
-		log.Printf("Block failed validation for prev hash: expected %s but got %s\n", prevHash, block.PrevBlockHash)
-		return false
+		return fmt.Errorf("block failed validation for prev hash: expected %s but got %s", prevHash, block.PrevBlockHash)
 	}
 	hash := block.ComputeHash()
 	if block.Hash != hash {
-		log.Printf("Block failed validation for hash: expected %s but got %s\n", hash, block.Hash)
-		return false
+		return fmt.Errorf("Block failed validation for hash: expected %s but got %s", hash, block.Hash)
 	}
 	t, err := StringToTime(block.Data.Timestamp)
 	if err != nil {
-		log.Printf("Failed to parse time %s\n", block.Data.Timestamp)
-		return false
+		return fmt.Errorf("failed to parse time %s", block.Data.Timestamp)
 	}
 	now := time.Now().UTC()
 	if now.Sub(t).Minutes() > clockSkewMin {
-		log.Printf("Block failed validation for clock skew: %s does not fall within %d minutes of %s\n",
+		return fmt.Errorf("block failed validation for clock skew: %s does not fall within %d minutes of %s",
 			block.Data.Timestamp,
 			clockSkewMin, TimeToString(now))
-		return false
 	}
-	return true
+	return nil
 }

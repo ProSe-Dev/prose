@@ -38,9 +38,11 @@ func RegisterConsensusServer(
 	switch mode {
 	case PBFTMode:
 		pbft := PBFTConsensus{
-			Client:       client,
-			Blockchain:   blockchain,
-			StateMachine: statemachine,
+			Client:             client,
+			Blockchain:         blockchain,
+			StateMachine:       statemachine,
+			PrepareResultTally: &Tally{},
+			CommitResultTally:  &Tally{},
 		}
 		proto.RegisterPBFTServer(server, &pbft)
 		return &pbft

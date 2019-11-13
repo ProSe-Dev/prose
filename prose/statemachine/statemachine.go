@@ -50,13 +50,14 @@ func (s *StateMachine) Enforce(state StateCode) (err error) {
 // EnforceWait blocks until the desired state is achieved
 func (s *StateMachine) EnforceWait(state StateCode) {
 	if s.State != state {
-		log.Printf("[STATEMACHINE] waiting on state %s", GetStateDebugName(state))
+		log.Printf("[STATEMACHINE] waiting on state %s, current is %s", GetStateDebugName(state), GetStateDebugName(s.State))
 		msgChan := stateCodeBrokerMap[state].Subscribe()
 		<-msgChan
 		stateCodeBrokerMap[state].Unsubscribe(msgChan)
 		log.Printf("[STATEMACHINE] state %s was blocked but is now enforced", GetStateDebugName(state))
+		return
 	}
-	log.Printf("[STATEMACHINE] state %s was enforced", GetStateDebugName(state))
+	log.Printf("[STATEMACHINE] state %s was already enforced", GetStateDebugName(state))
 	return
 }
 
@@ -138,4 +139,9 @@ func (b *StateBroker) Unsubscribe(msgChan chan interface{}) {
 // Publish broadcasts a message to all subscribers
 func (b *StateBroker) Publish(msg interface{}) {
 	b.publishChan <- msg
+}
+
+// Printf prints a message with the current state pre-pended
+func (s *StateMachine) Printf(fmts string, args ...interface{}) {
+	log.Printf("[STATE = %s] "+fmts, append([]interface{}{GetStateDebugName(s.State)}, args...)...)
 }
