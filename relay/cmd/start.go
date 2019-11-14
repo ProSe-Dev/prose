@@ -15,10 +15,10 @@ import (
 func init() {
 	createRelayCmd.PersistentFlags().StringP("initNode", "i", "", "initialization node")
 	createRelayCmd.PersistentFlags().StringP("consensus", "c", "", "consensus mode")
-	createMinerCmd.PersistentFlags().StringP("remoteIP", "r", "127.0.0.1", "IP address accessible to remote nodes - used akin to an ID")
+	createRelayCmd.PersistentFlags().StringP("remoteIP", "r", "127.0.0.1", "IP address accessible to remote nodes - used akin to an ID")
 	viper.BindPFlag("rinitNode", createRelayCmd.PersistentFlags().Lookup("initNode"))
 	viper.BindPFlag("rconsensus", createRelayCmd.PersistentFlags().Lookup("consensus"))
-	viper.BindPFlag("rremoteIP", createMinerCmd.PersistentFlags().Lookup("remoteIP"))
+	viper.BindPFlag("rremoteIP", createRelayCmd.PersistentFlags().Lookup("remoteIP"))
 	rootCmd.AddCommand(createRelayCmd)
 }
 
