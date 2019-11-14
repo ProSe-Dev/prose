@@ -1,6 +1,9 @@
 package gossip
 
 import (
+	"log"
+	"net"
+	"os"
 	"sort"
 	"strings"
 
@@ -45,4 +48,32 @@ func Broadcast(client *skademlia.Client, sendMessage func(*grpc.ClientConn)) {
 	for _, conn := range m {
 		sendMessage(conn)
 	}
+}
+
+// GetLocalIP returns the local IPv4 address by first trying the preferred outbound,
+// and then any available IPv4 and lastly if nothing is found returns 127.0.0.1
+func GetLocalIP() string {
+	conn, err := net.Dial("udp", "8.8.8.8:80")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer conn.Close()
+
+	localAddr := conn.LocalAddr().(*net.UDPAddr)
+	ipv4 := localAddr.IP.To4()
+	if ipv4 != nil {
+		return ipv4.String()
+	}
+
+	// any IP address
+	host, _ := os.Hostname()
+	addrs, _ := net.LookupIP(host)
+	for _, addr := range addrs {
+		if ipv4 := addr.To4(); ipv4 != nil {
+			return ipv4.String()
+		}
+	}
+
+	// couldn't find anything
+	return "127.0.0.1"
 }
