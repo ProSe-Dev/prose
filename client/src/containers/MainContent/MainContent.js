@@ -1,6 +1,7 @@
 import React from 'react';
-import { Switch, Route } from "react-router-dom";
+import { Switch, Route } from 'react-router-dom';
 import './MainContent.css';
+import HomePage from './pages/HomePage/HomePage';
 
 function MainContent() {
   return (
@@ -26,9 +27,7 @@ function MainContent() {
 
         { /* load main page by default if none of the previous routes matched */ }
         <Route path="/">
-          <div>
-            this is the home page :)
-          </div>
+          <HomePage />
         </Route>
       </Switch>
     </div>
