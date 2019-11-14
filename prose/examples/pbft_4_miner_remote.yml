@@ -26,7 +26,7 @@ windows:
         - ./prose mine 3001 -i ${SERVER_1}:3000 -r ${SERVER_2} |& tee log/2.log
     - shell_command:           # pane no. 3
         - printf '\033]2;%s\033\\' '[M]localhost:3002'
-        - sleep 6
+        - sleep 5
         - scp vars ${SERVER_1_USER}@${SERVER_1}:/tmp
         - ssh ${SERVER_1_USER}@${SERVER_1}
         - . /tmp/vars

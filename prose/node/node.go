@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"strconv"
+	"strings"
 
 	"github.com/ProSe-Dev/prose/prose/consensus"
 	"github.com/ProSe-Dev/prose/prose/gossip"
@@ -100,7 +101,20 @@ func NewNode(port uint16, initNode string, remoteIP string, consensusMode consen
 		}
 		log.Printf("Dialed %s", initNode)
 		node.Client.Bootstrap()
-		log.Printf("Bootstrapped with network: %s", gossip.GetNetwork(node.Client))
+		network := gossip.GetNetwork(node.Client)
+		seenNodeSet := map[string]struct{}{strings.Split(gossip.NormalizeLocalhost(initNode), ":")[0]: struct{}{}}
+		for _, n := range network {
+			ip := strings.Split(n, ":")[0]
+			if _, ok := seenNodeSet[ip]; ok {
+				continue
+			}
+			node.Client.Dial(n)
+			log.Printf("Dialed %s", n)
+			seenNodeSet[ip] = struct{}{}
+		}
+		node.Client.Bootstrap()
+		network = gossip.GetNetwork(node.Client)
+		log.Printf("Bootstrapped with network: %s", network)
 	}
 	node.Server = node.Client.Listen()
 	proto.RegisterBlockchainServer(node.Server, node)
