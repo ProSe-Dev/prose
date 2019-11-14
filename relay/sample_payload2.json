@@ -1,0 +1,7 @@
+{
+    "Author": "Foo Bar",
+    "CommitHash": "8784775b29049977bc6f662d950cbb0d1fcc4817",
+    "FileHashes": {
+        "f10e2821bbbea527ea02200352313bc059445190" : "secret.txt"
+    }
+}

@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package proto;
+
+import "proto/blockchain.proto";
+
+service PBFT {
+	rpc PrePrepare(PrePrepareRequest) returns (Ack) {}
+    rpc Prepare(PrepareRequest) returns (Ack) {}
+    rpc Commit(CommitRequest) returns (Ack) {}
+}
+
+message Ack {
+    bool received = 1;
+}
+
+message PrePrepareRequest {
+    Block block = 1;
+	int64 blockNumber = 2;
+	int64 viewNumber = 3;
+	string leaderID = 4;
+}
+
+message PrepareRequest {
+    string blockHash = 1;
+	int64 blockNumber = 2;
+	int64 viewNumber = 3;
+	string nodeID = 4;
+}
+
+message CommitRequest {
+    string blockHash = 1;
+	int64 blockNumber = 2;
+	int64 viewNumber = 3;
+	string nodeID = 4;
+}
