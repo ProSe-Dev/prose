@@ -88,8 +88,9 @@ func NewNode(port uint16, initNode string, isMiner bool, consensusMode consensus
 	if err != nil {
 		return
 	}
-	log.Printf("Local IP: %s", gossip.GetLocalIP())
-	addr := net.JoinHostPort(gossip.GetLocalIP(), strconv.Itoa(listener.Addr().(*net.TCPAddr).Port))
+	// TODO: we may need to figure out our local IP address (ie. not localhost) if we want to allow for
+	// inter-server communication (the issue is that s/kademlia uses this addr as ID for remote verification)
+	addr := net.JoinHostPort("127.0.0.1", strconv.Itoa(listener.Addr().(*net.TCPAddr).Port))
 	node.Client = skademlia.NewClient(addr, keys, skademlia.WithC1(1), skademlia.WithC2(1))
 	node.Client.SetCredentials(noise.NewCredentials(addr, handshake.NewECDH(), cipher.NewAEAD(), node.Client.Protocol()))
 
