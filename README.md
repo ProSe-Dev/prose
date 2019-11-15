@@ -8,7 +8,7 @@ See the latest ProSe client binaries under Releases.
 
 TODO: provide instructions for client usage
 
-## Hosting a ProSe blockchain
+## Blockchain hosting
 See the latest ProSe CLI binary under Releases.
 
 Sample cluster configurations can be found in the examples directory at `prose/examples`.
