@@ -4,12 +4,12 @@ ProSe is a prototype blockchain for online intellectual property protection. As 
 ProSe is named as wordplay on "Pro Se", which is to represent oneself in court and "prose" being a mundane, prosaic application for its apparent simplicity to users. 
 
 ## Usage
-See the latest ProSe client binaries under Releases.
+See the latest ProSe client binaries under [releases](https://github.com/ProSe-Dev/prose/releases).
 
-TODO: provide instructions for client usage
+*TODO*: provide instructions for client usage
 
 ## Blockchain hosting
-See the latest ProSe CLI binary under Releases.
+See the latest ProSe CLI binary under [releases](https://github.com/ProSe-Dev/prose/releases).
 
 Sample cluster configurations can be found in the examples directory at `prose/examples`.
 
