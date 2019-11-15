@@ -1,16 +1,16 @@
 # ProSe
-
-## Overview
 ProSe is a prototype blockchain for online intellectual property protection. As a service, it provides an untamperable recording of idea ownership as files are modified over time. Ownership can be easily retrieved using verified timestamps. Additionally, ProSe does not receive or store actual file content; only [file hashes](https://en.wikipedia.org/wiki/Hash_function). We integrate with Git for local file versioning so that file changes are stored and versioned, though no knowledge of Git is required. 
 
 ProSe is named as wordplay on "Pro Se", which is to represent oneself in court and "prose" being a mundane, prosaic application for its apparent simplicity to users. 
 
 ## Usage
 See the latest ProSe client binaries under Releases.
+
 TODO: provide instructions for client usage
 
 ## Hosting a ProSe blockchain
 See the latest ProSe CLI binary under Releases.
+
 Sample cluster configurations can be found in the examples directory at `prose/examples`.
 
 ## Contributing
