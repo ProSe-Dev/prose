@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"strconv"
+	"strings"
 
 	"github.com/ProSe-Dev/prose/prose/consensus"
 	"github.com/ProSe-Dev/prose/prose/gossip"
@@ -75,7 +76,7 @@ func (n *Node) GetBlockchain(ctx context.Context, in *proto.GetBlockchainRequest
 }
 
 // NewNode creates a new Node that is ready to listen
-func NewNode(port uint16, initNode string, isMiner bool, consensusMode consensus.Mode) (node *Node, err error) {
+func NewNode(port uint16, initNode string, remoteIP string, consensusMode consensus.Mode) (node *Node, err error) {
 	node = &Node{
 		Blockchain:   mining.NewBlockchain(),
 		StateMachine: statemachine.NewStateMachine(StateNascent),
@@ -90,7 +91,7 @@ func NewNode(port uint16, initNode string, isMiner bool, consensusMode consensus
 	}
 	// TODO: we may need to figure out our local IP address (ie. not localhost) if we want to allow for
 	// inter-server communication (the issue is that s/kademlia uses this addr as ID for remote verification)
-	addr := net.JoinHostPort("127.0.0.1", strconv.Itoa(listener.Addr().(*net.TCPAddr).Port))
+	addr := net.JoinHostPort(remoteIP, strconv.Itoa(listener.Addr().(*net.TCPAddr).Port))
 	node.Client = skademlia.NewClient(addr, keys, skademlia.WithC1(1), skademlia.WithC2(1))
 	node.Client.SetCredentials(noise.NewCredentials(addr, handshake.NewECDH(), cipher.NewAEAD(), node.Client.Protocol()))
 
@@ -100,7 +101,20 @@ func NewNode(port uint16, initNode string, isMiner bool, consensusMode consensus
 		}
 		log.Printf("Dialed %s", initNode)
 		node.Client.Bootstrap()
-		log.Printf("Bootstrapped with network: %s", gossip.GetNetwork(node.Client))
+		network := gossip.GetNetwork(node.Client)
+		seenNodeSet := map[string]struct{}{strings.Split(gossip.NormalizeLocalhost(initNode), ":")[0]: struct{}{}}
+		for _, n := range network {
+			ip := strings.Split(n, ":")[0]
+			if _, ok := seenNodeSet[ip]; ok {
+				continue
+			}
+			node.Client.Dial(n)
+			log.Printf("Dialed %s", n)
+			seenNodeSet[ip] = struct{}{}
+		}
+		node.Client.Bootstrap()
+		network = gossip.GetNetwork(node.Client)
+		log.Printf("Bootstrapped with network: %s", network)
 	}
 	node.Server = node.Client.Listen()
 	proto.RegisterBlockchainServer(node.Server, node)

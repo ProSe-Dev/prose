@@ -117,6 +117,8 @@ func (p *PBFTConsensus) NewRound() {
 				PrevBlockHash: b.PrevBlockHash,
 				Data: &proto.BlockData{
 					Author:     b.Data.Author,
+					Identity:   b.Data.Identity,
+					ProjectID:  b.Data.ProjectID,
 					CommitHash: b.Data.CommitHash,
 					Timestamp:  b.Data.Timestamp,
 					FileHashes: b.Data.FileHashes,
@@ -170,6 +172,8 @@ func (p *PBFTConsensus) PrePrepare(ctx context.Context, in *proto.PrePrepareRequ
 		block := mining.Block{
 			Data: mining.BlockData{
 				Author:     in.Block.Data.Author,
+				Identity:   in.Block.Data.Identity,
+				ProjectID:  in.Block.Data.ProjectID,
 				CommitHash: in.Block.Data.CommitHash,
 				Timestamp:  in.Block.Data.Timestamp,
 				FileHashes: in.Block.Data.FileHashes,

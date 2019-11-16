@@ -1,0 +1,59 @@
+session_name: 4 miner PBFT remote
+windows:
+- window_name: dev window
+  layout: tiled
+  panes: # TODO: the timing here is actually wrong, and it'll sometimes fail because of scheduling
+    - shell_command:           # pane no. 1
+        - printf '\033]2;%s\033\\' "[M]${SERVER_1}:3000"
+        - scp vars ${SERVER_1_USER}@${SERVER_1}:/tmp
+        - ssh ${SERVER_1_USER}@${SERVER_1}
+        - . /tmp/vars
+        - cdf
+        - cd prose
+        - ./gen-protoc.sh
+        - go build
+        - ./prose mine 3000 -r ${SERVER_1} |& tee log/1.log 
+    - shell_command:           # pane no. 2
+        - printf '\033]2;%s\033\\' "[M]${SERVER_2}:3001"
+        - sleep 5
+        - scp vars ${SERVER_2_USER}@${SERVER_2}:/tmp
+        - ssh ${SERVER_2_USER}@${SERVER_2}
+        - . /tmp/vars
+        - cdf
+        - cd prose
+        - ./gen-protoc.sh
+        - go build
+        - ./prose mine 3001 -i ${SERVER_1}:3000 -r ${SERVER_2} |& tee log/2.log
+    - shell_command:           # pane no. 3
+        - printf '\033]2;%s\033\\' '[M]localhost:3002'
+        - sleep 5
+        - scp vars ${SERVER_1_USER}@${SERVER_1}:/tmp
+        - ssh ${SERVER_1_USER}@${SERVER_1}
+        - . /tmp/vars
+        - cdf
+        - cd prose
+        - ./gen-protoc.sh
+        - go build
+        - ./prose mine 3002 -i ${SERVER_1}:3000 -r ${SERVER_1} |& tee log/3.log
+    - shell_command:           # pane no. 4
+        - printf '\033]2;%s\033\\' '[M]localhost:3003'
+        - sleep 5
+        - scp vars ${SERVER_2_USER}@${SERVER_2}:/tmp
+        - ssh ${SERVER_2_USER}@${SERVER_2}
+        - . /tmp/vars
+        - cdf
+        - cd prose
+        - ./gen-protoc.sh
+        - go build
+        - ./prose mine 3003 -i ${SERVER_1}:3000 -r ${SERVER_2} |& tee log/4.log
+    - shell_command:           # pane no. 5
+        - printf '\033]2;%s\033\\' '[R]3004/8080'
+        - sleep 8
+        - scp vars ${SERVER_2_USER}@${SERVER_2}:/tmp
+        - ssh ${SERVER_2_USER}@${SERVER_2}
+        - . /tmp/vars
+        - cdf
+        - cd relay
+        - go build
+        - ./relay start 8080 3004 -i ${SERVER_1}:3000 -r ${SERVER_2} |& tee ../prose/log/5.log
+

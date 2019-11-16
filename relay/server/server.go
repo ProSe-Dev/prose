@@ -14,16 +14,26 @@ import (
 	"github.com/ProSe-Dev/prose/prose/node"
 	"github.com/ProSe-Dev/prose/prose/proto"
 	"github.com/gorilla/mux"
+	"github.com/mitchellh/hashstructure"
 	"google.golang.org/grpc"
 )
 
 var (
-	relayNode *node.Node
+	relayNode        *node.Node
+	projectMap       = map[uint64][]*mining.Block{}
+	fileToProjectMap = map[string]map[uint64]struct{}{}
 )
+
+type projectKey struct {
+	identity  string
+	projectID string
+}
 
 // Message body expected to be received from client
 type Message struct {
 	Author     string
+	Identity   string
+	ProjectID  string
 	CommitHash string
 	FileHashes map[string]string
 }
@@ -48,7 +58,8 @@ func run(port uint64) error {
 func makeMuxRouter() http.Handler {
 	muxRouter := mux.NewRouter()
 	muxRouter.HandleFunc("/", handleGetBlockchain).Methods("GET")
-	muxRouter.HandleFunc("/", handleWriteBlock).Methods("POST")
+	muxRouter.HandleFunc("/search", handleSearchBlockchain).Methods("GET")
+	muxRouter.HandleFunc("/transaction", handleWriteBlock).Methods("POST")
 	// curl localhost:8080 -X POST -d @sample_payload.json
 	// curl localhost:8080 -X POST -d @C:\Users\Alison\go\src\github.com\ProSe-Dev\prose\relay\sample_payload.json
 	return muxRouter
@@ -61,6 +72,40 @@ func handleGetBlockchain(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	io.WriteString(w, string(bytes))
+}
+
+func handleSearchBlockchain(w http.ResponseWriter, r *http.Request) {
+	fileHashes, ok := r.URL.Query()["filehash"]
+
+	if !ok || len(fileHashes[0]) < 1 {
+		respondWithJSON(w, r, http.StatusBadRequest, r.Body)
+		return
+	}
+
+	fileHash := fileHashes[0]
+	projKeySet, ok := fileToProjectMap[fileHash]
+	projList := [][]*mining.Block{}
+	if !ok {
+		bytes, err := json.MarshalIndent(projList, "", "  ")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		io.WriteString(w, string(bytes))
+		return
+	}
+
+	for projKey := range projKeySet {
+		projList = append(projList, projectMap[projKey])
+	}
+
+	bytes, err := json.MarshalIndent(projList, "", "  ")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	io.WriteString(w, string(bytes))
+	return
 }
 
 func handleWriteBlock(w http.ResponseWriter, r *http.Request) {
@@ -76,6 +121,8 @@ func handleWriteBlock(w http.ResponseWriter, r *http.Request) {
 	gossip.Broadcast(relayNode.Client, func(conn *grpc.ClientConn) {
 		m := &proto.AddBlockRequest{Data: &proto.BlockData{
 			Author:     m.Author,
+			Identity:   m.Identity,
+			ProjectID:  m.ProjectID,
 			CommitHash: m.CommitHash,
 			FileHashes: m.FileHashes,
 			Timestamp:  timestamp,
@@ -90,6 +137,8 @@ func handleWriteBlock(w http.ResponseWriter, r *http.Request) {
 	// the relay node needs to participate too!
 	mining.EnqueueTransactionData(mining.BlockData{
 		Author:     m.Author,
+		Identity:   m.Identity,
+		ProjectID:  m.ProjectID,
 		CommitHash: m.CommitHash,
 		FileHashes: m.FileHashes,
 		Timestamp:  timestamp,
@@ -115,5 +164,46 @@ func respondWithJSON(w http.ResponseWriter, r *http.Request, code int, payload i
 // Start begins the relay server using the specified relay node
 func Start(n *node.Node, port uint64) {
 	relayNode = n
+	go updateMaps()
 	log.Fatal(run(port)) // web server logic
+}
+
+func updateMaps() {
+	index := len(relayNode.Blockchain.Blocks)
+	for _, block := range relayNode.Blockchain.Blocks {
+		updateMapWithBlock(block)
+	}
+
+	for {
+		select {
+		case <-mining.BlockProcessedChan:
+			for index < len(relayNode.Blockchain.Blocks) {
+				updateMapWithBlock(relayNode.Blockchain.Blocks[index-1])
+				index++
+			}
+		}
+	}
+}
+
+func updateMapWithBlock(block *mining.Block) {
+	key := projectKey{
+		identity:  block.Data.Identity,
+		projectID: block.Data.ProjectID,
+	}
+	hash, _ := hashstructure.Hash(key, nil)
+	projectVersions, ok := projectMap[hash]
+	if ok {
+		projectVersions = append(projectVersions, block)
+	} else {
+		projectMap[hash] = []*mining.Block{block}
+	}
+
+	for _, fileHash := range block.Data.FileHashes {
+		projectKeySet, ok := fileToProjectMap[fileHash]
+		if ok {
+			projectKeySet[hash] = struct{}{}
+		} else {
+			fileToProjectMap[fileHash] = map[uint64]struct{}{hash: struct{}{}}
+		}
+	}
 }

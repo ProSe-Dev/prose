@@ -15,9 +15,10 @@ import (
 func init() {
 	createRelayCmd.PersistentFlags().StringP("initNode", "i", "", "initialization node")
 	createRelayCmd.PersistentFlags().StringP("consensus", "c", "", "consensus mode")
-
+	createRelayCmd.PersistentFlags().StringP("remoteIP", "r", "127.0.0.1", "IP address accessible to remote nodes - used akin to an ID")
 	viper.BindPFlag("rinitNode", createRelayCmd.PersistentFlags().Lookup("initNode"))
 	viper.BindPFlag("rconsensus", createRelayCmd.PersistentFlags().Lookup("consensus"))
+	viper.BindPFlag("rremoteIP", createRelayCmd.PersistentFlags().Lookup("remoteIP"))
 	rootCmd.AddCommand(createRelayCmd)
 }
 
@@ -41,11 +42,12 @@ var createRelayCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 		initializationNode := viper.GetString("rinitNode")
-		c := viper.GetString("mconsensus")
+		c := viper.GetString("rconsensus")
 		if c != "" {
 			consensusMode = consensus.Mode(c)
 		}
-		if n, err = node.NewNode(uint16(rport), initializationNode, false, consensusMode); err != nil {
+		remoteIP := viper.GetString("rremoteIP")
+		if n, err = node.NewNode(uint16(rport), initializationNode, remoteIP, consensusMode); err != nil {
 			log.Fatal(err)
 		}
 		log.Print("Initialized relay node")

@@ -20,12 +20,17 @@ const (
 
 var (
 	latestDataQueue = queue.New(0)
+
+	// BlockProcessedChan is a channel for indicating blocks have been processed
+	BlockProcessedChan = make(chan int)
 )
 
 // BlockData is the data for a block
 type BlockData struct {
 	Timestamp  string
 	Author     string
+	Identity   string
+	ProjectID  string
 	CommitHash string
 	FileHashes map[string]string
 }
@@ -85,6 +90,10 @@ func (bc *Blockchain) Commit() (err error) {
 	}
 	bc.Blocks = append(bc.Blocks, bc.StagedBlock)
 	bc.StagedBlock = nil
+	select {
+	case BlockProcessedChan <- 1:
+	default:
+	}
 	return
 }
 
