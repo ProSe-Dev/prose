@@ -1,5 +1,7 @@
 {
-    "Author": "Fizz Buzz",
+    "Author": "some-public-key",
+    "Identity": "my@email.com",
+    "ProjectID": "some-unique-uuid",
     "CommitHash": "f040627201ccdc49e0f6eb7e352ef94d4117bbd7",
     "FileHashes": {
         "ad488703f13c05b77140e22de6f782ccf16fd271ec4df4102f108311f23db79b" : "File1",
