@@ -9,7 +9,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/golang-collections/go-datastructures/queue"
+	"github.com/Workiva/go-datastructures/queue"
 	"github.com/mitchellh/hashstructure"
 )
 
@@ -110,13 +110,23 @@ func NewBlockchain() *Blockchain {
 	return &Blockchain{Blocks: []*Block{NewGenesisBlock()}}
 }
 
-// GetLatestTransactionData returns the latest transaction data
-func GetLatestTransactionData() (data BlockData, err error) {
+// PopLatestTransactionData returns the latest transaction data
+func PopLatestTransactionData() (data BlockData, err error) {
 	var val []interface{}
 	if val, err = latestDataQueue.Get(1); err != nil {
 		return
 	}
 	data = val[0].(BlockData)
+	return
+}
+
+// PeekLatestTransactionData returns the latest transaction data
+func PeekLatestTransactionData() (data BlockData, err error) {
+	var val interface{}
+	if val, err = latestDataQueue.Peek(); err != nil {
+		return
+	}
+	data = val.(BlockData)
 	return
 }
 
