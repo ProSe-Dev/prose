@@ -1,0 +1,72 @@
+.dot {
+    height: 25px;
+    width: 25px;
+    border-radius: 50%;
+    display: inline-block;
+    border: 3px solid;
+    margin-top: 0px;
+  }
+
+.dot.red {
+    background-color: #E84E4E;
+}
+
+.dot.green{
+    background-color: #78D881;
+}
+.project-title{
+    
+}
+.main-container{
+    background-color: #DAD9D9;
+    height: 100%;
+}
+
+.inner-container{
+    padding-left:30px;
+    padding-right:30px;
+}
+.summary{
+    background-color: #FFFFFF;
+    margin-bottom: -5px;
+}
+
+.files{
+    background-color: #FFFFFF;
+    margin-bottom: 10px;
+}
+
+.certificates{
+    background-color: #F7E790;
+}
+.cert-button{
+    float: right;
+    margin-top:25px;
+}
+
+.cert-table{
+    padding-left: 30px;
+    padding-right: 30px;
+    padding-bottom: 30px;
+}
+
+.files-table{
+    padding-left: 30px;
+    padding-right: 30px;
+    padding-bottom: 30px;
+}
+.title-container{
+    margin-bottom:100px
+}
+
+.shadow{
+    box-shadow: 5px 10px #c70606;
+}
+
+.file-row-dark{
+    background-color: #A9A9A9;
+}
+
+.file-row-light{
+    background-color: #E7E7E7;
+}

@@ -2,6 +2,7 @@ import React from 'react';
 import { Switch, Route } from 'react-router-dom';
 import './MainContent.css';
 import HomePage from './pages/HomePage/HomePage';
+import ProjectPage from './pages/ProjectPage/ProjectPage';
 
 function MainContent() {
   return (
@@ -13,9 +14,7 @@ function MainContent() {
 
         { /* route to a project page, the project that opens should be dependant on the params that's passed in */ }
         <Route path="/project">
-          <div>
-            this is the project page
-          </div>
+          <ProjectPage />
         </Route>
 
         { /* route to page for file searching on the blockchain */ }
@@ -29,6 +28,7 @@ function MainContent() {
         <Route path="/">
           <HomePage />
         </Route>
+
       </Switch>
     </div>
   );
