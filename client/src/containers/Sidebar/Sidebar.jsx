@@ -7,12 +7,18 @@ class Sidebar extends React.Component{
     const projectList = createProjectList("x");
     return(
       <div class="Sidebar">
-        <div>
-          <h3>ProSe</h3>
+        <h3>ProSe</h3>
+        <div class="projects">
           <p class ="side-titles">Existing Projects</p>
           {projectList}
         </div>
-  
+
+        <div>
+          <Link 
+            style={{ textDecoration: 'none', color: 'white' }} 
+            to="/file-search"> Add New Project</Link>
+        </div>
+
         <div>
           <Link 
             style={{ textDecoration: 'none', color: 'white' }} 
@@ -40,8 +46,15 @@ function createProjectList(something){
   }
   var example_list = [{
     name: "VPN"
-  }];
+  },
+  {
+    name: "fake project 2"
+  },
+  {
+    name: "fake project 3"
+  }
+];
 
-  var projectsList = example_list.map((proj)=>getProject(proj.name));
+  var projectsList = example_list.map((project)=>getProject(project.name));
   return projectsList;
 }
