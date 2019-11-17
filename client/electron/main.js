@@ -1,6 +1,7 @@
-const { app, BrowserWindow } = require('electron')
+const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const url = require('url');
+const project = require('./project.js');
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -42,10 +43,15 @@ function createWindow () {
   })
 }
 
+function onReady() {
+  createWindow();
+  project.bootstrap(project);
+}
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on('ready', createWindow)
+app.on('ready', onReady)
 
 // Quit when all windows are closed.
 app.on('window-all-closed', () => {
