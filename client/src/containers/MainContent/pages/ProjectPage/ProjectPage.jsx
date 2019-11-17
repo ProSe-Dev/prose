@@ -4,24 +4,23 @@ import './ProjectPage.css'
 function Title(props){
   function Dot(status){
     if (status.synced)
-      return (<span class="green dot"></span>)
+      return (<span class="green dot"></span>);
     else
-      return (<span class="red dot"></span>)
+      return (<span class="red dot"></span>);
   }
   return(
-    <div>
-      <span>
-        <span class="display-3 font-weight-bold"> {props.ProjectName} </span>
-        <Dot synced = {props.CertStatus}/>
-      </span>
-    </div>
+    <span class="title-container">
+      <span class="display-3 font-weight-bold project-title"> {props.ProjectName} </span>
+      <Dot synced = {props.CertStatus}/>
+      <button class="btn btn-primary btn-lg cert-button">New Certificate</button>
+    </span>
   )
 }
 
 class Files extends React.Component{
   render(){
     return(
-      <div>
+      <div class="files">
         <div class="display-4">
           Files
         </div>
@@ -62,13 +61,15 @@ class Files extends React.Component{
 }
 
 class Certificates extends React.Component {
+  
+
   render(){
     return(
-      <div>
+      <div class="certificates">
         <div class="display-4">
           Certificates
         </div>
-        <table class="table">
+        <table class="table cert-table">
         <thead>
           <tr>
             <th scope="col">#</th>
@@ -96,9 +97,9 @@ class Certificates extends React.Component {
             <td>the Bird</td>
             <td>@twitter</td>
           </tr>
-        </tbody>
-      </table>
-      </div>
+          </tbody>
+        </table>
+    </div>
       
     )
   }
@@ -107,7 +108,7 @@ class Certificates extends React.Component {
 class Summary extends React.Component {
   render(){
     return(
-      <div>
+      <div class ="summary">
         <div class="display-4">
             Summary
         </div>
@@ -121,19 +122,23 @@ class ProjectPage extends React.Component {
   render() {
     return (
       <div class ="main-container">
-        <Title
-          ProjectName = {"VPN"}
-          CertStatus = {true}
-        />
-        <Summary 
-          description = {"Something about this project"}
-        />
-        <Files
-          FileList = {"temp"}
-        />
-        <Certificates
-          CertList = {"temp"}
-        />
+        <div class ="inner-container">
+          <span>
+            <Title
+              ProjectName = {"VPN"}
+              CertStatus = {true}
+            />
+          </span>
+          <Summary 
+            description = {"Something about this project"}
+          />
+          <Files
+            FileList = {"temp"}
+          />
+          <Certificates
+            CertList = {"temp"}
+          />
+        </div>
       </div>
     );
   }

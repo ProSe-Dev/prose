@@ -3,7 +3,8 @@
     width: 25px;
     border-radius: 50%;
     display: inline-block;
-    border: 3px solid
+    border: 3px solid;
+    margin-top: 0px;
   }
 
 .dot.red {
@@ -13,7 +14,38 @@
 .dot.green{
     background-color: #78D881;
 }
-
+.project-title{
+    
+}
 .main-container{
     background-color: #DAD9D9;
+}
+
+.inner-container{
+    padding-left:30px;
+    padding-right:30px;
+}
+.summary{
+    background-color: #FFFFFF;
+}
+
+.files{
+    background-color: #FFFFFF;
+}
+
+.certificates{
+    background-color: #F7E790;
+}
+.cert-button{
+    float: right;
+    margin-top:25px;
+}
+
+.cert-table{
+    padding-left: 30px;
+    padding-right: 30px;
+}
+
+.title-container{
+    margin-bottom:100px
 }
