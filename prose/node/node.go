@@ -100,6 +100,9 @@ func (n *Node) FastForward(ctx context.Context, in *proto.FastForwardRequest) (*
 	for idx := range n.Blockchain.Blocks {
 		blockOurs = n.Blockchain.Blocks[idx]
 		if idx >= len(in.Blocks) {
+			if divergentIndex == -1 {
+				divergentIndex = int64(idx)
+			}
 			resp.Blocks = append(resp.Blocks, &proto.Block{
 				PrevBlockHash: blockOurs.PrevBlockHash,
 				Data: &proto.BlockData{
@@ -157,7 +160,9 @@ func (n *Node) FastForwardToInitNode(conn *grpc.ClientConn) error {
 		return err
 	}
 	log.Printf("[%s] received sync response: %v\n", conn.Target(), resp)
-	n.Consensus.UpdateInfo(resp.CInfo)
+	if resp.CInfo.ConsensusMode == string(n.ConsensusMode) {
+		n.Consensus.UpdateInfo(resp.CInfo)
+	}
 	if resp.DivergentIndex == -1 {
 		return nil
 	}

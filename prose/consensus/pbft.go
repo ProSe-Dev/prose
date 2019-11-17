@@ -48,7 +48,7 @@ type MessageKey struct {
 }
 
 // AddMessageToTally adds a unique combination to the result tally set
-func (p *PBFTConsensus) AddMessageToTally(nodeID string, key MessageKey, tally *Tally) {
+func (p *PBFTConsensus) AddMessageToTally(nodeID string, key MessageKey, tally *Tally) map[string]struct{} {
 	tally.Lock()
 	defer tally.Unlock()
 	p.StateMachine.Printf(
@@ -66,6 +66,7 @@ func (p *PBFTConsensus) AddMessageToTally(nodeID string, key MessageKey, tally *
 		tally.Map[hash] = map[string]struct{}{}
 	}
 	tally.Map[hash][nodeID] = struct{}{}
+	return tally.Map[hash]
 }
 
 // ResetMessageTally clears all entries in the result tally for the next round
@@ -157,7 +158,7 @@ func (p *PBFTConsensus) NewRound() {
 	// so it instead sends out the prepare message now
 	gossip.Broadcast(p.Client, func(conn *grpc.ClientConn) {
 		m := &proto.PrepareRequest{
-			BlockHash:   b.PrevBlockHash,
+			BlockHash:   b.Hash,
 			BlockNumber: int64(len(p.Blockchain.Blocks)),
 			ViewNumber:  p.ViewNumber,
 			NodeID:      gossip.GetNodeID(p.Client),
@@ -175,11 +176,11 @@ func (p *PBFTConsensus) NewRound() {
 // PrePrepare stages the generated block
 func (p *PBFTConsensus) PrePrepare(ctx context.Context, in *proto.PrePrepareRequest) (a *proto.Ack, err error) {
 	p.StateMachine.Printf("[IN] Received pre-prepare message from %s", in.LeaderID)
-	if in.ViewNumber != p.ViewNumber {
+	if in.ViewNumber < p.ViewNumber {
 		a = &proto.Ack{
 			Received: false,
 		}
-		log.Printf("[PBFT] ignoring bad view number: %d vs %d - possibly an old message", in.ViewNumber, p.ViewNumber)
+		log.Printf("[PBFT] ignoring bad view number: %d < %d - possibly an old message", in.ViewNumber, p.ViewNumber)
 		return
 	}
 
@@ -232,29 +233,31 @@ func (p *PBFTConsensus) PrePrepare(ctx context.Context, in *proto.PrePrepareRequ
 // Prepare requires 2*f+1 responses
 func (p *PBFTConsensus) Prepare(ctx context.Context, in *proto.PrepareRequest) (a *proto.Ack, err error) {
 	p.StateMachine.Printf("[IN] Received prepare message from %s", in.NodeID)
-	if in.ViewNumber != p.ViewNumber {
+	if in.ViewNumber < p.ViewNumber {
 		a = &proto.Ack{
 			Received: false,
 		}
-		log.Printf("[PBFT] ignoring bad view number: %d vs %d - possibly an old message", in.ViewNumber, p.ViewNumber)
+		log.Printf("[PBFT] ignoring bad view number: %d < %d - possibly an old message", in.ViewNumber, p.ViewNumber)
 		return
 	}
 
 	go func() {
 		p.StateMachine.EnforceWait(statePreparing)
-		p.AddMessageToTally(
+		key := MessageKey{
+			BlockID:    in.BlockNumber,
+			BlockHash:  in.BlockHash,
+			ViewNumber: in.ViewNumber}
+		nodeIDMap := p.AddMessageToTally(
 			gossip.NormalizeLocalhost(in.NodeID),
-			MessageKey{
-				BlockID:    in.BlockNumber,
-				BlockHash:  in.BlockHash,
-				ViewNumber: in.ViewNumber}, p.PrepareResultTally)
-		remaining := 2*p.FaultToleranceConstant + 1 - len(p.PrepareResultTally.Map)
+			key,
+			p.PrepareResultTally)
+		remaining := 2*p.FaultToleranceConstant + 1 - len(nodeIDMap)
 		if remaining < 0 {
 			p.StateMachine.Printf("[PBFT] got a prepare message from %s, but we're already done preparing", in.NodeID)
 			return
 		}
 		if remaining > 0 {
-			p.StateMachine.Printf("[PBFT] got a prepare message from %s, need %d more", in.NodeID, remaining)
+			p.StateMachine.Printf("[PBFT] got a prepare message with key %v from %s, need %d more", key, in.NodeID, remaining)
 			return
 		}
 		p.StateMachine.Printf("[PBFT] got last prepare message from %s!", in.NodeID)
@@ -283,29 +286,31 @@ func (p *PBFTConsensus) Prepare(ctx context.Context, in *proto.PrepareRequest) (
 // Commit requires 2*f+1 responses
 func (p *PBFTConsensus) Commit(ctx context.Context, in *proto.CommitRequest) (a *proto.Ack, err error) {
 	p.StateMachine.Printf("[IN] Received commit message from %s", in.NodeID)
-	if in.ViewNumber != p.ViewNumber {
+	if in.ViewNumber < p.ViewNumber {
 		a = &proto.Ack{
 			Received: false,
 		}
-		log.Printf("[PBFT] ignoring bad view number: %d vs %d - possibly an old message", in.ViewNumber, p.ViewNumber)
+		log.Printf("[PBFT] ignoring bad view number: %d < %d - possibly an old message", in.ViewNumber, p.ViewNumber)
 		return
 	}
 
 	go func() {
 		p.StateMachine.EnforceWait(stateCommitting)
-		p.AddMessageToTally(
+		key := MessageKey{
+			BlockID:    in.BlockNumber,
+			BlockHash:  in.BlockHash,
+			ViewNumber: in.ViewNumber}
+		nodeIDMap := p.AddMessageToTally(
 			gossip.NormalizeLocalhost(in.NodeID),
-			MessageKey{
-				BlockID:    in.BlockNumber,
-				BlockHash:  in.BlockHash,
-				ViewNumber: in.ViewNumber}, p.CommitResultTally)
-		remaining := 2*p.FaultToleranceConstant + 1 - len(p.CommitResultTally.Map)
+			key,
+			p.CommitResultTally)
+		remaining := 2*p.FaultToleranceConstant + 1 - len(nodeIDMap)
 		if remaining < 0 {
 			p.StateMachine.Printf("[PBFT] got a commit message from %s, but we're already done preparing", in.NodeID)
 			return
 		}
 		if remaining > 0 {
-			p.StateMachine.Printf("[PBFT] got a commit message from %s, need %d more", in.NodeID, remaining)
+			p.StateMachine.Printf("[PBFT] got a commit message with key %v from %s, need %d more", key, in.NodeID, remaining)
 			return
 		}
 		p.StateMachine.Printf("[PBFT] got last commit message from %s!", in.NodeID)
