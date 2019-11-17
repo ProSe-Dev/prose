@@ -32,6 +32,20 @@ func GetStateDebugName(state StateCode) string {
 	return stateCodeDebugNameMap[state]
 }
 
+// GetStateFromDebugName returns the state code for a debug name
+func GetStateFromDebugName(debugName string) (stateCode StateCode, err error) {
+	tempMap := map[string]StateCode{}
+	for k, v := range stateCodeDebugNameMap {
+		tempMap[v] = k
+	}
+	stateCode, ok := tempMap[debugName]
+	if !ok {
+		err = fmt.Errorf("%s is not a valid debugName", debugName)
+		return
+	}
+	return
+}
+
 // SetState updates the current state of a node
 func (s *StateMachine) SetState(newState StateCode) {
 	log.Printf("[STATEMACHINE] set state to %s", GetStateDebugName(newState))

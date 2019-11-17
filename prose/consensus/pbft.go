@@ -25,7 +25,7 @@ var (
 // Tally is a round counter for unique messages
 type Tally struct {
 	sync.Mutex
-	Map map[uint64]struct{}
+	Map map[uint64]map[string]struct{}
 }
 
 // PBFTConsensus is consensus using the Practical Byzantine Fault Tolerance algorithm
@@ -44,25 +44,28 @@ type PBFTConsensus struct {
 type MessageKey struct {
 	BlockID    int64
 	BlockHash  string
-	NodeID     string
 	ViewNumber int64
 }
 
 // AddMessageToTally adds a unique combination to the result tally set
-func (p *PBFTConsensus) AddMessageToTally(key MessageKey, tally *Tally) {
+func (p *PBFTConsensus) AddMessageToTally(nodeID string, key MessageKey, tally *Tally) {
 	tally.Lock()
 	defer tally.Unlock()
 	p.StateMachine.Printf(
-		"[PBFT] Tallying key (BlockId=%d, BlockHash=%s, NodeID=%s, ViewNumber=%d",
+		"[PBFT] Tallying nodeID=%s (BlockID=%d, BlockHash=%s, ViewNumber=%d)",
+		nodeID,
 		key.BlockID,
 		key.BlockHash,
-		key.NodeID,
 		key.ViewNumber)
 	hash, err := hashstructure.Hash(key, nil)
 	if err != nil {
 		panic(err) // should not error here
 	}
-	tally.Map[hash] = struct{}{}
+	_, ok := tally.Map[hash]
+	if !ok {
+		tally.Map[hash] = map[string]struct{}{}
+	}
+	tally.Map[hash][nodeID] = struct{}{}
 }
 
 // ResetMessageTally clears all entries in the result tally for the next round
@@ -70,13 +73,26 @@ func (p *PBFTConsensus) ResetMessageTally(tally *Tally) {
 	tally.Lock()
 	defer tally.Unlock()
 	p.StateMachine.Printf("[PBFT] Reset tally")
-	tally.Map = map[uint64]struct{}{}
+	tally.Map = map[uint64]map[string]struct{}{}
 }
 
 // Start handles adding a new blockchain block
 func (p *PBFTConsensus) Start() {
 	// start the new round in the background
 	go p.NewRound()
+}
+
+// GetInfo returns the consensus info
+func (p *PBFTConsensus) GetInfo() *proto.ConsensusInfo {
+	return &proto.ConsensusInfo{
+		ConsensusMode: string(PBFTMode),
+		Iteration:     p.ViewNumber,
+	}
+}
+
+// UpdateInfo updates consensus info
+func (p *PBFTConsensus) UpdateInfo(info *proto.ConsensusInfo) {
+	p.ViewNumber = info.Iteration
 }
 
 // NewRound starts a new PBFT round
@@ -93,7 +109,7 @@ func (p *PBFTConsensus) NewRound() {
 	p.FaultToleranceConstant = (len(network) - 1) / 3
 	p.StateMachine.Printf("View: %d\nNetwork: %s\nLeader: %s\nf: %d", p.ViewNumber, network, leaderID, p.FaultToleranceConstant)
 
-	transaction, err := mining.GetLatestTransactionData()
+	transaction, err := mining.PeekLatestTransactionData()
 	if err != nil {
 		panic(err)
 	}
@@ -181,7 +197,9 @@ func (p *PBFTConsensus) PrePrepare(ctx context.Context, in *proto.PrePrepareRequ
 			PrevBlockHash: in.Block.PrevBlockHash,
 			Hash:          in.Block.Hash}
 		if err := p.Blockchain.IsBlockValid(&block); err != nil {
-			p.StateMachine.Printf(err.Error()+"\nblock: %v", block)
+			p.StateMachine.Printf(err.Error()+"\nblock: %v\nskipping leader %s", block, in.LeaderID)
+			p.ViewNumber++
+			go p.NewRound()
 			a = &proto.Ack{
 				Received: false,
 			}
@@ -224,11 +242,12 @@ func (p *PBFTConsensus) Prepare(ctx context.Context, in *proto.PrepareRequest) (
 
 	go func() {
 		p.StateMachine.EnforceWait(statePreparing)
-		p.AddMessageToTally(MessageKey{
-			BlockID:    in.BlockNumber,
-			BlockHash:  in.BlockHash,
-			NodeID:     gossip.NormalizeLocalhost(in.NodeID),
-			ViewNumber: in.ViewNumber}, p.PrepareResultTally)
+		p.AddMessageToTally(
+			gossip.NormalizeLocalhost(in.NodeID),
+			MessageKey{
+				BlockID:    in.BlockNumber,
+				BlockHash:  in.BlockHash,
+				ViewNumber: in.ViewNumber}, p.PrepareResultTally)
 		remaining := 2*p.FaultToleranceConstant + 1 - len(p.PrepareResultTally.Map)
 		if remaining < 0 {
 			p.StateMachine.Printf("[PBFT] got a prepare message from %s, but we're already done preparing", in.NodeID)
@@ -274,11 +293,12 @@ func (p *PBFTConsensus) Commit(ctx context.Context, in *proto.CommitRequest) (a 
 
 	go func() {
 		p.StateMachine.EnforceWait(stateCommitting)
-		p.AddMessageToTally(MessageKey{
-			BlockID:    in.BlockNumber,
-			BlockHash:  in.BlockHash,
-			NodeID:     gossip.NormalizeLocalhost(in.NodeID),
-			ViewNumber: in.ViewNumber}, p.CommitResultTally)
+		p.AddMessageToTally(
+			gossip.NormalizeLocalhost(in.NodeID),
+			MessageKey{
+				BlockID:    in.BlockNumber,
+				BlockHash:  in.BlockHash,
+				ViewNumber: in.ViewNumber}, p.CommitResultTally)
 		remaining := 2*p.FaultToleranceConstant + 1 - len(p.CommitResultTally.Map)
 		if remaining < 0 {
 			p.StateMachine.Printf("[PBFT] got a commit message from %s, but we're already done preparing", in.NodeID)
@@ -291,6 +311,10 @@ func (p *PBFTConsensus) Commit(ctx context.Context, in *proto.CommitRequest) (a 
 		p.StateMachine.Printf("[PBFT] got last commit message from %s!", in.NodeID)
 		p.StateMachine.Printf("[PBFT] committed block: %v", p.Blockchain.StagedBlock)
 		p.Blockchain.Commit()
+		_, err := mining.PopLatestTransactionData()
+		if err != nil {
+			panic(err)
+		}
 		p.ViewNumber++
 		// make sure we restore the old idle state here
 		p.StateMachine.SetState(p.IdleState)

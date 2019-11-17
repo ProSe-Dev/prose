@@ -1,6 +1,7 @@
 package gossip
 
 import (
+	"fmt"
 	"sort"
 	"strings"
 
@@ -45,4 +46,16 @@ func Broadcast(client *skademlia.Client, sendMessage func(*grpc.ClientConn)) {
 	for _, conn := range m {
 		sendMessage(conn)
 	}
+}
+
+// SendMessage sends a message to a specified target if it exists in the network
+func SendMessage(target string, client *skademlia.Client, sendMessage func(*grpc.ClientConn)) (err error) {
+	m := getUniqueConnectionsMap(client)
+	targetConn, ok := m[target]
+	if !ok {
+		err = fmt.Errorf("%s was not a valid target", target)
+		return
+	}
+	sendMessage(targetConn)
+	return
 }

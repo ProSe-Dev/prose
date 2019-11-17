@@ -25,6 +25,8 @@ const (
 // Consensus is a consensus implementation
 type Consensus interface {
 	Start()
+	GetInfo() *proto.ConsensusInfo
+	UpdateInfo(*proto.ConsensusInfo)
 }
 
 // RegisterConsensusServer registers the server using the desired consensus mode
