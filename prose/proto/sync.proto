@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package proto;
+
+import "proto/blockchain.proto";
+
+service Sync {
+    rpc FastForward(FastForwardRequest) returns (FastForwardResponse) {}
+    rpc GetState(GetStateRequest) returns (GetStateResponse) {}
+    rpc GetNetwork(GetNetworkRequest) returns (GetNetworkResponse) {}
+}
+
+message FastForwardRequest {
+    repeated Block blocks = 1;
+    string consensusMode = 2;
+}
+
+message FastForwardResponse {
+	repeated Block blocks = 1;
+    int64 divergentIndex = 2;
+    ConsensusInfo cInfo = 3;
+}
+
+message ConsensusInfo {
+    string consensusMode = 1;
+    int64 iteration = 2;
+}
+
+message GetStateRequest {
+}
+
+message GetStateResponse {
+    string stateDebugName = 1;
+}
+
+message GetNetworkRequest {
+}
+
+message GetNetworkResponse {
+    repeated string nodeIDs = 1;
+}
