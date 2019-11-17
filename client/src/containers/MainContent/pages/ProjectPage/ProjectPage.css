@@ -19,6 +19,7 @@
 }
 .main-container{
     background-color: #DAD9D9;
+    height: 100%;
 }
 
 .inner-container{
@@ -48,4 +49,8 @@
 
 .title-container{
     margin-bottom:100px
+}
+
+.shadow{
+    box-shadow: 5px 10px #c70606;
 }

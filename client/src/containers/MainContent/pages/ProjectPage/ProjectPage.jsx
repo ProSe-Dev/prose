@@ -20,7 +20,7 @@ function Title(props){
 class Files extends React.Component{
   render(){
     return(
-      <div class="files">
+      <div class="files shadow">
         <div class="display-4">
           Files
         </div>
@@ -65,7 +65,7 @@ class Certificates extends React.Component {
 
   render(){
     return(
-      <div class="certificates">
+      <div class="certificates shadow">
         <div class="display-4">
           Certificates
         </div>
@@ -108,7 +108,7 @@ class Certificates extends React.Component {
 class Summary extends React.Component {
   render(){
     return(
-      <div class ="summary">
+      <div class ="summary shadow">
         <div class="display-4">
             Summary
         </div>
