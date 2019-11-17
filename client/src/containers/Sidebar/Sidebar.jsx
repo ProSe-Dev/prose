@@ -48,10 +48,12 @@ export default Sidebar;
 
 function createProjectList(something){
   function getProject(project_name){
-    return (<Link 
+    return (<div><Link 
       style={{ textDecoration: 'none', color: 'white' }} 
-    to="/project"> > {project_name}</Link>)
+    to="/project"> > {project_name}</Link></div>
+    );
   }
+
   var example_list = [{
     name: "VPN"
   },
