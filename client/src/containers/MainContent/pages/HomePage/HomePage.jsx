@@ -9,10 +9,6 @@ class HomePage extends React.Component {
   render() {
     return (
       <div>
-<<<<<<< HEAD
-        <button type="button" class="btn btn-success">
-          ADD NEW PROJECTX
-=======
         <button 
           type="button"
           className="btn btn-success"
@@ -23,7 +19,6 @@ class HomePage extends React.Component {
           }}
         >
           ADD NEW PROJECT
->>>>>>> 4789d93e0af6fccaa8cf916f1d2bf457208131a6
         </button>
       </div>
     );

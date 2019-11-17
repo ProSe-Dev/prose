@@ -1,3 +1,17 @@
 .Sidebar {
-  background: #ddd
+  background: #515151;
+  width: 200px;
+  font-size: 15px;
+  text-align: left;
+  padding-left:10px;
+  color:white;
+}
+
+.side-titles{
+  font-size: 20px;
+  margin-bottom:0px;
+}
+
+.projects{
+  margin-bottom: 50px;
 }
