@@ -1,4 +1,4 @@
-session_name: 4 miner PBFT remote
+session_name: 5 miner PBFT remote
 windows:
 - window_name: dev window
   layout: tiled
@@ -9,6 +9,7 @@ windows:
         - ssh ${SERVER_1_USER}@${SERVER_1}
         - . /tmp/vars
         - cdf
+        - git pull origin master
         - cd prose
         - ./gen-protoc.sh
         - go build
@@ -20,6 +21,7 @@ windows:
         - ssh ${SERVER_2_USER}@${SERVER_2}
         - . /tmp/vars
         - cdf
+        - git pull origin master
         - cd prose
         - ./gen-protoc.sh
         - go build
@@ -31,6 +33,7 @@ windows:
         - ssh ${SERVER_1_USER}@${SERVER_1}
         - . /tmp/vars
         - cdf
+        - git pull origin master
         - cd prose
         - ./gen-protoc.sh
         - go build
@@ -42,6 +45,7 @@ windows:
         - ssh ${SERVER_2_USER}@${SERVER_2}
         - . /tmp/vars
         - cdf
+        - git pull origin master
         - cd prose
         - ./gen-protoc.sh
         - go build
@@ -53,6 +57,7 @@ windows:
         - ssh ${SERVER_2_USER}@${SERVER_2}
         - . /tmp/vars
         - cdf
+        - git pull origin master
         - cd relay
         - go build
         - ./relay start 8080 3004 -i ${SERVER_1}:3000 -r ${SERVER_2} |& tee ../prose/log/5.log
