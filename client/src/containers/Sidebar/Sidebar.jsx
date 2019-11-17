@@ -1,6 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import './Sidebar.css';
+import { SYNC_CREATE_PROJECT_CH } from 'shared/constants.js';
+const ipc = window.require('electron').ipcRenderer;
 
 class Sidebar extends React.Component{
   render(){
@@ -14,9 +16,15 @@ class Sidebar extends React.Component{
         </div>
 
         <div>
-          <Link 
-            style={{ textDecoration: 'none', color: 'white' }} 
-            to="/file-search"> Add New Project</Link>
+        <button 
+          class="side-add-project"
+          onClick={() => {
+            console.log('button pressed');
+            let result = ipc.sendSync(SYNC_CREATE_PROJECT_CH, 'testproject');
+            console.log(result);
+          }}
+        >Add New Project </button>
+      
         </div>
 
         <div>
