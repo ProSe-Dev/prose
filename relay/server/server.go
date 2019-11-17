@@ -131,6 +131,7 @@ func handleWriteBlock(w http.ResponseWriter, r *http.Request) {
 		resp, err := client.AddBlock(context.Background(), m)
 		if err != nil {
 			log.Printf("[ERROR] unable to add block: %v", err)
+			return
 		}
 		log.Printf("[%s] block submitted: %v\n", conn.Target(), resp.ACK)
 	})

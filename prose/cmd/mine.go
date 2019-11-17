@@ -45,7 +45,9 @@ var createMinerCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 		log.Print("Initialized miner node")
-		n.Serve()
+		if err = n.Serve(); err != nil {
+			log.Fatal(err)
+		}
 		return
 	},
 }

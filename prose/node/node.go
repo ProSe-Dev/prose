@@ -136,48 +136,47 @@ func (n *Node) FastForward(ctx context.Context, in *proto.FastForwardRequest) (*
 }
 
 // FastForwardToInitNode bootstraps the blockchain and consensus state
-func (n *Node) FastForwardToInitNode(initNode string) {
-	gossip.SendMessage(initNode, n.Client, func(conn *grpc.ClientConn) {
-		m := new(proto.FastForwardRequest)
-		for _, b := range n.Blockchain.Blocks {
-			m.Blocks = append(m.Blocks, &proto.Block{
-				PrevBlockHash: b.PrevBlockHash,
-				Data: &proto.BlockData{
-					Author:     b.Data.Author,
-					Timestamp:  b.Data.Timestamp,
-					CommitHash: b.Data.CommitHash,
-					FileHashes: b.Data.FileHashes,
-				},
-				Hash: b.Hash,
-			})
-		}
-		m.ConsensusMode = string(n.ConsensusMode)
-		client := proto.NewSyncClient(conn)
-		resp, err := client.FastForward(context.Background(), m)
-		if err != nil {
-			log.Printf("[ERROR] unable to add block: %v", err)
-		}
-		log.Printf("[%s] received sync response: %v\n", conn.Target(), resp)
-		n.Consensus.UpdateInfo(resp.CInfo)
-		if resp.DivergentIndex == -1 {
-			return
-		}
-		log.Printf("old blockchain had length %d, divergent at %d", len(n.Blockchain.Blocks), resp.DivergentIndex)
-		n.Blockchain.Blocks = n.Blockchain.Blocks[:resp.DivergentIndex]
-		for _, b := range resp.Blocks {
-			n.Blockchain.Blocks = append(n.Blockchain.Blocks, &mining.Block{
-				PrevBlockHash: b.PrevBlockHash,
-				Data: mining.BlockData{
-					Author:     b.Data.Author,
-					Timestamp:  b.Data.Timestamp,
-					CommitHash: b.Data.CommitHash,
-					FileHashes: b.Data.FileHashes,
-				},
-				Hash: b.Hash,
-			})
-		}
-		log.Printf("new blockchain has length %d", len(n.Blockchain.Blocks))
-	})
+func (n *Node) FastForwardToInitNode(conn *grpc.ClientConn) error {
+	m := new(proto.FastForwardRequest)
+	for _, b := range n.Blockchain.Blocks {
+		m.Blocks = append(m.Blocks, &proto.Block{
+			PrevBlockHash: b.PrevBlockHash,
+			Data: &proto.BlockData{
+				Author:     b.Data.Author,
+				Timestamp:  b.Data.Timestamp,
+				CommitHash: b.Data.CommitHash,
+				FileHashes: b.Data.FileHashes,
+			},
+			Hash: b.Hash,
+		})
+	}
+	m.ConsensusMode = string(n.ConsensusMode)
+	client := proto.NewSyncClient(conn)
+	resp, err := client.FastForward(context.Background(), m)
+	if err != nil {
+		return err
+	}
+	log.Printf("[%s] received sync response: %v\n", conn.Target(), resp)
+	n.Consensus.UpdateInfo(resp.CInfo)
+	if resp.DivergentIndex == -1 {
+		return nil
+	}
+	log.Printf("old blockchain had length %d, divergent at %d", len(n.Blockchain.Blocks), resp.DivergentIndex)
+	n.Blockchain.Blocks = n.Blockchain.Blocks[:resp.DivergentIndex]
+	for _, b := range resp.Blocks {
+		n.Blockchain.Blocks = append(n.Blockchain.Blocks, &mining.Block{
+			PrevBlockHash: b.PrevBlockHash,
+			Data: mining.BlockData{
+				Author:     b.Data.Author,
+				Timestamp:  b.Data.Timestamp,
+				CommitHash: b.Data.CommitHash,
+				FileHashes: b.Data.FileHashes,
+			},
+			Hash: b.Hash,
+		})
+	}
+	log.Printf("new blockchain has length %d", len(n.Blockchain.Blocks))
+	return nil
 }
 
 // NewNode creates a new Node that is ready to listen
@@ -198,20 +197,26 @@ func NewNode(port uint16, initNode string, remoteIP string, consensusMode consen
 	node.Client = skademlia.NewClient(addr, keys, skademlia.WithC1(1), skademlia.WithC2(1))
 	node.Client.SetCredentials(noise.NewCredentials(addr, handshake.NewECDH(), cipher.NewAEAD(), node.Client.Protocol()))
 
+	node.Server = node.Client.Listen()
+	proto.RegisterBlockchainServer(node.Server, node)
+	proto.RegisterSyncServer(node.Server, node)
+	node.ConsensusMode = consensusMode
+	node.Consensus = consensus.RegisterConsensusServer(node.Blockchain, node.StateMachine, node.Server, node.Client, consensusMode)
+
 	if initNode != "" {
-		if _, err = node.Client.Dial(initNode); err != nil {
+		var conn *grpc.ClientConn
+		if conn, err = node.Client.Dial(initNode); err != nil {
 			return
 		}
 		log.Printf("Dialed %s", initNode)
 		node.Client.Bootstrap()
-		node.FastForwardToInitNode(initNode)
+		if err = node.FastForwardToInitNode(conn); err != nil {
+			log.Printf("[ERROR] unable to fastforward: %v", err)
+		}
 		network := gossip.GetNetwork(node.Client)
 		log.Printf("Finished bootstrapping. Network: %s", network)
 	}
-	node.Server = node.Client.Listen()
-	proto.RegisterBlockchainServer(node.Server, node)
-	node.ConsensusMode = consensusMode
-	node.Consensus = consensus.RegisterConsensusServer(node.Blockchain, node.StateMachine, node.Server, node.Client, consensusMode)
+
 	node.Serve = func() error {
 		node.StateMachine.SetState(StateIdle)
 		return node.Server.Serve(listener)
