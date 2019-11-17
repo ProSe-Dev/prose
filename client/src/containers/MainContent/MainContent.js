@@ -3,6 +3,7 @@ import { Switch, Route } from 'react-router-dom';
 import './MainContent.css';
 import HomePage from './pages/HomePage/HomePage';
 import ProjectPage from './pages/ProjectPage/ProjectPage';
+import IPCheckPage from './pages/IPCheckPage/IPCheckPage';
 
 function MainContent() {
   return (
@@ -19,9 +20,7 @@ function MainContent() {
 
         { /* route to page for file searching on the blockchain */ }
         <Route path="/file-search">
-          <div>
-            this is the file searching page
-          </div>
+          <IPCheckPage />
         </Route>
 
         { /* load main page by default if none of the previous routes matched */ }
