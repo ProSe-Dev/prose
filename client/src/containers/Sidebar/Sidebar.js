@@ -12,6 +12,11 @@ function Sidebar() {
       <div>
         <Link to="/file-search"> go to file search</Link>
       </div>
+
+      <div>
+        <Link to="/"> homepage </Link>
+      </div>
+
     </div>
   );
 }

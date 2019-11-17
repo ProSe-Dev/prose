@@ -5,7 +5,7 @@ class HomePage extends React.Component {
     return (
       <div>
         <button type="button" class="btn btn-success">
-          ADD NEW PROJECT
+          ADD NEW PROJECTX
         </button>
       </div>
     );
