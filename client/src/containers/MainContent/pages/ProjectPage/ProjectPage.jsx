@@ -25,7 +25,7 @@ class Files extends React.Component{
         <div class="display-4">
           Files
         </div>
-        <div>
+        <div class="files-table">
           {file_list}
         </div>
       </div>
@@ -97,7 +97,7 @@ function getFiles(){
   return(
     <table class="table">
         <thead>
-          <tr>
+          <tr class = "file-row-dark">
             <th scope="col">#</th>
             <th scope="col">First</th>
             <th scope="col">Last</th>
@@ -105,19 +105,19 @@ function getFiles(){
           </tr>
         </thead>
         <tbody>
-          <tr>
+          <tr class="file-row-light">
             <th scope="row">1</th>
             <td>Mark</td>
             <td>Otto</td>
             <td>@mdo</td>
           </tr>
-          <tr>
+          <tr class="file-row-light">
             <th scope="row">2</th>
             <td>Jacob</td>
             <td>Thornton</td>
             <td>@fat</td>
           </tr>
-          <tr>
+          <tr class="file-row-light">
             <th scope="row">3</th>
             <td>Larry</td>
             <td>the Bird</td>
