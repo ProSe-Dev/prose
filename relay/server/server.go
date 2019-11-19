@@ -25,8 +25,8 @@ var (
 )
 
 type projectKey struct {
-	authorID  string
-	projectID string
+	AuthorID  string
+	ProjectID string
 }
 
 // Message body expected to be received from client
@@ -179,7 +179,7 @@ func updateMaps() {
 		select {
 		case <-mining.BlockProcessedChan:
 			for index < len(relayNode.Blockchain.Blocks) {
-				updateMapWithBlock(relayNode.Blockchain.Blocks[index-1])
+				updateMapWithBlock(relayNode.Blockchain.Blocks[index])
 				index++
 			}
 		}
@@ -188,13 +188,13 @@ func updateMaps() {
 
 func updateMapWithBlock(block *mining.Block) {
 	key := projectKey{
-		authorID:  block.Data.AuthorID,
-		projectID: block.Data.ProjectID,
+		AuthorID:  block.Data.AuthorID,
+		ProjectID: block.Data.ProjectID,
 	}
 	hash, _ := hashstructure.Hash(key, nil)
 	projectVersions, ok := projectMap[hash]
 	if ok {
-		projectVersions = append(projectVersions, block)
+		projectMap[hash] = append(projectVersions, block)
 	} else {
 		projectMap[hash] = []*mining.Block{block}
 	}
