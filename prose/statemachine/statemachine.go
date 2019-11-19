@@ -66,11 +66,9 @@ func (s *StateMachine) Enforce(state StateCode) (err error) {
 
 // EnforceWait blocks until the desired state is achieved
 func (s *StateMachine) EnforceWait(state StateCode) {
-	if s.State != state {
+	for s.State != state {
 		s.Printf("[STATEMACHINE] waiting on state %s, current is %s", GetStateDebugName(state), GetStateDebugName(s.State))
-		stateCodeBrokerMap[state].WaitOnAnyTimeout(1)
-		s.Printf("[STATEMACHINE] state %s was blocked but is now enforced", GetStateDebugName(state))
-		return
+		stateCodeBrokerMap[state].WaitOnAnyTimeout(5)
 	}
 	s.Printf("[STATEMACHINE] state %s was already enforced", GetStateDebugName(state))
 	return

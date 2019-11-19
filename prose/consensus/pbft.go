@@ -82,6 +82,7 @@ func (p *PBFTConsensus) ResetMessageTally(tally *Tally) {
 // Start handles adding a new blockchain block
 func (p *PBFTConsensus) Start() {
 	// start the new round in the background
+	p.IdleState = p.StateMachine.State
 	go p.NewRound()
 }
 
@@ -100,12 +101,8 @@ func (p *PBFTConsensus) UpdateInfo(info *proto.ConsensusInfo) {
 
 // NewRound starts a new PBFT round
 func (p *PBFTConsensus) NewRound() {
-	p.ViewNumberMutex.Lock()
-	defer p.ViewNumberMutex.Unlock()
+	p.StateMachine.EnforceWait(p.IdleState)
 	p.StateMachine.Printf("[PBFT] Started new round")
-	// cache the initial idle state to avoid dependency cycles
-	p.IdleState = p.StateMachine.State
-	p.StateMachine.SetState(statePrePreparing)
 	p.ResetMessageTally(p.CommitResultTally)
 	p.ResetMessageTally(p.PrepareResultTally)
 
@@ -118,6 +115,9 @@ func (p *PBFTConsensus) NewRound() {
 	if err != nil {
 		panic(err)
 	}
+
+	// cache the initial idle state to avoid dependency cycles
+	p.StateMachine.SetState(statePrePreparing)
 
 	if p.LeaderID != p.Client.ID().Address() {
 		p.StateMachine.Printf("Not the leader for this round: %s vs %s", p.Client.ID().Address(), p.LeaderID)
@@ -179,8 +179,6 @@ func (p *PBFTConsensus) NewRound() {
 
 // PrePrepare stages the generated block
 func (p *PBFTConsensus) PrePrepare(ctx context.Context, in *proto.PrePrepareRequest) (a *proto.Ack, err error) {
-	p.ViewNumberMutex.Lock()
-	defer p.ViewNumberMutex.Unlock()
 	p.StateMachine.Printf("[IN N=%s V=%d] Received pre-prepare message", in.LeaderID, in.ViewNumber)
 	if in.ViewNumber < p.ViewNumber {
 		a = &proto.Ack{
@@ -215,11 +213,6 @@ func (p *PBFTConsensus) PrePrepare(ctx context.Context, in *proto.PrePrepareRequ
 			Hash:          in.Block.Hash}
 		if !mining.IsBlockDataQueued(&block.Data) {
 			p.StateMachine.Printf("unknown block: %v\nskipping leader %s", block.Data, in.LeaderID)
-			dHash, _ := hashstructure.Hash(block.Data, nil)
-			p.StateMachine.Printf("current hash: %d", dHash)
-			for k, v := range mining.QueuedDataMap {
-				p.StateMachine.Printf("key: %v value: %v", k, v)
-			}
 			p.IncrementViewNumber()
 			p.StateMachine.SetState(p.IdleState)
 			go p.NewRound()
@@ -264,8 +257,6 @@ func (p *PBFTConsensus) PrePrepare(ctx context.Context, in *proto.PrePrepareRequ
 
 // Prepare requires 2*f+1 responses
 func (p *PBFTConsensus) Prepare(ctx context.Context, in *proto.PrepareRequest) (a *proto.Ack, err error) {
-	p.ViewNumberMutex.Lock()
-	defer p.ViewNumberMutex.Unlock()
 	p.StateMachine.Printf("[IN N=%s V=%d] Received prepare message", in.NodeID, in.ViewNumber)
 	if in.ViewNumber < p.ViewNumber {
 		a = &proto.Ack{
