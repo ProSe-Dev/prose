@@ -1,6 +1,6 @@
 {
-    "Author": "Foo Bar",
-    "Identity": "foo@bar.com",
+    "PublicKey": "foobar-pubkey",
+    "AuthorID": "foo@bar.com",
     "ProjectID": "some-unique-uuid2",
     "CommitHash": "8784775b29049977bc6f662d950cbb0d1fcc4817",
     "FileHashes": {

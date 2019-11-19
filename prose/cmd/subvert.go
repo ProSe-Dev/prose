@@ -72,7 +72,9 @@ type evilNode struct {
 // AddBlock adds a new block to blockchain
 func (n *evilNode) AddBlock(ctx context.Context, in *proto.AddBlockRequest) (resp *proto.AddBlockResponse, err error) {
 	data := mining.BlockData{
-		Author:     "L33T H4CK0R",
+		PublicKey:  "publickey",
+		AuthorID:   "L33T H4CK0R",
+		ProjectID:  "coolproject",
 		Timestamp:  mining.TimeToString(time.Now().UTC()),
 		CommitHash: "abcdefgthisisahash123",
 		FileHashes: map[string]string{},

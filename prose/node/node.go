@@ -41,10 +41,10 @@ type Node struct {
 // AddBlock adds a new block to blockchain
 func (n *Node) AddBlock(ctx context.Context, in *proto.AddBlockRequest) (resp *proto.AddBlockResponse, err error) {
 	data := mining.BlockData{
-		Author:     in.Data.Author,
-		Timestamp:  in.Data.Timestamp,
-		Identity:   in.Data.Identity,
+		PublicKey:  in.Data.PublicKey,
+		AuthorID:   in.Data.AuthorID,
 		ProjectID:  in.Data.ProjectID,
+		Timestamp:  in.Data.Timestamp,
 		CommitHash: in.Data.CommitHash,
 		FileHashes: in.Data.FileHashes,
 	}
@@ -67,10 +67,10 @@ func (n *Node) GetBlockchain(ctx context.Context, in *proto.GetBlockchainRequest
 		resp.Blocks = append(resp.Blocks, &proto.Block{
 			PrevBlockHash: b.PrevBlockHash,
 			Data: &proto.BlockData{
-				Author:     b.Data.Author,
-				Timestamp:  b.Data.Timestamp,
-				Identity:   b.Data.Identity,
+				PublicKey:  b.Data.PublicKey,
+				AuthorID:   b.Data.AuthorID,
 				ProjectID:  b.Data.ProjectID,
+				Timestamp:  b.Data.Timestamp,
 				CommitHash: b.Data.CommitHash,
 				FileHashes: b.Data.FileHashes,
 			},
@@ -111,10 +111,10 @@ func (n *Node) FastForward(ctx context.Context, in *proto.FastForwardRequest) (*
 			resp.Blocks = append(resp.Blocks, &proto.Block{
 				PrevBlockHash: blockOurs.PrevBlockHash,
 				Data: &proto.BlockData{
-					Author:     blockOurs.Data.Author,
-					Timestamp:  blockOurs.Data.Timestamp,
-					Identity:   blockOurs.Data.Identity,
+					PublicKey:  blockOurs.Data.PublicKey,
+					AuthorID:   blockOurs.Data.AuthorID,
 					ProjectID:  blockOurs.Data.ProjectID,
+					Timestamp:  blockOurs.Data.Timestamp,
 					CommitHash: blockOurs.Data.CommitHash,
 					FileHashes: blockOurs.Data.FileHashes,
 				},
@@ -132,10 +132,10 @@ func (n *Node) FastForward(ctx context.Context, in *proto.FastForwardRequest) (*
 		resp.Blocks = append(resp.Blocks, &proto.Block{
 			PrevBlockHash: blockOurs.PrevBlockHash,
 			Data: &proto.BlockData{
-				Author:     blockOurs.Data.Author,
-				Timestamp:  blockOurs.Data.Timestamp,
-				Identity:   blockOurs.Data.Identity,
+				PublicKey:  blockOurs.Data.PublicKey,
+				AuthorID:   blockOurs.Data.AuthorID,
 				ProjectID:  blockOurs.Data.ProjectID,
+				Timestamp:  blockOurs.Data.Timestamp,
 				CommitHash: blockOurs.Data.CommitHash,
 				FileHashes: blockOurs.Data.FileHashes,
 			},
@@ -154,10 +154,10 @@ func (n *Node) FastForwardToInitNode(conn *grpc.ClientConn) error {
 		m.Blocks = append(m.Blocks, &proto.Block{
 			PrevBlockHash: b.PrevBlockHash,
 			Data: &proto.BlockData{
-				Author:     b.Data.Author,
-				Timestamp:  b.Data.Timestamp,
-				Identity:   b.Data.Identity,
+				PublicKey:  b.Data.PublicKey,
+				AuthorID:   b.Data.AuthorID,
 				ProjectID:  b.Data.ProjectID,
+				Timestamp:  b.Data.Timestamp,
 				CommitHash: b.Data.CommitHash,
 				FileHashes: b.Data.FileHashes,
 			},
@@ -183,10 +183,10 @@ func (n *Node) FastForwardToInitNode(conn *grpc.ClientConn) error {
 		n.Blockchain.Blocks = append(n.Blockchain.Blocks, &mining.Block{
 			PrevBlockHash: b.PrevBlockHash,
 			Data: mining.BlockData{
-				Author:     b.Data.Author,
-				Timestamp:  b.Data.Timestamp,
-				Identity:   b.Data.Identity,
+				PublicKey:  b.Data.PublicKey,
+				AuthorID:   b.Data.AuthorID,
 				ProjectID:  b.Data.ProjectID,
+				Timestamp:  b.Data.Timestamp,
 				CommitHash: b.Data.CommitHash,
 				FileHashes: b.Data.FileHashes,
 			},

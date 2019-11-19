@@ -17,8 +17,8 @@ message AddBlockResponse {
 
 message BlockData {
 	string timestamp = 1;
-	string author = 2;
-	string identity = 3;
+	string publicKey = 2;
+	string authorID = 3;
 	string projectID = 4;
 	string commitHash = 5;
 	map<string, string> fileHashes = 6;
