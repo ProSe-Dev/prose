@@ -6,6 +6,20 @@ const {
   PROJECT_CONFIG_FOLDER_NAME
 } = require('../src/shared/constants');
 
+const projects = [];
+
+class Project {
+  constructor(name, path) {
+    this.name = name;
+    this.path = path;
+    this.repo = null;
+  }
+
+  setRepo(repo) {
+    this.repo = repo;
+  }
+}
+
 exports.bootstrap = function () {
   /**
    * open dialog that lets user selects a directory
@@ -41,6 +55,18 @@ exports.bootstrap = function () {
     if (!fs.existsSync(configFolder)) {
       fs.mkdirSync(configFolder);
     }
+    let project = new Project(path.basename(projectPath), projectPath);
+    // initialize the directory with git
+    console.log('project:', project);
+    require('./repository')
+      .openRepo(projectPath)
+      .then((repo) => {
+        console.log('repo set up');
+        project.setRepo(repo);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
 
     // TODO: [a04a] should create config files in .prose
     // 1) project.json
@@ -52,12 +78,6 @@ exports.bootstrap = function () {
     // https://nodejs.org/api/fs.html#fs_class_fs_dir
     let files = [];
 
-    let project = {
-      name: path.basename(projectPath),
-      certificates: [],
-      path: projectPath,
-      files
-    }
     return project;
   }
 

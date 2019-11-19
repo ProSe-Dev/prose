@@ -1,5 +1,20 @@
 var git = require('nodegit-kit');
-var nodegit = require('nodegit');
+
+/**
+ * opens a repo, if path currently isnt a repo, initalize it
+ * @param {String} path - absolute path to repo 
+ */
+function openRepo(path) {
+  console.log('openRepo');
+  return git.open(path, { 'init': false })
+    .then((nodegitRepo) => { 
+      console.log('opening repo', nodegitRepo);
+      return new Repository(nodegitRepo)
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+}
 
 class Repository {
   constructor(nodegitRepo) {
@@ -26,7 +41,7 @@ class Repository {
             id: commit.id().tostrS(),
             message: commit.message()
           }
-          resolve(head);
+          resolve(this.head);
         })
         .catch((err) => {
           reject(err);
@@ -35,4 +50,6 @@ class Repository {
   }
 }
 
-module.exports = Repository;
+module.exports = {
+  openRepo,
+};
