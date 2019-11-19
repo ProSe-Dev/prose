@@ -1,6 +1,6 @@
 {
-    "Author": "some-public-key",
-    "Identity": "my@email.com",
+    "PublicKey": "my-public-key",
+    "AuthorID": "signed(MD5(my@email.com + myPassword))",
     "ProjectID": "some-unique-uuid",
     "CommitHash": "f040627201ccdc49e0f6eb7e352ef94d4117bbd7",
     "FileHashes": {

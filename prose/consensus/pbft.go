@@ -133,8 +133,8 @@ func (p *PBFTConsensus) NewRound() {
 			Block: &proto.Block{
 				PrevBlockHash: b.PrevBlockHash,
 				Data: &proto.BlockData{
-					Author:     b.Data.Author,
-					Identity:   b.Data.Identity,
+					PublicKey:  b.Data.PublicKey,
+					AuthorID:   b.Data.AuthorID,
 					ProjectID:  b.Data.ProjectID,
 					CommitHash: b.Data.CommitHash,
 					Timestamp:  b.Data.Timestamp,
@@ -188,8 +188,8 @@ func (p *PBFTConsensus) PrePrepare(ctx context.Context, in *proto.PrePrepareRequ
 		p.StateMachine.EnforceWait(statePrePreparing)
 		block := mining.Block{
 			Data: mining.BlockData{
-				Author:     in.Block.Data.Author,
-				Identity:   in.Block.Data.Identity,
+				PublicKey:  in.Block.Data.PublicKey,
+				AuthorID:   in.Block.Data.AuthorID,
 				ProjectID:  in.Block.Data.ProjectID,
 				CommitHash: in.Block.Data.CommitHash,
 				Timestamp:  in.Block.Data.Timestamp,

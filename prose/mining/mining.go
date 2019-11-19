@@ -28,8 +28,8 @@ var (
 // BlockData is the data for a block
 type BlockData struct {
 	Timestamp  string
-	Author     string
-	Identity   string
+	PublicKey  string
+	AuthorID   string
 	ProjectID  string
 	CommitHash string
 	FileHashes map[string]string
@@ -72,7 +72,9 @@ func NewBlock(data BlockData, prevBlockHash string) *Block {
 func NewGenesisBlock() *Block {
 	return NewBlock(BlockData{
 		Timestamp:  "",
-		Author:     "ProSe",
+		PublicKey:  "",
+		AuthorID:   "ProSe",
+		ProjectID:  "",
 		CommitHash: "421fdea6ec87b5531d196bb7498c96fb84f2880a",
 		FileHashes: map[string]string{},
 	}, "")
