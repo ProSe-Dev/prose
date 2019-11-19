@@ -1,4 +1,4 @@
-session_name: 5 miner PBFT
+session_name: 4 miner PBFT
 windows:
 - window_name: dev window
   layout: tiled
@@ -20,12 +20,8 @@ windows:
         - while ! nc -z localhost 3000; do sleep 1 && echo -n .; done
         - ./prose mine 3002 -i localhost:3000 |& tee log/3.log
     - shell_command:
-        - printf '\033]2;%s\033\\' '[MINER]localhost:3003'
-        - while ! nc -z localhost 3000; do sleep 1 && echo -n .; done
-        - ./prose mine 3003 -i localhost:3000 |& tee log/4.log
-    - shell_command:
-        - printf '\033]2;%s\033\\' '[RELAY]3004/8080'
+        - printf '\033]2;%s\033\\' '[RELAY]3003/8080'
         - cd ../relay
         - go build || read
-        - while ! nc -z localhost 3003; do sleep 1 && echo -n .; done
-        - ./relay start 8080 3004 -i localhost:3000 |& tee ../prose/log/5.log
+        - while ! nc -z localhost 3002; do sleep 1 && echo -n .; done
+        - ./relay start 8080 3003 -i localhost:3000 |& tee ../prose/log/4.log

@@ -136,7 +136,7 @@ func handleWriteBlock(w http.ResponseWriter, r *http.Request) {
 		log.Printf("[%s] block submitted: %v\n", conn.Target(), resp.ACK)
 	})
 	// the relay node needs to participate too!
-	mining.EnqueueTransactionData(mining.BlockData{
+	mining.EnqueueTransactionData(&mining.BlockData{
 		Author:     m.Author,
 		Identity:   m.Identity,
 		ProjectID:  m.ProjectID,

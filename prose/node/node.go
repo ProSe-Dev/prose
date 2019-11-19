@@ -43,10 +43,13 @@ func (n *Node) AddBlock(ctx context.Context, in *proto.AddBlockRequest) (resp *p
 	data := mining.BlockData{
 		Author:     in.Data.Author,
 		Timestamp:  in.Data.Timestamp,
+		Identity:   in.Data.Identity,
+		ProjectID:  in.Data.ProjectID,
 		CommitHash: in.Data.CommitHash,
 		FileHashes: in.Data.FileHashes,
 	}
-	mining.EnqueueTransactionData(data)
+	n.StateMachine.Printf("Enqueue %v", data)
+	mining.EnqueueTransactionData(&data)
 	// if we're in the middle of consensus already, skip
 	if n.StateMachine.State == StateIdle {
 		n.Consensus.Start()
@@ -66,6 +69,8 @@ func (n *Node) GetBlockchain(ctx context.Context, in *proto.GetBlockchainRequest
 			Data: &proto.BlockData{
 				Author:     b.Data.Author,
 				Timestamp:  b.Data.Timestamp,
+				Identity:   b.Data.Identity,
+				ProjectID:  b.Data.ProjectID,
 				CommitHash: b.Data.CommitHash,
 				FileHashes: b.Data.FileHashes,
 			},
@@ -108,6 +113,8 @@ func (n *Node) FastForward(ctx context.Context, in *proto.FastForwardRequest) (*
 				Data: &proto.BlockData{
 					Author:     blockOurs.Data.Author,
 					Timestamp:  blockOurs.Data.Timestamp,
+					Identity:   blockOurs.Data.Identity,
+					ProjectID:  blockOurs.Data.ProjectID,
 					CommitHash: blockOurs.Data.CommitHash,
 					FileHashes: blockOurs.Data.FileHashes,
 				},
@@ -127,6 +134,8 @@ func (n *Node) FastForward(ctx context.Context, in *proto.FastForwardRequest) (*
 			Data: &proto.BlockData{
 				Author:     blockOurs.Data.Author,
 				Timestamp:  blockOurs.Data.Timestamp,
+				Identity:   blockOurs.Data.Identity,
+				ProjectID:  blockOurs.Data.ProjectID,
 				CommitHash: blockOurs.Data.CommitHash,
 				FileHashes: blockOurs.Data.FileHashes,
 			},
@@ -147,6 +156,8 @@ func (n *Node) FastForwardToInitNode(conn *grpc.ClientConn) error {
 			Data: &proto.BlockData{
 				Author:     b.Data.Author,
 				Timestamp:  b.Data.Timestamp,
+				Identity:   b.Data.Identity,
+				ProjectID:  b.Data.ProjectID,
 				CommitHash: b.Data.CommitHash,
 				FileHashes: b.Data.FileHashes,
 			},
@@ -174,6 +185,8 @@ func (n *Node) FastForwardToInitNode(conn *grpc.ClientConn) error {
 			Data: mining.BlockData{
 				Author:     b.Data.Author,
 				Timestamp:  b.Data.Timestamp,
+				Identity:   b.Data.Identity,
+				ProjectID:  b.Data.ProjectID,
 				CommitHash: b.Data.CommitHash,
 				FileHashes: b.Data.FileHashes,
 			},

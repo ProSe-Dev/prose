@@ -4,7 +4,6 @@ package consensus
 
 import (
 	"context"
-	"log"
 	"sync"
 
 	"github.com/ProSe-Dev/prose/prose/gossip"
@@ -32,6 +31,8 @@ type Tally struct {
 type PBFTConsensus struct {
 	Client                 *skademlia.Client
 	ViewNumber             int64
+	ViewNumberMutex        sync.Mutex
+	LeaderID               string
 	Blockchain             *mining.Blockchain
 	StateMachine           *statemachine.StateMachine
 	IdleState              statemachine.StateCode
@@ -47,16 +48,17 @@ type MessageKey struct {
 	ViewNumber int64
 }
 
+// IncrementViewNumber increments the view number
+func (p *PBFTConsensus) IncrementViewNumber() {
+	p.ViewNumberMutex.Lock()
+	defer p.ViewNumberMutex.Unlock()
+	p.ViewNumber++
+}
+
 // AddMessageToTally adds a unique combination to the result tally set
 func (p *PBFTConsensus) AddMessageToTally(nodeID string, key MessageKey, tally *Tally) map[string]struct{} {
 	tally.Lock()
 	defer tally.Unlock()
-	p.StateMachine.Printf(
-		"[PBFT] Tallying nodeID=%s (BlockID=%d, BlockHash=%s, ViewNumber=%d)",
-		nodeID,
-		key.BlockID,
-		key.BlockHash,
-		key.ViewNumber)
 	hash, err := hashstructure.Hash(key, nil)
 	if err != nil {
 		panic(err) // should not error here
@@ -98,6 +100,8 @@ func (p *PBFTConsensus) UpdateInfo(info *proto.ConsensusInfo) {
 
 // NewRound starts a new PBFT round
 func (p *PBFTConsensus) NewRound() {
+	p.ViewNumberMutex.Lock()
+	defer p.ViewNumberMutex.Unlock()
 	p.StateMachine.Printf("[PBFT] Started new round")
 	// cache the initial idle state to avoid dependency cycles
 	p.IdleState = p.StateMachine.State
@@ -106,22 +110,22 @@ func (p *PBFTConsensus) NewRound() {
 	p.ResetMessageTally(p.PrepareResultTally)
 
 	network := gossip.GetNetwork(p.Client)
-	leaderID := network[p.ViewNumber%int64(len(network))]
+	p.LeaderID = network[p.ViewNumber%int64(len(network))]
 	p.FaultToleranceConstant = (len(network) - 1) / 3
-	p.StateMachine.Printf("View: %d\nNetwork: %s\nLeader: %s\nf: %d", p.ViewNumber, network, leaderID, p.FaultToleranceConstant)
+	p.StateMachine.Printf("\nView: %d\nNetwork: %s\nLeader: %s\nf: %d", p.ViewNumber, network, p.LeaderID, p.FaultToleranceConstant)
 
 	transaction, err := mining.PeekLatestTransactionData()
 	if err != nil {
 		panic(err)
 	}
 
-	if leaderID != p.Client.ID().Address() {
-		p.StateMachine.Printf("Not the leader for this round: %s vs %s", p.Client.ID().Address(), leaderID)
+	if p.LeaderID != p.Client.ID().Address() {
+		p.StateMachine.Printf("Not the leader for this round: %s vs %s", p.Client.ID().Address(), p.LeaderID)
 		return
 	}
 
 	p.StateMachine.Printf("Acting as leader for this round")
-	b := p.Blockchain.ProcessNewBlock(transaction)
+	b := p.Blockchain.ProcessNewBlock(*transaction)
 	if err := p.Blockchain.IsBlockValid(b); err != nil {
 		p.StateMachine.Printf(err.Error()+"\nblock: %v", b)
 		return
@@ -144,14 +148,14 @@ func (p *PBFTConsensus) NewRound() {
 			},
 			BlockNumber: int64(len(p.Blockchain.Blocks)),
 			ViewNumber:  p.ViewNumber,
-			LeaderID:    leaderID,
+			LeaderID:    p.LeaderID,
 		}
 		client := proto.NewPBFTClient(conn)
 		resp, err := client.PrePrepare(context.Background(), m)
 		if err != nil {
-			p.StateMachine.Printf("[OUT] ERROR: unable to send pre-prepare to %s:\nerror: %v", conn.Target(), err)
+			p.StateMachine.Printf("[OUT N=%s V=%d] ERROR: unable to send pre-prepare:\nerror: %v", conn.Target(), p.ViewNumber, err)
 		}
-		p.StateMachine.Printf("[OUT] SUCCESS: sent pre-prepare to %s:\nresponse: %v\n", conn.Target(), resp)
+		p.StateMachine.Printf("[OUT N=%s V=%d] SUCCESS: sent pre-prepare:\n response: %v\n", conn.Target(), p.ViewNumber, resp)
 	})
 
 	// the leader node itself doesn't need to receive a pre-prepare message,
@@ -166,26 +170,38 @@ func (p *PBFTConsensus) NewRound() {
 		client := proto.NewPBFTClient(conn)
 		resp, err := client.Prepare(context.Background(), m)
 		if err != nil {
-			p.StateMachine.Printf("[OUT] ERROR: unable to send pre-prepare to %s:\nerror: %v", conn.Target(), err)
+			p.StateMachine.Printf("[OUT N=%s V=%d] ERROR: unable to send prepare:\nerror: %v", conn.Target(), p.ViewNumber, err)
 		}
-		p.StateMachine.Printf("[OUT] SUCCESS: sent pre-prepare to %s:\n response: %v\n", conn.Target(), resp)
+		p.StateMachine.Printf("[OUT N=%s V=%d] SUCCESS: sent prepare:\n response: %v\n", conn.Target(), p.ViewNumber, resp)
 	})
 	p.StateMachine.SetState(statePreparing)
 }
 
 // PrePrepare stages the generated block
 func (p *PBFTConsensus) PrePrepare(ctx context.Context, in *proto.PrePrepareRequest) (a *proto.Ack, err error) {
-	p.StateMachine.Printf("[IN] Received pre-prepare message from %s", in.LeaderID)
+	p.ViewNumberMutex.Lock()
+	defer p.ViewNumberMutex.Unlock()
+	p.StateMachine.Printf("[IN N=%s V=%d] Received pre-prepare message", in.LeaderID, in.ViewNumber)
 	if in.ViewNumber < p.ViewNumber {
 		a = &proto.Ack{
 			Received: false,
 		}
-		log.Printf("[PBFT] ignoring bad view number: %d < %d - possibly an old message", in.ViewNumber, p.ViewNumber)
+		p.StateMachine.Printf("[PBFT] ignoring bad view number: %d < %d - possibly an old message", in.ViewNumber, p.ViewNumber)
 		return
 	}
 
 	go func() {
 		p.StateMachine.EnforceWait(statePrePreparing)
+		for in.ViewNumber > p.ViewNumber {
+			p.StateMachine.EnforceWait(statePrePreparing)
+		}
+		if in.LeaderID != p.LeaderID {
+			a = &proto.Ack{
+				Received: false,
+			}
+			p.StateMachine.Printf("[PBFT] ignoring bad leader ID: received %s != actual %s", in.LeaderID, p.LeaderID)
+			return
+		}
 		block := mining.Block{
 			Data: mining.BlockData{
 				Author:     in.Block.Data.Author,
@@ -197,9 +213,25 @@ func (p *PBFTConsensus) PrePrepare(ctx context.Context, in *proto.PrePrepareRequ
 			},
 			PrevBlockHash: in.Block.PrevBlockHash,
 			Hash:          in.Block.Hash}
+		if !mining.IsBlockDataQueued(&block.Data) {
+			p.StateMachine.Printf("unknown block: %v\nskipping leader %s", block.Data, in.LeaderID)
+			dHash, _ := hashstructure.Hash(block.Data, nil)
+			p.StateMachine.Printf("current hash: %d", dHash)
+			for k, v := range mining.QueuedDataMap {
+				p.StateMachine.Printf("key: %v value: %v", k, v)
+			}
+			p.IncrementViewNumber()
+			p.StateMachine.SetState(p.IdleState)
+			go p.NewRound()
+			a = &proto.Ack{
+				Received: false,
+			}
+			return
+		}
 		if err := p.Blockchain.IsBlockValid(&block); err != nil {
 			p.StateMachine.Printf(err.Error()+"\nblock: %v\nskipping leader %s", block, in.LeaderID)
-			p.ViewNumber++
+			p.IncrementViewNumber()
+			p.StateMachine.SetState(p.IdleState)
 			go p.NewRound()
 			a = &proto.Ack{
 				Received: false,
@@ -218,9 +250,9 @@ func (p *PBFTConsensus) PrePrepare(ctx context.Context, in *proto.PrePrepareRequ
 			client := proto.NewPBFTClient(conn)
 			resp, err := client.Prepare(context.Background(), m)
 			if err != nil {
-				p.StateMachine.Printf("[OUT] ERROR: unable to send prepare to %s:\nerror: %v", conn.Target(), err)
+				p.StateMachine.Printf("[OUT N=%s V=%d] ERROR: unable to send prepare:\nerror: %v", conn.Target(), p.ViewNumber, err)
 			}
-			p.StateMachine.Printf("[OUT] SUCCESS: sent prepare to %s:\n response: %v\n", conn.Target(), resp)
+			p.StateMachine.Printf("[OUT N=%s V=%d] SUCCESS: sent prepare:\n response: %v\n", conn.Target(), p.ViewNumber, resp)
 		})
 		p.StateMachine.SetState(statePreparing)
 	}()
@@ -232,17 +264,22 @@ func (p *PBFTConsensus) PrePrepare(ctx context.Context, in *proto.PrePrepareRequ
 
 // Prepare requires 2*f+1 responses
 func (p *PBFTConsensus) Prepare(ctx context.Context, in *proto.PrepareRequest) (a *proto.Ack, err error) {
-	p.StateMachine.Printf("[IN] Received prepare message from %s", in.NodeID)
+	p.ViewNumberMutex.Lock()
+	defer p.ViewNumberMutex.Unlock()
+	p.StateMachine.Printf("[IN N=%s V=%d] Received prepare message", in.NodeID, in.ViewNumber)
 	if in.ViewNumber < p.ViewNumber {
 		a = &proto.Ack{
 			Received: false,
 		}
-		log.Printf("[PBFT] ignoring bad view number: %d < %d - possibly an old message", in.ViewNumber, p.ViewNumber)
+		p.StateMachine.Printf("[PBFT] ignoring bad view number: %d < %d - possibly an old message", in.ViewNumber, p.ViewNumber)
 		return
 	}
 
 	go func() {
 		p.StateMachine.EnforceWait(statePreparing)
+		for in.ViewNumber > p.ViewNumber {
+			p.StateMachine.EnforceWait(statePreparing)
+		}
 		key := MessageKey{
 			BlockID:    in.BlockNumber,
 			BlockHash:  in.BlockHash,
@@ -271,9 +308,9 @@ func (p *PBFTConsensus) Prepare(ctx context.Context, in *proto.PrepareRequest) (
 			client := proto.NewPBFTClient(conn)
 			resp, err := client.Commit(context.Background(), m)
 			if err != nil {
-				p.StateMachine.Printf("[OUT] ERROR: unable to send commit to %s:\nerror: %v", conn.Target(), err)
+				p.StateMachine.Printf("[OUT N=%s V=%d] ERROR: unable to send commit:\nerror: %v", conn.Target(), p.ViewNumber, err)
 			}
-			p.StateMachine.Printf("[OUT] SUCCESS: sent commit to %s:\n response: %v\n", conn.Target(), resp)
+			p.StateMachine.Printf("[OUT N=%s V=%d] SUCCESS: sent commit:\n response: %v\n", conn.Target(), p.ViewNumber, resp)
 		})
 		p.StateMachine.SetState(stateCommitting)
 	}()
@@ -285,17 +322,20 @@ func (p *PBFTConsensus) Prepare(ctx context.Context, in *proto.PrepareRequest) (
 
 // Commit requires 2*f+1 responses
 func (p *PBFTConsensus) Commit(ctx context.Context, in *proto.CommitRequest) (a *proto.Ack, err error) {
-	p.StateMachine.Printf("[IN] Received commit message from %s", in.NodeID)
+	p.StateMachine.Printf("[IN N=%s V=%d] Received commit message", in.NodeID, in.ViewNumber)
 	if in.ViewNumber < p.ViewNumber {
 		a = &proto.Ack{
 			Received: false,
 		}
-		log.Printf("[PBFT] ignoring bad view number: %d < %d - possibly an old message", in.ViewNumber, p.ViewNumber)
+		p.StateMachine.Printf("[PBFT] ignoring bad view number: %d < %d - possibly an old message", in.ViewNumber, p.ViewNumber)
 		return
 	}
 
 	go func() {
 		p.StateMachine.EnforceWait(stateCommitting)
+		for in.ViewNumber > p.ViewNumber {
+			p.StateMachine.EnforceWait(stateCommitting)
+		}
 		key := MessageKey{
 			BlockID:    in.BlockNumber,
 			BlockHash:  in.BlockHash,
@@ -315,12 +355,13 @@ func (p *PBFTConsensus) Commit(ctx context.Context, in *proto.CommitRequest) (a 
 		}
 		p.StateMachine.Printf("[PBFT] got last commit message from %s!", in.NodeID)
 		p.StateMachine.Printf("[PBFT] committed block: %v", p.Blockchain.StagedBlock)
+		mining.RemoveTransactionData(&p.Blockchain.StagedBlock.Data)
 		p.Blockchain.Commit()
-		_, err := mining.PopLatestTransactionData()
 		if err != nil {
 			panic(err)
 		}
-		p.ViewNumber++
+		p.StateMachine.Printf("[PBFT] completed consensus for view %d!", p.ViewNumber)
+		p.IncrementViewNumber()
 		// make sure we restore the old idle state here
 		p.StateMachine.SetState(p.IdleState)
 		if mining.NewTransactionDataExists() {

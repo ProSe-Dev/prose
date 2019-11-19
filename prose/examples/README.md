@@ -1,10 +1,10 @@
 ## How to run examples
 
 ### Install tmuxp
-`pip install tmuxp`
+`pip install --user tmuxp`
 
 ### Execute a session
 `./run.sh <SESSION>`
 
 ### Exiting a session
-CTRL + C -> CTRL + D for each pane
+`CTRL + C` followed by `CTRL + D` for each pane

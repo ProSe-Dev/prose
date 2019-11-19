@@ -17,12 +17,13 @@ type TrivialConsensus struct {
 // Start handles adding a new blockchain block
 func (t *TrivialConsensus) Start() {
 	log.Printf("[TRIVIAL] Starting")
-	data, err := mining.PopLatestTransactionData()
+	data, err := mining.PeekLatestTransactionData()
 	if err != nil {
 		panic(err)
 	}
-	t.Blockchain.ProcessNewBlock(data)
+	t.Blockchain.ProcessNewBlock(*data)
 	t.Blockchain.Commit()
+	mining.RemoveTransactionData(data)
 }
 
 // GetInfo returns the consensus info

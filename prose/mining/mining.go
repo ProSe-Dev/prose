@@ -6,10 +6,9 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"log"
+	"sync"
 	"time"
 
-	"github.com/Workiva/go-datastructures/queue"
 	"github.com/mitchellh/hashstructure"
 )
 
@@ -19,7 +18,9 @@ const (
 )
 
 var (
-	latestDataQueue = queue.New(0)
+	latestDataQueue   = []uint64{}
+	QueuedDataMap     = map[uint64]*BlockData{}
+	queuedDataMapLock sync.Mutex
 
 	// BlockProcessedChan is a channel for indicating blocks have been processed
 	BlockProcessedChan = make(chan int)
@@ -110,35 +111,63 @@ func NewBlockchain() *Blockchain {
 	return &Blockchain{Blocks: []*Block{NewGenesisBlock()}}
 }
 
-// PopLatestTransactionData returns the latest transaction data
-func PopLatestTransactionData() (data BlockData, err error) {
-	var val []interface{}
-	if val, err = latestDataQueue.Get(1); err != nil {
+// IsBlockDataQueued returns true if block data is queued
+func IsBlockDataQueued(data *BlockData) bool {
+	queuedDataMapLock.Lock()
+	defer queuedDataMapLock.Unlock()
+	dHash, _ := hashstructure.Hash(data, nil)
+	_, ok := QueuedDataMap[dHash]
+	return ok
+}
+
+// RemoveTransactionData removes the specified transaction data
+// TODO: may want to be more efficient here
+func RemoveTransactionData(data *BlockData) (err error) {
+	queuedDataMapLock.Lock()
+	defer queuedDataMapLock.Unlock()
+	dHash, _ := hashstructure.Hash(data, nil)
+	if len(latestDataQueue) == 0 {
+		err = errors.New("queue is already empty")
 		return
 	}
-	data = val[0].(BlockData)
+	tmp := latestDataQueue[:0]
+	for _, h := range latestDataQueue {
+		if h != dHash {
+			tmp = append(tmp, h)
+		}
+	}
+	latestDataQueue = tmp
+	if _, ok := QueuedDataMap[dHash]; !ok {
+		err = errors.New("data not found in map")
+		return
+	}
+	delete(QueuedDataMap, dHash)
 	return
 }
 
 // PeekLatestTransactionData returns the latest transaction data
-func PeekLatestTransactionData() (data BlockData, err error) {
-	var val interface{}
-	if val, err = latestDataQueue.Peek(); err != nil {
+func PeekLatestTransactionData() (data *BlockData, err error) {
+	if len(latestDataQueue) == 0 {
+		err = errors.New("tried peeking from empty queue")
 		return
 	}
-	data = val.(BlockData)
+	dHash := latestDataQueue[0]
+	data = QueuedDataMap[dHash]
 	return
 }
 
 // EnqueueTransactionData enqueues the latest transaction data
-func EnqueueTransactionData(data BlockData) {
-	log.Printf("Enqueue %v", data)
-	latestDataQueue.Put(data)
+func EnqueueTransactionData(data *BlockData) {
+	queuedDataMapLock.Lock()
+	defer queuedDataMapLock.Unlock()
+	dHash, _ := hashstructure.Hash(data, nil)
+	QueuedDataMap[dHash] = data
+	latestDataQueue = append(latestDataQueue, dHash)
 }
 
 // NewTransactionDataExists returns true if there is enqueued transaction data
 func NewTransactionDataExists() bool {
-	return latestDataQueue.Len() > 0
+	return len(latestDataQueue) > 0
 }
 
 // TimeToString returns the string representation of a time
