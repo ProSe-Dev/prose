@@ -60,8 +60,6 @@ func makeMuxRouter() http.Handler {
 	muxRouter.HandleFunc("/", handleGetBlockchain).Methods("GET")
 	muxRouter.HandleFunc("/search", handleSearchBlockchain).Methods("GET")
 	muxRouter.HandleFunc("/transaction", handleWriteBlock).Methods("POST")
-	// curl localhost:8080/transaction -X POST -d @sample_payload.json
-	// curl localhost:8080/transaction -X POST -d @C:\Users\Alison\go\src\github.com\ProSe-Dev\prose\relay\sample_payload.json
 	return muxRouter
 }
 
