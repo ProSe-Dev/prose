@@ -16,15 +16,9 @@ class Sidebar extends React.Component{
         </div>
 
         <div>
-        <button 
-          class="side-add-project"
-          onClick={() => {
-            console.log('button pressed');
-            let result = ipc.sendSync(SYNC_CREATE_PROJECT_CH, 'testproject');
-            console.log(result);
-          }}
-        >Add New Project </button>
-      
+          <Link 
+            style={{ textDecoration: 'none', color: 'white' }} 
+            to="/add-project"> Add New Project</Link>
         </div>
 
         <div>
@@ -32,7 +26,7 @@ class Sidebar extends React.Component{
             style={{ textDecoration: 'none', color: 'white' }} 
             to="/file-search"> IP Check</Link>
         </div>
-  
+
         <div>
           <Link 
             style={{ textDecoration: 'none', color: 'white' }} 
@@ -69,3 +63,14 @@ function createProjectList(something){
   var projectsList = example_list.map((project)=>getProject(project.name));
   return projectsList;
 }
+
+/**
+ * <button 
+          class="side-add-project"
+          onClick={() => {
+            console.log('button pressed');
+            let result = ipc.sendSync(SYNC_CREATE_PROJECT_CH, 'testproject');
+            console.log(result);
+          }}
+        >Add New Project </button>
+ */

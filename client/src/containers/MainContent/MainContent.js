@@ -3,6 +3,7 @@ import { Switch, Route } from 'react-router-dom';
 import './MainContent.css';
 import HomePage from './pages/HomePage/HomePage';
 import ProjectPage from './pages/ProjectPage/ProjectPage';
+import AddProjectPage from './pages/AddProjectPage/AddProjectPage';
 import IPCheckPage from './pages/IPCheckPage/IPCheckPage';
 
 function MainContent() {
@@ -16,6 +17,11 @@ function MainContent() {
         { /* route to a project page, the project that opens should be dependant on the params that's passed in */ }
         <Route path="/project">
           <ProjectPage />
+        </Route>
+
+        { /* route to page for adding new project */ }
+        <Route path="/add-project">
+          <AddProjectPage />
         </Route>
 
         { /* route to page for file searching on the blockchain */ }
