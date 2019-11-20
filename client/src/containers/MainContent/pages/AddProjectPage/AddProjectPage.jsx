@@ -43,7 +43,8 @@ function getAddProjectButton(){
             console.log(result);
           }}
         >
-          ADD NEW PROJECT
+          Choose Project Folder
         </button>
   )
 }
+
