@@ -72,14 +72,53 @@ function getSubmitButton(handler){
 }
 
 function getRestPage(state_of_page){
+  var transac_list = 
+    [{
+      Timestamp:"Oct 24 2019 23:19:58",
+      Author:"meme@gmail.com",
+      ProjectName: "Invest Now in Memes"
+    },{
+      Timestamp:"Oct 11 2019 05:11:45",
+      Author:"Fake Ford R&D",
+      ProjectName: "Mustang Mach-e"
+    }]
+  var fileHash = "aed85dbe7c334f66bae908997be6cd0ddb2074ff5b0d4e1a8a3169b4031f2c03"
+  var transactionHistory = getTransactions(transac_list);
   // if submit button has been pressed
   if(state_of_page.submitted){
     return(
       <div class="bottomPage">
         <h3>Hash</h3>
-        <p>aed85dbe7c334f66bae908997be6cd0ddb2074ff5b0d4e1a8a3169b4031f2c03</p>
+        <p>{fileHash}</p>
         <h3>Transaction History</h3>
+        <div>{transactionHistory}</div>
       </div>
     )
   }
+}
+
+function getTransactions(t_list){
+
+  var rows = [];
+  function generateRow(row){
+    rows.push(
+    <tr class="file-row-light">
+      <td>{row.Timestamp}</td>
+      <td>{row.Author}</td>
+      <td>{row.ProjectName}</td>
+    </tr>)
+  }
+  t_list.map(generateRow);
+  return(
+    <table class="table">
+        <thead>
+          <tr class = "file-row-dark">
+            <th scope="col">Timestamp</th>
+            <th scope="col">Author</th>
+            <th scope="col">Project Name</th>
+          </tr>
+        </thead>
+        <tbody> {rows} </tbody>
+      </table>
+  );
 }
