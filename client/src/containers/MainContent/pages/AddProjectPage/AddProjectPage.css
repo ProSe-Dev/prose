@@ -9,8 +9,13 @@
     float:left;
     width: 200px;
     height: 60px;
+    display:block;
 }
 
 .page-title{
     margin-bottom: 30px;
+}
+
+.project-label{
+    display:block;
 }

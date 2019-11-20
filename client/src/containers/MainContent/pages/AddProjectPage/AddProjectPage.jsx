@@ -20,9 +20,9 @@ class AddProjectPage extends React.Component {
       <div class="main-container">
         <div class = "display-4 page-title"> Project Setup</div>
         <div>{addButton}</div>
-        <label>
+        <label class="h3">
             Project Name:
-            <input type="text" name="name" />
+            <input class="project-label" type="text" name="name" />
         </label>
         <input type="submit" value="Submit" />
       </div>

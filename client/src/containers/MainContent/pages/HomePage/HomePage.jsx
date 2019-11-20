@@ -25,7 +25,6 @@ class HomePage extends React.Component {
         <Link 
             style={{ textDecoration: 'none', color: 'white' }} 
             to="/add-project"> 
-            
             <button 
               type="button"
               className="btn btn-success add-new-btn">
@@ -39,3 +38,5 @@ class HomePage extends React.Component {
 
 
 export default HomePage;
+
+//https://www.w3schools.com/howto/howto_css_split_screen.asp
