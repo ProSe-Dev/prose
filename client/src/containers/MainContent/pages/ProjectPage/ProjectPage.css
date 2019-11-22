@@ -91,3 +91,11 @@
     display: flex;
     align-items: center;
 }
+
+/* texts */
+.projectpage-heading {
+    font-size: 2em;
+    color: #232323;
+    text-align: left;
+    font-weight: 300;
+}

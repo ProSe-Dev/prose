@@ -1,6 +1,8 @@
 import React from 'react';
 import './ProjectPage.css'
 import TitleBar from 'components/TitleBar';
+import Table from 'components/Table';
+import ToggleSwitch from 'components/ToggleSwitch';
 
 function SnapshotOutdatedAlert() {
   return (
@@ -39,20 +41,31 @@ function Title(props){
   )
 }
 
+const UpToDateStatus = (<span className="badge badge-pill badge-success">uptodate</span>);
+const OutdatedStatus = (<span className="badge badge-pill badge-danger">outdated</span>);
+const ExcludedStatus = (<span className="badge badge-pill badge-secondary">excluded</span>);
+const FILE_TABLE_HEADERS = ['Status', 'File Name', 'Include In Snapshots', 'Other Actions'];
+const test_rows = [
+  [UpToDateStatus, 'Cover Page.pdf', <ToggleSwitch />, 'xxx'],
+  [OutdatedStatus, 'Cover Page.pdf', <ToggleSwitch />, 'xxx'],
+  [ExcludedStatus, 'Cover Page.pdf', <ToggleSwitch />, 'xxx'],
+  [ExcludedStatus, 'Cover Page.pdf', <ToggleSwitch />, 'xxx'],
+  [ExcludedStatus, 'Cover Page.pdf', <ToggleSwitch />, 'xxx']
+];
+
 class Files extends React.Component{
-  render(){
-    const file_list = getFiles();
+  render (){
     return(
-      <div class="files shadow">
-        <div class="display-4">
-          Files
+      <div>
+        <div className="projectpage-heading">
+          Project Files
         </div>
-        <div class="files-table">
-          {file_list}
-        </div>
+        <Table
+          headers={FILE_TABLE_HEADERS}
+          rows={test_rows}
+        />
       </div>
-      
-    )
+    );
   }
 }
 
@@ -98,9 +111,6 @@ class ProjectPage extends React.Component {
             showSettings
           />
           <SnapshotOutdatedAlert />
-          <Summary 
-            description = {"Something about this project"}
-          />
           <Files
             FileList = {"temp"}
           />
