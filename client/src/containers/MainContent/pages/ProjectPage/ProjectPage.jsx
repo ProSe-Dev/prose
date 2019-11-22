@@ -1,5 +1,6 @@
 import React from 'react';
 import './ProjectPage.css'
+import TitleBar from 'components/TitleBar';
 
 function Title(props){
   function Dot(status){
@@ -70,12 +71,11 @@ class ProjectPage extends React.Component {
     return (
       <div class ="main-container">
         <div class ="inner-container">
-          <span>
-            <Title
-              ProjectName = {"VPN"}
-              CertStatus = {true}
-            />
-          </span>
+          <TitleBar 
+            title="hello"
+            subtitle="bye"
+            showSettings
+          />
           <Summary 
             description = {"Something about this project"}
           />

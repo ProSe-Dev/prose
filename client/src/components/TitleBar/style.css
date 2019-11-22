@@ -1,0 +1,24 @@
+.titlebar {
+  padding: 0.75rem 2rem 0.75rem 2rem;
+  margin-bottom: 1rem;
+  display: grid;
+  grid-template-columns: 9fr 1fr;
+}
+
+.titlebar-text-container {
+  text-align: left;
+}
+
+.titlebar-title {
+  font-size: 1.5em;
+  color: white; 
+}
+
+.titlebar-subtile {
+  font-size: 1em;
+  color: #232323;
+}
+
+.titlebar-settings {
+  align-content: left;
+}
