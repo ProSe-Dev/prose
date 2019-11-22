@@ -28,7 +28,6 @@ function SnapshotUptodateAlert() {
 const UpToDateStatus = (<span className="badge badge-pill badge-success">uptodate</span>);
 const OutdatedStatus = (<span className="badge badge-pill badge-danger">outdated</span>);
 const ExcludedStatus = (<span className="badge badge-pill badge-secondary">excluded</span>);
-const FILE_TABLE_HEADERS = ['Status', 'File Name', 'Include In Snapshots', 'Actions'];
 const test_rows = [
   [UpToDateStatus, 'Cover Page.pdf', <ToggleSwitch />, 'xxx'],
   [OutdatedStatus, 'Cover Page.pdf', <ToggleSwitch />, 'xxx'],
@@ -36,6 +35,34 @@ const test_rows = [
   [ExcludedStatus, 'Cover Page.pdf', <ToggleSwitch />, 'xxx'],
   [ExcludedStatus, 'Cover Page.pdf', <ToggleSwitch />, 'xxx']
 ];
+
+/** creates a html table from list of files */
+function getFiles() {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve(test_rows)
+    }, 2000)
+  });
+}
+
+
+const test_snapshot_rows = [
+  [1, new Date().toLocaleString(), 'xxx', 'xxx'],
+  [2, new Date().toLocaleString(), 'xxx', 'xxx'],
+  [3, new Date().toLocaleString(), 'xxx', 'xxx'],
+  [4, new Date().toLocaleString(), 'xxx', 'xxx'],
+  [5, new Date().toLocaleString(), 'xxx', 'xxx']
+];
+/** creates a html table from list of certificates */
+function getSnapshots(){
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve(test_snapshot_rows)
+    }, 2000);
+  });
+}
+
+const FILE_TABLE_HEADERS = ['Status', 'File Name', 'Include In Snapshots', 'Actions'];
 
 class Files extends React.Component{
   render (){
@@ -46,7 +73,7 @@ class Files extends React.Component{
         </div>
         <Table
           headers={FILE_TABLE_HEADERS}
-          rows={test_rows}
+          rows={this.props.files}
         />
       </div>
     );
@@ -54,13 +81,6 @@ class Files extends React.Component{
 }
 
 const SNAPSHOT_TABLE_HEADERS = ['#', 'Date and Time', 'Other Information', 'Actions'];
-const test_snapshot_rows = [
-  [1, new Date().toLocaleString(), 'xxx', 'xxx'],
-  [2, new Date().toLocaleString(), 'xxx', 'xxx'],
-  [3, new Date().toLocaleString(), 'xxx', 'xxx'],
-  [4, new Date().toLocaleString(), 'xxx', 'xxx'],
-  [5, new Date().toLocaleString(), 'xxx', 'xxx']
-];
 
 class Snapshots extends React.Component {
   render(){
@@ -71,7 +91,7 @@ class Snapshots extends React.Component {
         </div>
         <Table
           headers={SNAPSHOT_TABLE_HEADERS}
-          rows={test_snapshot_rows}
+          rows={this.props.snapshots}
           headerBGColor='#F0AD4E'
         />
       </div>
@@ -80,6 +100,25 @@ class Snapshots extends React.Component {
 }
 
 class ProjectPage extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      files: [],
+      snapshots: []
+    };
+  }
+
+  componentDidMount() {
+    return Promise
+      .all([getFiles(), getSnapshots()])
+      .then(results => {
+        this.setState({
+          files: results[0],
+          snapshots: results[1]
+        })
+      });
+  }
+
   render() {
     return (
       <div class ="main-container">
@@ -90,8 +129,12 @@ class ProjectPage extends React.Component {
         />
         <div class ="inner-container">
           <SnapshotOutdatedAlert />
-          <Files />
-          <Snapshots />
+          <Files
+            files={this.state.files}
+          />
+          <Snapshots
+            snapshots={this.state.snapshots}
+          />
         </div>
       </div>
     );
@@ -99,71 +142,3 @@ class ProjectPage extends React.Component {
 }
 
 export default ProjectPage;
-/** creates a html table from list of files */
-function getFiles(){
-  return(
-    <table class="table">
-        <thead>
-          <tr class = "file-row-dark">
-            <th scope="col">#</th>
-            <th scope="col">First</th>
-            <th scope="col">Last</th>
-            <th scope="col">Handle</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr class="file-row-light">
-            <th scope="row">1</th>
-            <td>Mark</td>
-            <td>Otto</td>
-            <td>@mdo</td>
-          </tr>
-          <tr class="file-row-light">
-            <th scope="row">2</th>
-            <td>Jacob</td>
-            <td>Thornton</td>
-            <td>@fat</td>
-          </tr>
-          <tr class="file-row-light">
-            <th scope="row">3</th>
-            <td>Larry</td>
-            <td>the Bird</td>
-            <td>@twitter</td>
-          </tr>
-        </tbody>
-      </table>
-  )
-}
-/** creates a html table from list of certificates */
-function getCerts(){
-  return (<table class="table">
-  <thead>
-    <tr class="bg-warning">
-      <th scope="col">#</th>
-      <th scope="col">First</th>
-      <th scope="col">Last</th>
-      <th scope="col">Handle</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr class="table-light">
-      <th scope="row">1</th>
-      <td>Mark</td>
-      <td>Otto</td>
-      <td>@mdo</td>
-    </tr>
-    <tr class="table-light">
-      <th scope="row">2</th>
-      <td>Jacob</td>
-      <td>Thornton</td>
-      <td>@fat</td>
-    </tr>
-    <tr class="table-light">
-      <th scope="row">3</th>
-      <td>Larry</td>
-      <td>the Bird</td>
-      <td>@twitter</td>
-    </tr>
-    </tbody>
-  </table>)
-}
