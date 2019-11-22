@@ -7,5 +7,6 @@ module.exports = {
 
   SELECT_FOLDER: 'select-folder',
   ADD_PROJECT: 'add-project',
-  GET_PROJECT_INFO: 'get-project-info'
+  GET_PROJECT_INFO: 'get-project-info',
+  GET_EXISTING_PROJECTS: 'get-existing-projects'
 };

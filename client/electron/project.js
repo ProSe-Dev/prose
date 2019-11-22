@@ -6,12 +6,7 @@ const { selectDirAsync, selectDirSync } = require('./helpers/dialog');
 const Log = require('./helpers/log');
 const { generateUUID } = require('./helpers/id');
 
-const {
-  SYNC_CREATE_PROJECT_CH,
-  SELECT_FOLDER,
-  ADD_PROJECT,
-  GET_PROJECT_INFO
-} = require('../src/shared/ipc-events');
+const events = require('../src/shared/ipc-events');
 
 const PROJECT_CONFIG_FOLDER_NAME = '.prose';
 
@@ -71,8 +66,12 @@ exports.bootstrap = function () {
     return project;
   }
 
-  ipcMain.handle(GET_PROJECT_INFO, async (event, args) => {
-    Log.ipcLog(GET_PROJECT_INFO, args);
+  ipcMain.handle(events.GET_EXISTING_PROJECTS, (event, args) => {
+    return projectList;
+  });
+
+  ipcMain.handle(events.GET_PROJECT_INFO, async (event, args) => {
+    Log.ipcLog(events.GET_PROJECT_INFO, args);
     let id = args[0];
     let path = projectList[id];
     let projectInfo = {};
@@ -85,14 +84,14 @@ exports.bootstrap = function () {
     let snapshotsRaw = await fs.readFileAsync(resolve(path, '.prose', 'snapshots.json'));
     projectInfo.snapshots = JSON.parse(snapshotsRaw);
     
-    Log.debugLog(GET_PROJECT_INFO, projectInfo.files);
-    Log.debugLog(GET_PROJECT_INFO, projectInfo.snapshots);
+    Log.debugLog(events.GET_PROJECT_INFO, projectInfo.files);
+    Log.debugLog(events.GET_PROJECT_INFO, projectInfo.snapshots);
 
     return projectInfo;
   })
 
-  ipcMain.handle(SELECT_FOLDER, async (event, args) => {
-    Log.ipcLog(SELECT_FOLDER, args);
+  ipcMain.handle(events.SELECT_FOLDER, async (event, args) => {
+    Log.ipcLog(events.SELECT_FOLDER, args);
     let result = await selectDirAsync();
     if (result.canceled) {
       return null;
@@ -101,8 +100,8 @@ exports.bootstrap = function () {
     }
   });
 
-  ipcMain.handle(ADD_PROJECT, async (event, args) => {
-    Log.ipcLog(ADD_PROJECT, args);
+  ipcMain.handle(events.ADD_PROJECT, async (event, args) => {
+    Log.ipcLog(events.ADD_PROJECT, args);
     let name = args[0];
     let contact = args[1];
     let path = args[2];
@@ -111,7 +110,7 @@ exports.bootstrap = function () {
     try {
       // return if folder is already a prose project
       if (await isProseProject(projectPath)) {
-        console.log(ADD_PROJECT, 'already a prose project');
+        console.log(events.ADD_PROJECT, 'already a prose project');
         return;
       }
     
