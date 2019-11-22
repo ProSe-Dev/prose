@@ -25,26 +25,10 @@ function SnapshotUptodateAlert() {
   );
 }
 
-function Title(props){
-  function Dot(status){
-    if (status.synced)
-      return (<span class="green dot"></span>);
-    else
-      return (<span class="red dot"></span>);
-  }
-  return(
-    <span class="title-container">
-      <span class="display-3 font-weight-bold project-title"> {props.ProjectName} </span>
-      <Dot synced = {props.CertStatus}/>
-      <button class="btn btn-primary btn-lg cert-button">New Certificate</button>
-    </span>
-  )
-}
-
 const UpToDateStatus = (<span className="badge badge-pill badge-success">uptodate</span>);
 const OutdatedStatus = (<span className="badge badge-pill badge-danger">outdated</span>);
 const ExcludedStatus = (<span className="badge badge-pill badge-secondary">excluded</span>);
-const FILE_TABLE_HEADERS = ['Status', 'File Name', 'Include In Snapshots', 'Other Actions'];
+const FILE_TABLE_HEADERS = ['Status', 'File Name', 'Include In Snapshots', 'Actions'];
 const test_rows = [
   [UpToDateStatus, 'Cover Page.pdf', <ToggleSwitch />, 'xxx'],
   [OutdatedStatus, 'Cover Page.pdf', <ToggleSwitch />, 'xxx'],
@@ -69,34 +53,29 @@ class Files extends React.Component{
   }
 }
 
-class Certificates extends React.Component {
-  
-  render(){
-    const cert_list = getCerts();
-    return(
-      <div class="certificates shadow">
-        <div class="display-4">
-          Certificates
-        </div>
-        <div class="cert-table">
-          {cert_list}
-        </div>
-    </div>
-      
-    )
-  }
-}
+const SNAPSHOT_TABLE_HEADERS = ['#', 'Date and Time', 'Other Information', 'Actions'];
+const test_snapshot_rows = [
+  [1, new Date().toLocaleString(), 'xxx', 'xxx'],
+  [2, new Date().toLocaleString(), 'xxx', 'xxx'],
+  [3, new Date().toLocaleString(), 'xxx', 'xxx'],
+  [4, new Date().toLocaleString(), 'xxx', 'xxx'],
+  [5, new Date().toLocaleString(), 'xxx', 'xxx']
+];
 
-class Summary extends React.Component {
+class Snapshots extends React.Component {
   render(){
     return(
-      <div class ="summary shadow">
-        <div class="display-4">
-            Summary
+      <div>
+        <div className="projectpage-heading">
+          Snapshots
         </div>
-        <p>{this.props.description}</p>
-    </div>
-    )
+        <Table
+          headers={SNAPSHOT_TABLE_HEADERS}
+          rows={test_snapshot_rows}
+          headerBGColor='#F0AD4E'
+        />
+      </div>
+    );
   }
 }
 
@@ -104,19 +83,15 @@ class ProjectPage extends React.Component {
   render() {
     return (
       <div class ="main-container">
+        <TitleBar 
+          title="hello"
+          subtitle="bye"
+          showSettings
+        />
         <div class ="inner-container">
-          <TitleBar 
-            title="hello"
-            subtitle="bye"
-            showSettings
-          />
           <SnapshotOutdatedAlert />
-          <Files
-            FileList = {"temp"}
-          />
-          <Certificates
-            CertList = {"temp"}
-          />
+          <Files />
+          <Snapshots />
         </div>
       </div>
     );
