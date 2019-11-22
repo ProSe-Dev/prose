@@ -70,3 +70,19 @@
 .file-row-light{
     background-color: #E7E7E7;
 }
+
+.projectpage-outdated-alert {
+    text-align: left;
+    display: grid;
+    grid-template-columns: 9fr 1fr;
+}
+
+.projectpage-outdated-alert > button {
+    width: fit-content;    
+}
+
+.projectpage-vcenter-wrapper {
+    display: -webkit-flex;
+    display: flex;
+    align-items: center;
+}

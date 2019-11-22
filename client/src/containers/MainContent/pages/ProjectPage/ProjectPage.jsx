@@ -2,6 +2,19 @@ import React from 'react';
 import './ProjectPage.css'
 import TitleBar from 'components/TitleBar';
 
+function SnapshotOutdatedAlert() {
+  return (
+    <div class="alert alert-warning projectpage-outdated-alert">
+      <div class="vcenter-wrapper">
+        Hey! Your project snapshot is outdated
+      </div>
+      <div class="hleft-wrapper">
+        <button type="button" class="btn btn-warning">Renew</button>
+      </div>
+    </div>
+  );
+}
+
 function Title(props){
   function Dot(status){
     if (status.synced)
@@ -76,6 +89,7 @@ class ProjectPage extends React.Component {
             subtitle="bye"
             showSettings
           />
+          <SnapshotOutdatedAlert />
           <Summary 
             description = {"Something about this project"}
           />

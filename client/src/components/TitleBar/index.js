@@ -16,7 +16,7 @@ function TitleBar (props) {
         <div className="titlebar-subtitle">{props.subtitle}</div>
       </div>
       {props.showSettings && (
-        <div className="titlebar-settings">
+        <div className="titlebar-settings vcenter-wrapper hleft-wrapper">
           <button type="button" class="btn btn-secondary">settings</button>
         </div>
       )}
