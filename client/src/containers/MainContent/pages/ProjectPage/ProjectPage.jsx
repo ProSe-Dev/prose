@@ -15,6 +15,14 @@ function SnapshotOutdatedAlert() {
   );
 }
 
+function SnapshotUptodateAlert() {
+  return (
+    <div class="alert alert-primary">
+      Everything is up to date!
+    </div>
+  );
+}
+
 function Title(props){
   function Dot(status){
     if (status.synced)

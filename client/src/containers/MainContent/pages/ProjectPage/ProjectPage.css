@@ -71,8 +71,13 @@
     background-color: #E7E7E7;
 }
 
-.projectpage-outdated-alert {
+/* overwrite bootstrap alert to justify text left */
+.alert {
     text-align: left;
+}
+
+/* alert styling */
+.projectpage-outdated-alert {
     display: grid;
     grid-template-columns: 9fr 1fr;
 }
