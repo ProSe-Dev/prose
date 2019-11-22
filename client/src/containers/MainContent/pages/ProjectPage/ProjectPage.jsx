@@ -3,6 +3,8 @@ import './ProjectPage.css'
 import TitleBar from 'components/TitleBar';
 import Table from 'components/Table';
 import ToggleSwitch from 'components/ToggleSwitch';
+import SettingsModal from './SettingsModal';
+import { throwStatement } from '@babel/types';
 
 function SnapshotOutdatedAlert() {
   return (
@@ -104,8 +106,20 @@ class ProjectPage extends React.Component {
     super(props);
     this.state = {
       files: [],
-      snapshots: []
+      snapshots: [],
+      showSettings: false
     };
+    this.toggleSettings = this.toggleSettings.bind(this);
+    this.handleSaveSettings = this.handleSaveSettings.bind(this);
+  }
+
+  toggleSettings() {
+    this.setState({ showSettings: !this.state.showSettings });
+  }
+
+  handleSaveSettings(settings) {
+    console.log('automatic snapshot:', settings.autoSnapshot)
+    this.toggleSettings();
   }
 
   componentDidMount() {
@@ -126,6 +140,7 @@ class ProjectPage extends React.Component {
           title="hello"
           subtitle="bye"
           showSettings
+          onSettingsClicked={this.toggleSettings}
         />
         <div class ="inner-container">
           <SnapshotOutdatedAlert />
@@ -136,6 +151,11 @@ class ProjectPage extends React.Component {
             snapshots={this.state.snapshots}
           />
         </div>
+        <SettingsModal
+          onClose={this.toggleSettings}
+          onSave={this.handleSaveSettings}
+          show={this.state.showSettings}
+        />
       </div>
     );
   }
