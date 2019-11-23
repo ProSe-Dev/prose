@@ -8,6 +8,13 @@ import TitleBar from 'components/TitleBar';
 const ipc = window.require('electron').ipcRenderer;
 
 class FileSearchPage extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      selectedFile: {},
+      searchResults: [],
+    };
+  }
   render() {
     return (
       <div>
@@ -16,7 +23,7 @@ class FileSearchPage extends React.Component {
           subtitle="This is where you can do an IP verification on a file. Information will be displayed if the file exists on the blockchain"
           color="blue"
         />
-        <Dropzone/>
+        <Dropzone parent={this}/>
         <button
         style={{
           float: 'left',
@@ -25,11 +32,15 @@ class FileSearchPage extends React.Component {
           type="button"
           className="btn btn-success"
           onClick={() => {
-            console.log('button pressed');
-            fetch('localhost:8080/search?filehash=test')
+            console.log('request: ' + '13.93.197.68:8080/search?filehash=' + this.state.selectedFile.hash);
+            fetch('http://13.93.197.68:8080/search?filehash=' + this.state.selectedFile.hash)
+            .then(res => {
+              console.log("Got " + res ); res.text()
+            })
+            .then(result => this.setState({ searchResults: result}))
           }}
         >
-          SEARCH
+          {"SEARCH for " + this.state.selectedFile.path}
         </button>
       </div>
     );
