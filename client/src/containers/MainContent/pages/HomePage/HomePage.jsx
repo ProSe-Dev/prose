@@ -1,5 +1,5 @@
 import React from 'react';
-import {SELECT_FOLDER, ADD_PROJECT, GET_PROJECT_INFO} from 'shared/ipc-events';
+import events from 'shared/ipc-events';
 
 // workaround for served react app to get access to electron module
 // reference: https://github.com/electron/electron/issues/7300
@@ -14,7 +14,7 @@ class HomePage extends React.Component {
           className="btn btn-success"
           onClick={() => {
             console.log('button pressed');
-            ipc.invoke(GET_PROJECT_INFO, ['123'])
+            ipc.invoke(events.SEARCH_FILE, ['/home/gordon/Workspace/School/cpen-442/prose/client/package.json'])
               .then(result => console.log(result));
           }}
         >

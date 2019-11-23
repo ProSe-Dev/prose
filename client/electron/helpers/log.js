@@ -8,7 +8,12 @@ function debugLog(functionName, msg) {
   console.log(LOG_HEADER, `${functionName}()`, ':::', msg);
 }
 
+function error(err) {
+  console.error(err);
+}
+
 module.exports = {
   ipcLog,
-  debugLog
+  debugLog,
+  error
 };
