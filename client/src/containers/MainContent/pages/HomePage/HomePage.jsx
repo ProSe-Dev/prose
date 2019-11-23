@@ -8,8 +8,17 @@ const ipc = window.require('electron').ipcRenderer;
 class HomePage extends React.Component {
   render() {
     return (
-      <div>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: '100%',
+        }}>
         <button 
+          style={{
+            width: 300,
+          }}
           type="button"
           className="btn btn-success"
           onClick={() => {

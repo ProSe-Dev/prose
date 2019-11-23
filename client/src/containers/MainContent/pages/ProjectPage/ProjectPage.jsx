@@ -31,11 +31,11 @@ const UpToDateStatus = (<span className="badge badge-pill badge-success">uptodat
 const OutdatedStatus = (<span className="badge badge-pill badge-danger">outdated</span>);
 const ExcludedStatus = (<span className="badge badge-pill badge-secondary">excluded</span>);
 const test_rows = [
-  [UpToDateStatus, 'Cover Page.pdf', <ToggleSwitch />, 'xxx'],
-  [OutdatedStatus, 'Cover Page.pdf', <ToggleSwitch />, 'xxx'],
-  [ExcludedStatus, 'Cover Page.pdf', <ToggleSwitch />, 'xxx'],
-  [ExcludedStatus, 'Cover Page.pdf', <ToggleSwitch />, 'xxx'],
-  [ExcludedStatus, 'Cover Page.pdf', <ToggleSwitch />, 'xxx']
+  [UpToDateStatus, 'Cover Page.pdf', <ToggleSwitch toggled={true} />, '@ZTfer'],
+  [OutdatedStatus, 'Canvas.png', <ToggleSwitch toggled={true} />, '@fat'],
+  [ExcludedStatus, 'Canvas.raw', <ToggleSwitch />, '@weibo'],
+  [ExcludedStatus, 'random.txt', <ToggleSwitch />, '@weibo'],
+  [ExcludedStatus, 'scrape.txt', <ToggleSwitch />, '@weibo']
 ];
 
 /** creates a html table from list of files */
@@ -137,8 +137,8 @@ class ProjectPage extends React.Component {
     return (
       <div class ="main-container">
         <TitleBar 
-          title="hello"
-          subtitle="bye"
+          title="The Art Project"
+          subtitle="Created on Nov 11, 2019"
           showSettings
           onSettingsClicked={this.toggleSettings}
         />
