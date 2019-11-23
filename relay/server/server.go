@@ -15,6 +15,7 @@ import (
 	"github.com/ProSe-Dev/prose/prose/proto"
 	"github.com/gorilla/mux"
 	"github.com/mitchellh/hashstructure"
+	"github.com/rs/cors"
 	"google.golang.org/grpc"
 )
 
@@ -42,9 +43,14 @@ func run(port uint64) error {
 	portStr := strconv.FormatUint(port, 10)
 	mux := makeMuxRouter()
 	log.Printf("Listening on %s", portStr)
+	c := cors.New(cors.Options{
+		AllowCredentials: true,
+		Debug:            true,
+	})
+	handler := c.Handler(mux)
 	s := &http.Server{
 		Addr:           ":" + portStr,
-		Handler:        mux,
+		Handler:        handler,
 		ReadTimeout:    10 * time.Second,
 		WriteTimeout:   10 * time.Second,
 		MaxHeaderBytes: 1 << 20,

@@ -1,5 +1,6 @@
-import React, {useMemo} from 'react';
+import React, {useMemo, useCallback} from 'react';
 import {useDropzone} from 'react-dropzone';
+const crypto = require('crypto');
 
 const baseStyle = {
   flex: 1,
@@ -32,6 +33,26 @@ const rejectStyle = {
 };
 
 function Dropzone(props) {
+  const onDrop = useCallback((acceptedFiles) => {
+    acceptedFiles.forEach((file) => {
+      const reader = new FileReader()
+
+      reader.onabort = () => console.log('file reading was aborted')
+      reader.onerror = () => console.log('file reading has failed')
+      reader.onload = () => {
+      // Do whatever you want with the file contents
+        const binaryStr = reader.result
+        console.log( props.selectedFile)
+        var sha256 = crypto.createHash('sha256').update(binaryStr).digest("hex")
+        props.parent.setState({ selectedFile: {binary: binaryStr, path: file.path, hash: sha256}})
+        console.log( props.parent.state.selectedFile)
+        console.log(binaryStr)
+      }
+      reader.readAsArrayBuffer(file)
+    })
+    
+  }, [])
+
   const {
     acceptedFiles,
     getRootProps,
@@ -39,7 +60,7 @@ function Dropzone(props) {
     isDragActive,
     isDragAccept,
     isDragReject
-  } = useDropzone({});
+  } = useDropzone({onDrop});
 
   const style = useMemo(() => ({
     ...baseStyle,
