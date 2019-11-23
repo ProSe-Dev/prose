@@ -2,14 +2,15 @@ import React from 'react';
 import './style.css';
 
 const BACKGROUND_COLOR_MAP = {
-  'GREY': '#979797'
+  'grey': '#979797',
+  'blue': '#6b8ab6',
 };
 
 function TitleBar (props) {
   return (
     <div 
       className="titlebar"
-      style={{backgroundColor: BACKGROUND_COLOR_MAP['GREY']}}
+      style={{backgroundColor: BACKGROUND_COLOR_MAP[props.color || "grey"]}}
     >
       <div className="titlebar-text-container">
         <div className="titlebar-title">{props.title}</div>
