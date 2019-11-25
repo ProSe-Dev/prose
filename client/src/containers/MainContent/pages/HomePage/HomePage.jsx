@@ -1,5 +1,5 @@
 import React from 'react';
-import { SYNC_CREATE_PROJECT_CH } from 'shared/constants.js';
+import events from 'shared/ipc-events';
 
 // workaround for served react app to get access to electron module
 // reference: https://github.com/electron/electron/issues/7300
@@ -14,8 +14,8 @@ class HomePage extends React.Component {
           className="btn btn-success"
           onClick={() => {
             console.log('button pressed');
-            let result = ipc.sendSync(SYNC_CREATE_PROJECT_CH, 'testproject');
-            console.log(result);
+            ipc.invoke(events.SEARCH_FILE, ['/home/gordon/Workspace/School/cpen-442/prose/client/package.json'])
+              .then(result => console.log(result));
           }}
         >
           ADD NEW PROJECT

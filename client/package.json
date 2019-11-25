@@ -5,13 +5,16 @@
   "main": "public/electron/main.js",
   "homepage": "./",
   "dependencies": {
+    "bluebird": "^3.7.1",
     "lodash.template": "^4.5.0",
     "mixin-deep": "^2.0.1",
+    "node-fetch": "^2.6.0",
     "react": "^16.11.0",
     "react-dom": "^16.11.0",
     "react-router-dom": "^5.1.2",
     "react-scripts": "3.2.0",
-    "set-value": "^2.0.1"
+    "set-value": "^2.0.1",
+    "uuid": "^3.3.3"
   },
   "scripts": {
     "start": "concurrently \"BROWSER=none npm run react-start\" \"wait-on http://localhost:3000 && npm run electron-start\"",
