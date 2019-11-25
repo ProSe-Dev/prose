@@ -4,20 +4,49 @@ import './Sidebar.css';
 import { SYNC_CREATE_PROJECT_CH } from 'shared/constants.js';
 const ipc = window.require('electron').ipcRenderer;
 
+const projectList = [
+  { name:'The Art Project', projectId: '21321ko3' },
+  { name:'Artwork', projectId: '21321421' },
+  { name:'Corporate', projectId: '12321323' }
+];
+
 class Sidebar extends React.Component{
+  constructor(props) {
+    super(props);
+    this.state = {
+      selectedProject: null,
+    };
+  }
+
   render(){
-    const projectList = createProjectList("x");
     return(
       <div class="Sidebar">
-        <Link 
+        <div className="sidebar-logo">
+          <Link 
             style={{ textDecoration: 'none', color: 'white' }} 
-            to="/"> <h3 style={{marginLeft: '5px'}}>ProSe</h3></Link>
+            to="/"
+          >
+            <h3 style={{marginLeft: '5px'}}>ProSe</h3>
+          </Link>
+        </div>
+
         <div class="projects">
           <h5 style={{
             color: 'lightgray',
             marginLeft: '5px',
-          }}>Existing Projects</h5>
-          {projectList}
+          }}>
+            Existing Projects
+          </h5>
+          {projectList.map((proj, ind) => (
+            <div className="project-item" key={ind}>
+              <Link
+                className="project-item-link"
+                to={`/project/${proj.projectId}`}  
+              >
+                <h7> {`> ${proj.name}`} </h7>
+              </Link>
+            </div>
+          ))}
         </div>
 
         <div>

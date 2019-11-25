@@ -29,3 +29,13 @@
   
 }
 button:focus {outline:0;}
+
+.project-item {
+  color: lightgray;
+  margin-left: 15px;
+}
+
+.project-item-link {
+  color: inherit;
+  text-decoration: inherit;
+}

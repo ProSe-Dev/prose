@@ -94,8 +94,10 @@ exports.bootstrap = function () {
     Log.ipcLog(events.SELECT_FOLDER, args);
     let result = await selectDirAsync();
     if (result.canceled) {
+      Log.ipcLog(events.SELECT_FOLDER, 'canceled');
       return null;
     } else {
+      Log.ipcLog(events.SELECT_FOLDER, result);
       return result.filePaths[0]
     }
   });

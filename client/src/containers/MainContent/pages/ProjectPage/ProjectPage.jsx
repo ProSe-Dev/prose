@@ -4,16 +4,16 @@ import TitleBar from 'components/TitleBar';
 import Table from 'components/Table';
 import ToggleSwitch from 'components/ToggleSwitch';
 import SettingsModal from './SettingsModal';
-import { throwStatement } from '@babel/types';
+import uuid from 'uuid/v4';
 
-function SnapshotOutdatedAlert() {
+function SnapshotOutdatedAlert(props) {
   return (
     <div class="alert alert-warning projectpage-outdated-alert">
       <div class="vcenter-wrapper">
         Hey! Your project snapshot is outdated
       </div>
       <div class="hleft-wrapper">
-        <button type="button" class="btn btn-warning">Renew</button>
+        <button type="button" class="btn btn-warning" onClick={props.onClick}>Renew</button>
       </div>
     </div>
   );
@@ -30,31 +30,26 @@ function SnapshotUptodateAlert() {
 const UpToDateStatus = (<span className="badge badge-pill badge-success">uptodate</span>);
 const OutdatedStatus = (<span className="badge badge-pill badge-danger">outdated</span>);
 const ExcludedStatus = (<span className="badge badge-pill badge-secondary">excluded</span>);
-const test_rows = [
-  [UpToDateStatus, 'Cover Page.pdf', <ToggleSwitch toggled={true} />, '@ZTfer'],
-  [OutdatedStatus, 'Canvas.png', <ToggleSwitch toggled={true} />, '@fat'],
-  [ExcludedStatus, 'Canvas.raw', <ToggleSwitch />, '@weibo'],
-  [ExcludedStatus, 'random.txt', <ToggleSwitch />, '@weibo'],
-  [ExcludedStatus, 'scrape.txt', <ToggleSwitch />, '@weibo']
+const test_file_rows = [
+  [OutdatedStatus, 'Cover Page.pdf', <ToggleSwitch toggled/>, '@ZTfer'],
+  [OutdatedStatus, 'Canvas.png', <ToggleSwitch toggled/>, '@fat'],
+  [OutdatedStatus, 'Canvas.raw', <ToggleSwitch toggled/>, '@weibo'],
+  [OutdatedStatus, 'random.txt', <ToggleSwitch toggled/>, '@weibo'],
+  [OutdatedStatus, 'scrape.txt', <ToggleSwitch toggled/>, '@weibo']
 ];
 
 /** creates a html table from list of files */
 function getFiles() {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
-      resolve(test_rows)
+      resolve(test_file_rows)
     }, 2000)
   });
 }
 
 
-const test_snapshot_rows = [
-  [1, new Date().toLocaleString(), 'xxx', 'xxx'],
-  [2, new Date().toLocaleString(), 'xxx', 'xxx'],
-  [3, new Date().toLocaleString(), 'xxx', 'xxx'],
-  [4, new Date().toLocaleString(), 'xxx', 'xxx'],
-  [5, new Date().toLocaleString(), 'xxx', 'xxx']
-];
+const test_snapshot_rows = [];
+
 /** creates a html table from list of certificates */
 function getSnapshots(){
   return new Promise((resolve, reject) => {
@@ -82,7 +77,7 @@ class Files extends React.Component{
   }
 }
 
-const SNAPSHOT_TABLE_HEADERS = ['#', 'Date and Time', 'Other Information', 'Actions'];
+const SNAPSHOT_TABLE_HEADERS = ['#', 'Date and Time', 'Block ID', 'Actions'];
 
 class Snapshots extends React.Component {
   render(){
@@ -107,10 +102,12 @@ class ProjectPage extends React.Component {
     this.state = {
       files: [],
       snapshots: [],
-      showSettings: false
+      showSettings: false,
+      snapshotUpdated: false
     };
     this.toggleSettings = this.toggleSettings.bind(this);
     this.handleSaveSettings = this.handleSaveSettings.bind(this);
+    this.handleSnapshot = this.handleSnapshot.bind(this);
   }
 
   toggleSettings() {
@@ -118,8 +115,19 @@ class ProjectPage extends React.Component {
   }
 
   handleSaveSettings(settings) {
-    console.log('automatic snapshot:', settings.autoSnapshot)
+    console.log('automatic snapshot:', settings.autoSnapshot);
     this.toggleSettings();
+  }
+
+  // TODO: this is a hack, please fix later
+  handleSnapshot() {
+    setTimeout(() => {
+      test_snapshot_rows.push([ test_snapshot_rows.length + 1, new Date().toLocaleString(), uuid(), '' ]);
+      test_file_rows.forEach((row) => {
+        row[0] = UpToDateStatus;
+      });
+      this.setState({ snapshotUpdated: true });
+    }, 1500);
   }
 
   componentDidMount() {
@@ -143,7 +151,8 @@ class ProjectPage extends React.Component {
           onSettingsClicked={this.toggleSettings}
         />
         <div class ="inner-container">
-          <SnapshotOutdatedAlert />
+          { this.state.snapshotUpdated ? <SnapshotUptodateAlert /> : <SnapshotOutdatedAlert onClick={this.handleSnapshot}/> }
+          
           <Files
             files={this.state.files}
           />
