@@ -127,7 +127,7 @@ class ProjectPage extends React.Component {
         row[0] = UpToDateStatus;
       });
       this.setState({ snapshotUpdated: true });
-    }, 1500);
+    }, 500);
   }
 
   componentDidMount() {

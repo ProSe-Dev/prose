@@ -23,3 +23,9 @@ code {
   display: flex;
   justify-content: flex-end;
 }
+
+.fstart-wrapper {
+  display: -webkit-flex;
+  display: flex;
+  justify-content: flex-start;
+}

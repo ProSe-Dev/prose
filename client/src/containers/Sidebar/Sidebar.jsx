@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import './Sidebar.css';
-import { SYNC_CREATE_PROJECT_CH } from 'shared/constants.js';
+import events from 'shared/ipc-events';
 const ipc = window.require('electron').ipcRenderer;
 
 const projectList = [
@@ -56,9 +56,9 @@ class Sidebar extends React.Component{
           marginLeft: '5px'
         }}
           class="side-add-project"
-          onClick={() => {
+          onClick={async () => {
             console.log('button pressed');
-            let result = ipc.sendSync(SYNC_CREATE_PROJECT_CH, 'testproject');
+            let result = await ipc.invoke(events.SELECT_FOLDER, 'testproject');
             console.log(result);
           }}
         ><h6>Add New Project + </h6></button>
