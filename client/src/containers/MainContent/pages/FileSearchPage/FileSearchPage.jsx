@@ -4,6 +4,7 @@ import Dropzone from 'components/Dropzone';
 import TitleBar from 'components/TitleBar';
 import Collapse from 'components/Collapse';
 import Timeline from 'components/Timeline';
+import Spinner from 'components/Spinner';
 
 // workaround for served react app to get access to electron module
 // reference: https://github.com/electron/electron/issues/7300
@@ -32,11 +33,19 @@ function ProjectDisplay(props) {
   return (
     <div className="project-display">
       <Collapse 
-        items={testProjects}
+        items={props.projects}
       />
     </div>
   );
 }
+
+function SuccessfulSearchMessage(props) {
+  return (
+    <div class="alert alert-success" role="alert">
+      {props.count} projects were found to contain the file!
+    </div>
+  );
+};
 
 class FileSearchPage extends React.Component {
   constructor(props) {
@@ -44,6 +53,9 @@ class FileSearchPage extends React.Component {
     this.state = {
       selectedFile: null,
       searchResults: [],
+      fetching: false,
+      projectList: null,
+      showResultMessage: false,
     };
   }
   render() {
@@ -54,26 +66,37 @@ class FileSearchPage extends React.Component {
           subtitle="This is where you can do an IP verification on a file. Information will be displayed if the file exists on the blockchain"
           color="blue"
         />
-        <Dropzone parent={this}/>
-        <button
-          style={{
-            margin: '15px',
-          }}
-          type="button"
-          className="btn btn-success hleft-wrapper"
-          onClick={() => {
-            console.log('request: ' + '13.93.197.68:8080/search?filehash=' + this.state.selectedFile.hash);
-            fetch('http://13.93.197.68:8080/search?filehash=' + this.state.selectedFile.hash)
-            .then(res => {
-              console.log("Got " + res ); res.text()
-            })
-            .then(result => this.setState({ searchResults: result}))
-          }}
-          disabled={!this.state.selectedFile}
-        >
-          {"SEARCH"}
-        </button>
-        <ProjectDisplay />
+        <div className="inner-container">
+          <Dropzone parent={this}/>
+          <div className="fstart-wrapper mt-4">
+            <button
+              type="button"
+              className="btn btn-success"
+              onClick={() => {
+                // TODO: electron should take care of this
+                // console.log('request: ' + '13.93.197.68:8080/search?filehash=' + this.state.selectedFile.hash);
+                // fetch('http://13.93.197.68:8080/search?filehash=' + this.state.selectedFile.hash)
+                // .then(res => {
+                //   console.log("Got " + res ); res.text()
+                // })
+                // .then(result => this.setState({ searchResults: result}))
+
+                setTimeout(() => {
+                  this.setState({ projectList: testProjects, fetching: false, showResultMessage: true });
+                }, 1000);
+                this.setState({ fetching: true });
+              }}
+              disabled={!this.state.selectedFile || this.state.fetching}
+            >
+              {"SEARCH"} 
+            </button>
+            { this.state.fetching && <Spinner className="ml-2" height="40px" width="40px"/> }
+          </div>
+          <div className="mt-4">
+            { this.state.showResultMessage && <SuccessfulSearchMessage count="4"/>}
+            { this.state.projectList && <ProjectDisplay projects={this.state.projectList}/>}
+          </div>
+        </div>
       </div>
     );
   }
