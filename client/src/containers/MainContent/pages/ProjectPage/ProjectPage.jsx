@@ -27,15 +27,15 @@ function SnapshotUptodateAlert() {
   );
 }
 
-const UpToDateStatus = (<span className="badge badge-pill badge-success">uptodate</span>);
-const OutdatedStatus = (<span className="badge badge-pill badge-danger">outdated</span>);
-const ExcludedStatus = (<span className="badge badge-pill badge-secondary">excluded</span>);
+const UpToDateStatus = (<span className="badge badge-pill badge-success">UPTODATE</span>);
+const OutdatedStatus = (<span className="badge badge-pill badge-danger">OUTDATED</span>);
+const ExcludedStatus = (<span className="badge badge-pill badge-secondary">EXCLUDED</span>);
 const test_file_rows = [
-  [OutdatedStatus, 'Cover Page.pdf', <ToggleSwitch toggled/>, '@ZTfer'],
-  [OutdatedStatus, 'Canvas.png', <ToggleSwitch toggled/>, '@fat'],
-  [OutdatedStatus, 'Canvas.raw', <ToggleSwitch toggled/>, '@weibo'],
-  [OutdatedStatus, 'random.txt', <ToggleSwitch toggled/>, '@weibo'],
-  [OutdatedStatus, 'scrape.txt', <ToggleSwitch toggled/>, '@weibo']
+  [OutdatedStatus, 'Cover Page.pdf', <ToggleSwitch toggled/>],
+  [OutdatedStatus, 'Canvas.png', <ToggleSwitch toggled/>],
+  [OutdatedStatus, 'Canvas.raw', <ToggleSwitch toggled/>],
+  [OutdatedStatus, 'Intro.doc', <ToggleSwitch toggled/>],
+  [OutdatedStatus, 'Report.doc', <ToggleSwitch toggled/>]
 ];
 
 /** creates a html table from list of files */
@@ -43,7 +43,7 @@ function getFiles() {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
       resolve(test_file_rows)
-    }, 2000)
+    }, 100)
   });
 }
 
@@ -55,11 +55,11 @@ function getSnapshots(){
   return new Promise((resolve, reject) => {
     setTimeout(() => {
       resolve(test_snapshot_rows)
-    }, 2000);
+    }, 100);
   });
 }
 
-const FILE_TABLE_HEADERS = ['Status', 'File Name', 'Include In Snapshots', 'Actions'];
+const FILE_TABLE_HEADERS = ['Status', 'File Name', 'Include In Certificate'];
 
 class Files extends React.Component{
   render (){
@@ -77,14 +77,15 @@ class Files extends React.Component{
   }
 }
 
-const SNAPSHOT_TABLE_HEADERS = ['#', 'Date and Time', 'Block ID', 'Actions'];
+const SNAPSHOT_TABLE_HEADERS = ['#', 'Date and Time', 'Status', 'Block ID'];
 
+//TODO: rename to cerificate
 class Snapshots extends React.Component {
   render(){
     return(
       <div>
         <div className="projectpage-heading">
-          Snapshots
+        Certificate
         </div>
         <Table
           headers={SNAPSHOT_TABLE_HEADERS}
@@ -122,7 +123,12 @@ class ProjectPage extends React.Component {
   // TODO: this is a hack, please fix later
   handleSnapshot() {
     setTimeout(() => {
-      test_snapshot_rows.push([ test_snapshot_rows.length + 1, new Date().toLocaleString(), uuid(), '' ]);
+      test_snapshot_rows.push([
+        test_snapshot_rows.length + 1,
+        new Date().toLocaleString(),
+        <span className="badge badge-success">LIVE</span>,
+        <span className="badge badge-warning">{uuid()}</span>
+      ]);
       test_file_rows.forEach((row) => {
         row[0] = UpToDateStatus;
       });
