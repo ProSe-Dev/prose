@@ -10,7 +10,7 @@ function SnapshotOutdatedAlert(props) {
   return (
     <div class="alert alert-warning projectpage-outdated-alert">
       <div class="vcenter-wrapper">
-        Hey! Your project snapshot is outdated
+        Hey! Your project certificate is outdated
       </div>
       <div class="hleft-wrapper">
         <button type="button" class="btn btn-warning" onClick={props.onClick}>Renew</button>

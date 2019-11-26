@@ -6,6 +6,7 @@
   "homepage": "./",
   "dependencies": {
     "@material-ui/core": "^4.7.0",
+    "@material-ui/icons": "^4.5.1",
     "bluebird": "^3.7.1",
     "lodash.template": "^4.5.0",
     "mdbreact": "^4.22.1",

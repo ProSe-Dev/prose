@@ -24,14 +24,14 @@ let testProjects = [
   { heading: 'CPEN 442 Assignment 1 Answer Key',
     content: (
       <div>
-        <ProjectContact author="Prof. Konstantin Beznosov" contact="beznosov@ece.ubc.ca"/>
+        <ProjectContact author="Prof. Konstantin Beznosov" contact="cpen442@ece.ubc.ca"/>
         <Timeline items={fakeEvents} />
       </div>
      )},
   { heading: 'My Dank Meme Collection 3',
     content: (
       <div>
-        <ProjectContact author="Prof. Konstantin Beznosov" contact="beznosov@ece.ubc.ca"/>
+        <ProjectContact author="Prof. Konstantin Beznosov" contact="cpen442@ece.ubc.ca"/>
         <Timeline items={fakeEvents} />
       </div>
     )},
