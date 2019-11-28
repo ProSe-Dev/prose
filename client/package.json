@@ -9,6 +9,7 @@
     "@material-ui/icons": "^4.5.1",
     "bluebird": "^3.7.1",
     "electron-settings": "^3.2.0",
+    "isomorphic-git": "^0.70.8",
     "lodash.template": "^4.5.0",
     "mdbreact": "^4.22.1",
     "mixin-deep": "^2.0.1",
