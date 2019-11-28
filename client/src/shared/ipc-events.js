@@ -27,5 +27,14 @@ module.exports = {
   SEARCH_FILE: "search-file",
   // return generated public and private keypair
   // args[]
-  CREATE_KEY_PAIR: "create-keypair"
+  CREATE_KEY_PAIR: "create-keypair",
+  // returns the settings object
+  // args[<name>, <value>]
+  SETTINGS_SET: "settings-set",
+  // return value corresponding to name
+  // args[<name>, (defaultValue)]
+  SETTINGS_GET: "settings-get",
+  // return true if name exists in settings, otherwise false
+  // args[<name>]
+  SETTINGS_HAS: "settings-has"
 };
