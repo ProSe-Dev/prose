@@ -17,3 +17,6 @@ To execute a non-distributed standalone relay server for testing:
 ### GET /transaction submits data to the blockchain
 `curl <ip.address>:8080/transaction -X POST -d @sample_payload.json`
 `curl <ip.address>:8080/transaction -X POST -d @sample_payload2.json`
+
+### Note
+* You can get the SHA256 of a file with `sha256sum -b <FILE>`

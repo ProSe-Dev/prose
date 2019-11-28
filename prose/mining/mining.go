@@ -13,13 +13,13 @@ import (
 )
 
 const (
-	timeFormat   = "2006-01-02 15:04:05"
+	timeFormat   = "2006-01-02T15:04:05.000Z0700"
 	clockSkewMin = 5
 )
 
 var (
 	latestDataQueue   = []uint64{}
-	QueuedDataMap     = map[uint64]*BlockData{}
+	queuedDataMap     = map[uint64]*BlockData{}
 	queuedDataMapLock sync.Mutex
 
 	// BlockProcessedChan is a channel for indicating blocks have been processed
@@ -118,7 +118,7 @@ func IsBlockDataQueued(data *BlockData) bool {
 	queuedDataMapLock.Lock()
 	defer queuedDataMapLock.Unlock()
 	dHash, _ := hashstructure.Hash(data, nil)
-	_, ok := QueuedDataMap[dHash]
+	_, ok := queuedDataMap[dHash]
 	return ok
 }
 
@@ -139,11 +139,11 @@ func RemoveTransactionData(data *BlockData) (err error) {
 		}
 	}
 	latestDataQueue = tmp
-	if _, ok := QueuedDataMap[dHash]; !ok {
+	if _, ok := queuedDataMap[dHash]; !ok {
 		err = errors.New("data not found in map")
 		return
 	}
-	delete(QueuedDataMap, dHash)
+	delete(queuedDataMap, dHash)
 	return
 }
 
@@ -154,7 +154,7 @@ func PeekLatestTransactionData() (data *BlockData, err error) {
 		return
 	}
 	dHash := latestDataQueue[0]
-	data = QueuedDataMap[dHash]
+	data = queuedDataMap[dHash]
 	return
 }
 
@@ -163,7 +163,7 @@ func EnqueueTransactionData(data *BlockData) {
 	queuedDataMapLock.Lock()
 	defer queuedDataMapLock.Unlock()
 	dHash, _ := hashstructure.Hash(data, nil)
-	QueuedDataMap[dHash] = data
+	queuedDataMap[dHash] = data
 	latestDataQueue = append(latestDataQueue, dHash)
 }
 

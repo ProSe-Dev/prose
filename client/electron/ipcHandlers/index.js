@@ -1,5 +1,6 @@
 function bootstrap() {
-  require('./file-search');
+  require("./file-search");
+  require("./keygen");
 }
 
 module.exports = {
