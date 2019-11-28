@@ -1,6 +1,6 @@
 .Sidebar {
   background: #515151;
-  width: 200px;
+  height: 100%;
   font-size: 15px;
   text-align: left;
   padding-left:10px;
@@ -29,3 +29,13 @@
   
 }
 button:focus {outline:0;}
+
+.project-item {
+  color: lightgray;
+  padding-left: 15px;
+}
+
+.project-item-link {
+  color: inherit;
+  text-decoration: inherit;
+}

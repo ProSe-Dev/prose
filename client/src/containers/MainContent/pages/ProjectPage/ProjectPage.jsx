@@ -4,16 +4,16 @@ import TitleBar from 'components/TitleBar';
 import Table from 'components/Table';
 import ToggleSwitch from 'components/ToggleSwitch';
 import SettingsModal from './SettingsModal';
-import { throwStatement } from '@babel/types';
+import uuid from 'uuid/v4';
 
-function SnapshotOutdatedAlert() {
+function SnapshotOutdatedAlert(props) {
   return (
     <div class="alert alert-warning projectpage-outdated-alert">
       <div class="vcenter-wrapper">
-        Hey! Your project snapshot is outdated
+        Hey! Your project certificate is outdated
       </div>
       <div class="hleft-wrapper">
-        <button type="button" class="btn btn-warning">Renew</button>
+        <button type="button" class="btn btn-warning" onClick={props.onClick}>Renew</button>
       </div>
     </div>
   );
@@ -27,44 +27,39 @@ function SnapshotUptodateAlert() {
   );
 }
 
-const UpToDateStatus = (<span className="badge badge-pill badge-success">uptodate</span>);
-const OutdatedStatus = (<span className="badge badge-pill badge-danger">outdated</span>);
-const ExcludedStatus = (<span className="badge badge-pill badge-secondary">excluded</span>);
-const test_rows = [
-  [UpToDateStatus, 'Cover Page.pdf', <ToggleSwitch />, 'xxx'],
-  [OutdatedStatus, 'Cover Page.pdf', <ToggleSwitch />, 'xxx'],
-  [ExcludedStatus, 'Cover Page.pdf', <ToggleSwitch />, 'xxx'],
-  [ExcludedStatus, 'Cover Page.pdf', <ToggleSwitch />, 'xxx'],
-  [ExcludedStatus, 'Cover Page.pdf', <ToggleSwitch />, 'xxx']
+const UpToDateStatus = (<span className="badge badge-pill badge-success">UPTODATE</span>);
+const OutdatedStatus = (<span className="badge badge-pill badge-danger">OUTDATED</span>);
+const ExcludedStatus = (<span className="badge badge-pill badge-secondary">EXCLUDED</span>);
+const test_file_rows = [
+  [OutdatedStatus, 'Cover Page.pdf', <ToggleSwitch toggled/>],
+  [OutdatedStatus, 'Canvas.png', <ToggleSwitch toggled/>],
+  [OutdatedStatus, 'Canvas.raw', <ToggleSwitch toggled/>],
+  [OutdatedStatus, 'Intro.doc', <ToggleSwitch toggled/>],
+  [OutdatedStatus, 'Report.doc', <ToggleSwitch toggled/>]
 ];
 
 /** creates a html table from list of files */
 function getFiles() {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
-      resolve(test_rows)
-    }, 2000)
+      resolve(test_file_rows)
+    }, 100)
   });
 }
 
 
-const test_snapshot_rows = [
-  [1, new Date().toLocaleString(), 'xxx', 'xxx'],
-  [2, new Date().toLocaleString(), 'xxx', 'xxx'],
-  [3, new Date().toLocaleString(), 'xxx', 'xxx'],
-  [4, new Date().toLocaleString(), 'xxx', 'xxx'],
-  [5, new Date().toLocaleString(), 'xxx', 'xxx']
-];
+const test_snapshot_rows = [];
+
 /** creates a html table from list of certificates */
 function getSnapshots(){
   return new Promise((resolve, reject) => {
     setTimeout(() => {
       resolve(test_snapshot_rows)
-    }, 2000);
+    }, 100);
   });
 }
 
-const FILE_TABLE_HEADERS = ['Status', 'File Name', 'Include In Snapshots', 'Actions'];
+const FILE_TABLE_HEADERS = ['Status', 'File Name', 'Include In Certificate'];
 
 class Files extends React.Component{
   render (){
@@ -82,14 +77,15 @@ class Files extends React.Component{
   }
 }
 
-const SNAPSHOT_TABLE_HEADERS = ['#', 'Date and Time', 'Other Information', 'Actions'];
+const SNAPSHOT_TABLE_HEADERS = ['#', 'Date and Time', 'Status', 'Block ID'];
 
+//TODO: rename to cerificate
 class Snapshots extends React.Component {
   render(){
     return(
       <div>
         <div className="projectpage-heading">
-          Snapshots
+        Certificate
         </div>
         <Table
           headers={SNAPSHOT_TABLE_HEADERS}
@@ -107,10 +103,12 @@ class ProjectPage extends React.Component {
     this.state = {
       files: [],
       snapshots: [],
-      showSettings: false
+      showSettings: false,
+      snapshotUpdated: false
     };
     this.toggleSettings = this.toggleSettings.bind(this);
     this.handleSaveSettings = this.handleSaveSettings.bind(this);
+    this.handleSnapshot = this.handleSnapshot.bind(this);
   }
 
   toggleSettings() {
@@ -118,8 +116,24 @@ class ProjectPage extends React.Component {
   }
 
   handleSaveSettings(settings) {
-    console.log('automatic snapshot:', settings.autoSnapshot)
+    console.log('automatic snapshot:', settings.autoSnapshot);
     this.toggleSettings();
+  }
+
+  // TODO: this is a hack, please fix later
+  handleSnapshot() {
+    setTimeout(() => {
+      test_snapshot_rows.push([
+        test_snapshot_rows.length + 1,
+        new Date().toLocaleString(),
+        <span className="badge badge-success">LIVE</span>,
+        <span className="badge badge-warning">{uuid()}</span>
+      ]);
+      test_file_rows.forEach((row) => {
+        row[0] = UpToDateStatus;
+      });
+      this.setState({ snapshotUpdated: true });
+    }, 500);
   }
 
   componentDidMount() {
@@ -137,13 +151,14 @@ class ProjectPage extends React.Component {
     return (
       <div class ="main-container">
         <TitleBar 
-          title="hello"
-          subtitle="bye"
+          title="The Art Project"
+          subtitle="Created on Nov 11, 2019"
           showSettings
           onSettingsClicked={this.toggleSettings}
         />
         <div class ="inner-container">
-          <SnapshotOutdatedAlert />
+          { this.state.snapshotUpdated ? <SnapshotUptodateAlert /> : <SnapshotOutdatedAlert onClick={this.handleSnapshot}/> }
+          
           <Files
             files={this.state.files}
           />

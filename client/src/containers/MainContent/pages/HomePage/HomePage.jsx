@@ -1,4 +1,5 @@
 import React from 'react';
+import { withRouter } from "react-router"
 import events from 'shared/ipc-events';
 
 // workaround for served react app to get access to electron module
@@ -6,17 +7,38 @@ import events from 'shared/ipc-events';
 const ipc = window.require('electron').ipcRenderer;
 
 class HomePage extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {};
+    this.handleAddProject = this.handleAddProject.bind(this);
+  }
+
+  handleAddProject() {
+    console.log('handleAddProject');
+    ipc.invoke(events.SELECT_FOLDER)
+      .then((path) => {
+        if (path) {
+          this.props.history.push('/project');
+        }
+      });
+  }
+
   render() {
     return (
-      <div>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: '100%',
+        }}>
         <button 
+          style={{
+            width: 300,
+          }}
           type="button"
           className="btn btn-success"
-          onClick={() => {
-            console.log('button pressed');
-            ipc.invoke(events.SEARCH_FILE, ['/home/gordon/Workspace/School/cpen-442/prose/client/package.json'])
-              .then(result => console.log(result));
-          }}
+          onClick={this.handleAddProject}
         >
           ADD NEW PROJECT
         </button>
@@ -25,4 +47,4 @@ class HomePage extends React.Component {
   }
 };
 
-export default HomePage;
+export default withRouter(HomePage);
