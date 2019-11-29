@@ -1,7 +1,6 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const url = require('url');
-const project = require('./project.js');
 const ipcHandlers = require('./ipcHandlers');
 
 // Keep a global reference of the window object, if you don't, the window will
@@ -46,7 +45,6 @@ function createWindow () {
 
 function onReady() {
   createWindow();
-  project.bootstrap(project);
   ipcHandlers.bootstrap();
 }
 
