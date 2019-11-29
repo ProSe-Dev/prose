@@ -1,25 +1,25 @@
-const filesHelper = require('../helpers/files');
-const fs = require('../helpers/fs');
-const { resolve } = require('path');
-const PROJECT_CONFIG_FOLDER_NAME = '.prose';
-const SNAPSHOT_FILE_NAME = 'snapshots.json';
+const filesHelper = require("../helpers/files");
+const fs = require("../helpers/fs");
+const { resolve } = require("path");
+const PROJECT_CONFIG_FOLDER_NAME = ".prose";
+const SNAPSHOT_FILE_NAME = "snapshots.json";
 
-function createProject() {
-
-}
+function createProject() {}
 
 function loadProject(abspath) {
-  return new Project('', '', abspath);
+  return new Project("", "", abspath);
 }
 
 class Project {
-  constructor(name, contact, abspath, projectId) {
+  constructor(projectID, name, contact, abspath, creationDate, colorClass) {
     this.name = name;
     this.contact = contact;
     this.path = abspath;
-    this.projectId = projectId;
+    this.projectID = projectID;
     this.snapshots = null;
     this.files = null;
+    this.creationDate = creationDate;
+    this.colorClass = colorClass;
   }
 
   async addSnapshot() {
@@ -37,7 +37,9 @@ class Project {
 
   async getSnapshots() {
     if (!this.snapshots) {
-      let snapshotsRaw = await fs.readFileAsync(resolve(this.path, PROJECT_CONFIG_FOLDER_NAME, SNAPSHOT_FILE_NAME));
+      let snapshotsRaw = await fs.readFileAsync(
+        resolve(this.path, PROJECT_CONFIG_FOLDER_NAME, SNAPSHOT_FILE_NAME)
+      );
       this.snapshots = JSON.parse(snapshotsRaw);
     }
     return this.snapshots;
@@ -46,4 +48,5 @@ class Project {
 
 module.exports = {
   loadProject,
+  Project
 };

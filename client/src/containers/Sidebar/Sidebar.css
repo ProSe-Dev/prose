@@ -3,39 +3,60 @@
   height: 100%;
   font-size: 15px;
   text-align: left;
-  padding-left:10px;
-  color:white;
-  padding-top:10px;
+  color: white;
+  padding-top: 10px;
 }
 
-.side-titles{
+.sidebar-logo {
+  text-align: center;
+}
+
+.sidebar-logo:hover {
+  color: black;
+}
+
+.side-titles {
   font-size: 20px;
-  margin-bottom:0px;
+  margin-bottom: 0px;
 }
 
-.projects{
-  margin-bottom: 50px;
+.projects {
+  margin: 15px;
 }
 
-.side-add-project{
+.sidebar-item {
   background-color: Transparent;
-  background-repeat:no-repeat;
+  background-repeat: no-repeat;
   border: none;
-  cursor:pointer;
+  cursor: pointer;
   overflow: hidden;
-  outline:none;
-  padding-left:0px;
-  color:white;
-  
+  outline: none;
+  color: white;
+  text-align: left;
+  color: "lightgray";
+  width: 100%;
+  height: 50px;
 }
-button:focus {outline:0;}
+.sidebar-text {
+  margin-left: 10px;
+}
+button:hover {
+  background-color: rgba(204, 204, 204, 0.5);
+}
+button:focus {
+  outline: 0;
+}
 
 .project-item {
-  color: lightgray;
-  padding-left: 15px;
+  margin-bottom: 15px;
 }
 
 .project-item-link {
   color: inherit;
   text-decoration: inherit;
+}
+
+.collapse-container {
+  margin-bottom: -30px;
+  margin-top: -15px;
 }

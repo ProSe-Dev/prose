@@ -3,7 +3,7 @@ const Log = require("../helpers/log");
 const events = require("../../src/shared/ipc-events");
 const crypto = require("crypto");
 
-ipcMain.handle(events.CREATE_KEY_PAIR, async (e, ...args) => {
+ipcMain.handle(events.CREATE_KEY_PAIR, async (event, ...args) => {
   Log.ipcLog(events.CREATE_KEY_PAIR, args);
   let secret = args[0];
   let result = crypto.generateKeyPairSync("ed25519", {
@@ -21,3 +21,8 @@ ipcMain.handle(events.CREATE_KEY_PAIR, async (e, ...args) => {
   });
   return result;
 });
+
+/*ipcMain.handle(events.SIGN_DATA, async (event, ...args) => {
+  Log.ipcLog(events.SIGN_DATA, args);
+  let data = args[0];
+});*/

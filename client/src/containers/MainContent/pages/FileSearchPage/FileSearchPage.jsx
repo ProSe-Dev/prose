@@ -95,9 +95,9 @@ class FileSearchPage extends React.Component {
     return (
       <div>
         <TitleBar
-          title="IP Check"
-          subtitle="This is where you can do an IP verification on a file. Information will be displayed if the file exists on the blockchain"
-          color="blue"
+          title="IP Checker"
+          subtitle="Search for file owners on the blockchain"
+          colorClass="blue"
         />
         <div className="inner-container">
           <Dropzone parent={this} />

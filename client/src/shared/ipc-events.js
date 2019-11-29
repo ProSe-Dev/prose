@@ -4,7 +4,7 @@ module.exports = {
   SYNC_CREATE_PROJECT_CH: "sync-create-project",
   ASYNC_CREATE_PROJECT_CH: "async-create-project",
   // event for getting existing projects
-  GET_EXISTING_PORJECTS: "get-existing-projects",
+  GET_EXISTING_PROJECTS: "get-existing-projects",
   NEW_SNAPSHOT: "new-snapshot",
 
   // open the select folder dialog and return path to user selected directory

@@ -1,8 +1,8 @@
 class Snapshot {
-  constructor(publicKey, contact, projectId, commitId, fileHashes) {
+  constructor(publicKey, contact, projectID, commitId, fileHashes) {
     this.publicKey = publicKey;
     this.contact = contact;
-    this.projectId = projectId;
+    this.projectID = projectID;
     this.commitId = commitId;
     this.fileHashes = fileHashes;
   }
@@ -12,7 +12,7 @@ class Snapshot {
       // TODO: hash this, because of the public key size
       PublicKey: this.publicKey,
       AuthorID: this.authorId,
-      ProjectID: this.projectId,
+      ProjectID: this.projectID,
       CommitHash: this.commitId,
       FileHashes: this.fileHashes
     });

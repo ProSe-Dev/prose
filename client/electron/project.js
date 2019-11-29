@@ -1,93 +1,44 @@
-const { dialog, ipcMain } = require("electron");
-const fs = require("./helpers/fs");
-const { resolve, basename } = require("path");
-const filesHelper = require("./helpers/files");
+const { ipcMain } = require("electron");
 const { selectDirAsync, selectFileAsync } = require("./helpers/dialog");
 const Log = require("./helpers/log");
 const { generateUUID } = require("./helpers/id");
 
 const events = require("../src/shared/ipc-events");
-
-const PROJECT_CONFIG_FOLDER_NAME = ".prose";
+const color = require("../src/shared/color");
+const s = require("../src/shared/settings");
+const { Project } = require("./models/Project");
+const settings = require("electron-settings");
+const projectList = settings.get(s.PROJECTS_LIST, []);
+const projectIDMap = {};
+const projectPathMap = {};
+projectList.forEach(p => {
+  projectIDMap[p.projectID] = p;
+  projectPathMap[p.path] = p;
+});
 
 exports.bootstrap = function() {
-  let projectList = {};
-  projectList["123"] =
-    "/home/gordon/Workspace/School/cpen-442/prose/client/test-projects/prose-test";
-
   /**
    * checks if a directory is already a prose project
    * @param projectPath - absolute path to the project folder
    * @return boolean
    */
   function isProseProject(projectPath) {
-    let configFolder = resolve(projectPath, PROJECT_CONFIG_FOLDER_NAME);
-    return fs.existsAsync(configFolder);
+    return projectList.some(p => {
+      return p.path === projectPath;
+    });
   }
 
-  /**
-   * create a new prose project in the give path
-   * @param {String} projectPath - path to project
-   */
-  function createProseProject(projectPath) {
-    // create hidden directory to contain config files
-    let configFolder = resolve(projectPath, PROJECT_CONFIG_FOLDER_NAME);
-    if (!fs.existsSync(configFolder)) {
-      fs.mkdirSync(configFolder);
-    }
-
-    // TODO: [a04a] should create config files in .prose
-    // 1) project.json
-    // 2) snapshots.json
-    // can probably do this async
-
-    // TODO: [3934] should grab files specified by the directory
-    // maybe use fs.Dir?
-    // https://nodejs.org/api/fs.html#fs_class_fs_dir
-
-    // get all files in the directory
-    // initially the status should all be changed? and all should be included in snapshot
-    let files = filesHelper.getAllFilesInDirSync(projectPath).map(filename => ({
-      filename,
-      status: 0,
-      ignore: false
-    }));
-
-    let project = {
-      // use basename of the directory as name for now
-      name: basename(projectPath),
-      createdOn: new Date().toISOString(),
-      snapshots: [],
-      path: projectPath,
-      files
-    };
-    return project;
-  }
-
-  ipcMain.handle(events.GET_EXISTING_PROJECTS, (event, args) => {
+  ipcMain.handle(events.GET_EXISTING_PROJECTS, (event, ...args) => {
+    Log.ipcLog(events.GET_EXISTING_PROJECTS, args);
+    Log.debugLog(JSON.stringify(projectList));
     return projectList;
   });
 
-  ipcMain.handle(events.GET_PROJECT_INFO, async (event, args) => {
+  ipcMain.handle(events.GET_PROJECT_INFO, async (event, ...args) => {
     Log.ipcLog(events.GET_PROJECT_INFO, args);
     let id = args[0];
-    let path = projectList[id];
-    let projectInfo = {};
-
-    if (!path) {
-      return null;
-    }
-
-    projectInfo.files = await filesHelper.getAllFilesInDirAsync(path);
-    let snapshotsRaw = await fs.readFileAsync(
-      resolve(path, ".prose", "snapshots.json")
-    );
-    projectInfo.snapshots = JSON.parse(snapshotsRaw);
-
-    Log.debugLog(events.GET_PROJECT_INFO, projectInfo.files);
-    Log.debugLog(events.GET_PROJECT_INFO, projectInfo.snapshots);
-
-    return projectInfo;
+    Log.debugLog("Result: " + JSON.stringify(projectIDMap[id]));
+    return projectIDMap[id];
   });
 
   ipcMain.handle(events.SELECT_FOLDER, async (event, ...args) => {
@@ -117,35 +68,38 @@ exports.bootstrap = function() {
   ipcMain.handle(events.ADD_PROJECT, async (event, ...args) => {
     Log.ipcLog(events.ADD_PROJECT, args);
     let name = args[0];
-    let contact = args[1];
-    let path = args[2];
-    let projectPath = resolve(__dirname, path);
+    let path = args[1];
+    let contact = args[2];
+    let project = null;
 
     try {
       // return if folder is already a prose project
-      if (await isProseProject(projectPath)) {
-        console.log(events.ADD_PROJECT, "already a prose project");
+      if (isProseProject(path)) {
         return;
       }
 
-      // set up .prose folder
-      let proseFolder = resolve(projectPath, PROJECT_CONFIG_FOLDER_NAME);
-      await fs.mkdirAsync(proseFolder);
-
-      // set up project config file
-      let projectInfo = {
+      project = new Project(
+        generateUUID(),
         name,
         contact,
-        createdOn: new Date().toISOString()
-      };
-      await fs.writeFileAsync(
-        resolve(proseFolder, "project.json"),
-        JSON.stringify(projectInfo)
+        path,
+        new Date(),
+        color.randomColorClass()
       );
+
+      projectList.push(project);
+      projectIDMap[project.projectID] = project;
+      projectPathMap[project.path] = project;
+      settings.set(s.PROJECTS_LIST, projectList);
+      Log.debugLog(JSON.stringify(projectIDMap));
 
       // TODO: should set up git here
     } catch (err) {
-      console.log(err);
+      project = null;
+      Log.debugLog(err);
     }
+
+    Log.debugLog(JSON.stringify(project));
+    return project;
   });
 };

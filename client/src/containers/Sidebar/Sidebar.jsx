@@ -1,103 +1,128 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import './Sidebar.css';
-import events from 'shared/ipc-events';
-const ipc = window.require('electron').ipcRenderer;
+import React from "react";
+import { Link, withRouter } from "react-router-dom";
+import "./Sidebar.css";
+import events from "shared/ipc-events";
+import settings from "shared/settings";
+import Collapse from "components/Collapse";
+import color from "shared/color";
+const ipc = window.require("electron").ipcRenderer;
 
-const projectList = [
-  { name:'The Art Project', projectId: '21321ko3' },
-  { name:'Artwork', projectId: '21321421' },
-  { name:'Corporate', projectId: '12321323' }
-];
-
-class Sidebar extends React.Component{
+class Sidebar extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       selectedProject: null,
+      isSelectingProject: false,
+      projectList: []
     };
+    // uncomment to clear projects
+    /*(async () => {
+      await ipc.invoke(events.SETTINGS_SET, settings.PROJECTS_LIST, []);
+    })();*/
+    (async () => {
+      this.setState({
+        projectList: await ipc.invoke(events.GET_EXISTING_PROJECTS)
+      });
+    })();
   }
 
-  render(){
-    return(
+  render() {
+    return (
       <div class="Sidebar">
         <div className="sidebar-logo">
-          <Link 
-            style={{ textDecoration: 'none', color: 'white' }} 
-            to="/"
-          >
-            <h3 style={{marginLeft: '5px'}}>ProSe</h3>
+          <Link style={{ textDecoration: "none", color: "white" }} to="/">
+            <h3>ProSe</h3>
           </Link>
         </div>
 
         <div class="projects">
-          <h5 style={{
-            color: 'lightgray',
-            marginLeft: '5px',
-          }}>
-            Existing Projects
-          </h5>
-          {projectList.map((proj, ind) => (
-            <div className="project-item" key={ind}>
-              <Link
-                className="project-item-link"
-                to={`/project/${proj.projectId}`}  
-              >
-                <h7> {`> ${proj.name}`} </h7>
-              </Link>
-            </div>
-          ))}
+          <Collapse
+            disabled={this.state.projectList.length == 0}
+            items={[
+              {
+                heading: "Projects",
+                content: (
+                  <div className="collapse-container">
+                    {this.state.projectList.map((proj, ind) => (
+                      <div className="project-item" key={ind}>
+                        <Link
+                          style={{ color: "black" }}
+                          to={`/project/${proj.projectID}`}
+                        >
+                          <h7> {`${proj.name}`} </h7>
+                        </Link>
+                      </div>
+                    ))}
+                  </div>
+                )
+              }
+            ]}
+          />
         </div>
 
         <div>
-        <button
-        style={{
-          color: 'lightgray',
-          marginLeft: '5px'
-        }}
-          class="side-add-project"
-          onClick={async () => {
-            console.log('button pressed');
-            let result = await ipc.invoke(events.SELECT_FOLDER, 'testproject');
-            console.log(result);
-          }}
-        ><h6>Add New Project + </h6></button>
+          <button
+            class="sidebar-item"
+            onClick={async () => {
+              if (this.state.isSelectingProject) {
+                return;
+              }
+              this.setState({
+                isSelectingProject: true
+              });
+              let folderPath = await ipc.invoke(events.SELECT_FOLDER);
+              if (folderPath) {
+                let basename = folderPath.split(/[\\/]/).pop();
+                let project = await ipc.invoke(
+                  events.ADD_PROJECT,
+                  basename,
+                  folderPath,
+                  "dev@prose.org"
+                );
+                if (!project) {
+                  this.setState({
+                    isSelectingProject: false
+                  });
+                  return;
+                }
+                this.setState({
+                  projectList: await ipc.invoke(events.GET_EXISTING_PROJECTS)
+                });
+                this.props.history.push(`/project/${project.projectID}`);
+              }
+              this.setState({
+                isSelectingProject: false
+              });
+            }}
+          >
+            <h6 class="sidebar-text">Add Project</h6>
+          </button>
         </div>
 
         <div>
-          <Link 
-            style={{ textDecoration: 'none', color: 'lightgray' }} 
-            to="/file-search"> <h6 style={{
-              marginLeft: '5px',
-            }}>IP Check</h6></Link>
+          <button
+            class="sidebar-item"
+            onClick={async () => {
+              this.props.history.push("/file-search");
+            }}
+          >
+            <h6 class="sidebar-text">IP Checker</h6>
+          </button>
         </div>
-  
+
+        <div>
+          <button
+            class="sidebar-item"
+            onClick={async () => {
+              this.props.history.push("/faq");
+            }}
+          >
+            <h6 class="sidebar-text">FAQ</h6>
+          </button>
+        </div>
       </div>
     );
-  } 
+  }
 }
 
-export default Sidebar;
-
-function createProjectList(something){
-  function getProject(project_name){
-    return (<Link 
-      style={{ textDecoration: 'none', color: 'lightgray'}} 
-    to="/project"><h7 style={{
-      marginLeft: '15px',
-    }}>{"> " + project_name}</h7><br/></Link>)
-  }
-  var example_list = [{
-    name: "CPEN 442"
-  },
-  {
-    name: "Artwork"
-  },
-  {
-    name: "Corporate"
-  }
-];
-
-  var projectsList = example_list.map((project)=>getProject(project.name));
-  return projectsList;
-}
+export default withRouter(Sidebar);
