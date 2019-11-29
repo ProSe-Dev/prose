@@ -2,6 +2,7 @@ const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const url = require('url');
 const ipcHandlers = require('./ipcHandlers');
+const settings = require('./settings');
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -45,6 +46,7 @@ function createWindow () {
 
 function onReady() {
   createWindow();
+  settings.start();
   ipcHandlers.bootstrap();
 }
 
@@ -61,6 +63,10 @@ app.on('window-all-closed', () => {
     app.quit()
   }
 })
+
+app.on('quit', () => {
+  settings.end();
+});
 
 app.on('activate', () => {
   // On macOS it's common to re-create a window in the app when the

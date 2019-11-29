@@ -15,7 +15,15 @@ class Sidebar extends React.Component{
     super(props);
     this.state = {
       selectedProject: null,
+      projects: []
     };
+  }
+
+  componentDidMount() {
+    ipc.invoke(events.GET_EXISTING_PORJECTS)
+      .then(result => {
+        this.setState({ projects: result });
+      });
   }
 
   render(){
@@ -37,13 +45,13 @@ class Sidebar extends React.Component{
           }}>
             Existing Projects
           </h5>
-          {projectList.map((proj, ind) => (
+          {this.state.projects.map((proj, ind) => (
             <div className="project-item" key={ind}>
               <Link
                 className="project-item-link"
                 to={`/project/${proj.projectId}`}  
               >
-                <h7> {`> ${proj.name}`} </h7>
+                <h6> {`> ${proj.projectName}`} </h6>
               </Link>
             </div>
           ))}
@@ -78,26 +86,3 @@ class Sidebar extends React.Component{
 }
 
 export default Sidebar;
-
-function createProjectList(something){
-  function getProject(project_name){
-    return (<Link 
-      style={{ textDecoration: 'none', color: 'lightgray'}} 
-    to="/project"><h7 style={{
-      marginLeft: '15px',
-    }}>{"> " + project_name}</h7><br/></Link>)
-  }
-  var example_list = [{
-    name: "CPEN 442"
-  },
-  {
-    name: "Artwork"
-  },
-  {
-    name: "Corporate"
-  }
-];
-
-  var projectsList = example_list.map((project)=>getProject(project.name));
-  return projectsList;
-}

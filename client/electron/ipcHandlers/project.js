@@ -1,13 +1,16 @@
 const { ipcMain } = require("electron");
 const { resolve, basename } = require("path");
+const settings = require('../settings');
 const fs = require("../helpers/fs");
 const filesHelper = require("../helpers/files");
 const { selectDirAsync, selectFileAsync } = require("../helpers/dialog");
 const Log = require("../helpers/log");
 const events = require("../../src/shared/ipc-events");
-const PROJECT_CONFIG_FOLDER_NAME = ".prose";
+const { generateUUID } = require('../helpers/id');
 
-const projectList = {};
+const PROJECT_CONFIG_FOLDER_NAME = ".prose";
+const PROJECT_SETTINGS_NAMESPACE = 'projects';
+const __projects = settings.get(PROJECT_SETTINGS_NAMESPACE);
 
 /**
   * checks if a directory is already a prose project
@@ -23,7 +26,7 @@ function isProseProject(projectPath) {
  * get the existing prose projects 
  */
 ipcMain.handle(events.GET_EXISTING_PROJECTS, (event, args) => {
-  return projectList;
+  return Object.keys(__projects).map(k => __projects[k]);
 });
 
 /**
@@ -33,7 +36,7 @@ ipcMain.handle(events.GET_EXISTING_PROJECTS, (event, args) => {
 ipcMain.handle(events.GET_PROJECT_INFO, async (event, args) => {
   Log.ipcLog(events.GET_PROJECT_INFO, args);
   let id = args[0];
-  let path = projectList[id];
+  let path = __projects[id].path;
   let projectInfo = {};
 
   if (!path) {
@@ -99,27 +102,33 @@ ipcMain.handle(events.ADD_PROJECT, async (event, ...args) => {
 
   try {
     // return if folder is already a prose project
-    if (await isProseProject(projectPath)) {
-      console.log(events.ADD_PROJECT, "already a prose project");
-      return;
-    }
+    // if (await isProseProject(projectPath)) {
+    //   console.log(events.ADD_PROJECT, "already a prose project");
+    //   return;
+    // }
 
     // set up .prose folder
     let proseFolder = resolve(projectPath, PROJECT_CONFIG_FOLDER_NAME);
     await fs.mkdirAsync(proseFolder);
 
     // set up project config file
-    let projectInfo = {
-      name,
-      contact,
+    let project = {
+      projectId: generateUUID(),
+      projectName: name,
+      projectPath,
+      authorContact: contact,
       createdOn: new Date().toISOString()
     };
     await fs.writeFileAsync(
       resolve(proseFolder, "project.json"),
-      JSON.stringify(projectInfo)
+      JSON.stringify(project)
     );
 
+    Log.debugLog(events.ADD_PROJECT, 'project: ' + JSON.stringify(project));
+
+    settings.add(PROJECT_SETTINGS_NAMESPACE, project.projectId, project);
     // TODO: should set up git here
+    return project;
   } catch (err) {
     console.log(err);
   }
