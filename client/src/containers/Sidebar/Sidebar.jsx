@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import './Sidebar.css';
 import events from 'shared/ipc-events';
 const ipc = window.require('electron').ipcRenderer;
@@ -14,9 +14,10 @@ class Sidebar extends React.Component{
   constructor(props) {
     super(props);
     this.state = {
-      selectedProject: null,
+      selectedTab: null,
       projects: []
     };
+    this.handleSelectTab = this.handleSelectTab.bind(this);
   }
 
   componentDidMount() {
@@ -26,58 +27,70 @@ class Sidebar extends React.Component{
       });
   }
 
+  handleSelectTab(e) {
+    console.log(e.target.name);
+    this.setState({ selectedTab: e.target.name });
+  }
+
   render(){
     return(
       <div class="Sidebar">
         <div className="sidebar-logo">
-          <Link 
-            style={{ textDecoration: 'none', color: 'white' }} 
+          <NavLink
+            className="disable-link-style"
+            name="home"
+            onClick={this.handleSelectTab}
             to="/"
           >
-            <h3 style={{marginLeft: '5px'}}>ProSe</h3>
-          </Link>
+            ProSe
+          </NavLink>
         </div>
 
         <div class="projects">
-          <h5 style={{
-            color: 'lightgray',
-            marginLeft: '5px',
-          }}>
+          <div className="sidebar-heading">
             Existing Projects
-          </h5>
-          {this.state.projects.map((proj, ind) => (
-            <div className="project-item" key={ind}>
-              <Link
-                className="project-item-link"
-                to={`/project/${proj.projectId}`}  
-              >
-                <h6> {`> ${proj.projectName}`} </h6>
-              </Link>
-            </div>
-          ))}
+          </div>
+          {this.state.projects.map((proj, ind) => {
+            let isActive = this.state.selectedTab === proj.projectId;
+            return (
+              <div className={`clickable ${isActive ? 'active' : ''}`} key={ind}>
+                <NavLink
+                  className="btn btn-link disable-link-style fit-parent"
+                  name={proj.projectId}
+                  onClick={this.handleSelectTab}
+                  to={`/project/${proj.projectId}`}  
+                >
+                  {`> ${proj.projectName}`}
+                </NavLink>
+              </div>
+            );
+          })}
         </div>
 
-        <div>
-        <button
-        style={{
-          color: 'lightgray',
-          marginLeft: '5px'
-        }}
-          class="side-add-project"
-          onClick={async () => {
-            console.log('button pressed');
-            let result = await ipc.invoke(events.SELECT_FOLDER, 'testproject');
-            console.log(result);
-          }}
-        ><h6>Add New Project + </h6></button>
+        <div className="clickable">
+          <button
+            type="button" className="btn btn-link disable-link-style"
+            style={{ paddingLeft: '0', fontSize: '0.9em'}}
+            onClick={async () => {
+              console.log('button pressed');
+              let result = await ipc.invoke(events.SELECT_FOLDER, 'testproject');
+              console.log(result);
+            }}
+          >
+            &nbsp;&#9656;&nbsp;&nbsp;Add New Project +
+          </button>
         </div>
 
-        <div>
-          <Link 
-            style={{ textDecoration: 'none', color: 'lightgray' }} 
-            to="/file-search"> <h6 style={{
-              marginLeft: '5px',
-            }}>IP Check</h6></Link>
+        <div className={`clickable ${this.state.selectedTab === 'ip-search' ? 'active' : ''}`}>
+          <NavLink
+            className="btn btn-link disable-link-style fit-parent"
+            style={{ paddingLeft: '0', fontSize: '0.9em'}}
+            onClick={this.handleSelectTab}
+            name="ip-search"
+            to="/file-search"
+          >
+            &nbsp;&#9656;&nbsp;&nbsp;IP Check
+          </NavLink>
         </div>
   
       </div>
