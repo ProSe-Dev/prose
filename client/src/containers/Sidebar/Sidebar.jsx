@@ -19,11 +19,12 @@ class Sidebar extends React.Component {
     /*(async () => {
       await ipc.invoke(events.SETTINGS_SET, settings.PROJECTS_LIST, []);
     })();*/
-    (async () => {
-      this.setState({
-        projectList: await ipc.invoke(events.GET_EXISTING_PROJECTS)
-      });
-    })();
+  }
+
+  componentDidMount() {
+    ipc.invoke(events.GET_EXISTING_PROJECTS).then(result => {
+      this.setState({ projects: result });
+    });
   }
 
   render() {
