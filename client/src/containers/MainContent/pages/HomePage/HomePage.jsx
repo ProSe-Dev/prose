@@ -17,9 +17,10 @@ class HomePage extends React.Component {
     console.log('handleAddProject');
     ipc.invoke(events.SELECT_FOLDER)
       .then((path) => {
-        if (path) {
-          this.props.history.push('/project');
-        }
+        return ipc.invoke(events.ADD_PROJECT, 'prose', 'prose@gmail.com', path);
+      })
+      .then((project) => {
+        this.props.history.push(`/project?id=${project.projectId}`);
       });
   }
 

@@ -54,6 +54,7 @@ button:focus {
 .project-item-link {
   color: inherit;
   text-decoration: inherit;
+  font-size: 16px;
 }
 
 .collapse-container {
