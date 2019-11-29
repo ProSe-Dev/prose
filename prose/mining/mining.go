@@ -30,10 +30,11 @@ var (
 type BlockData struct {
 	Timestamp  string
 	PublicKey  string
-	AuthorID   string
+	Signature  string
 	ProjectID  string
 	CommitHash string
 	FileHashes map[string]string
+	MetaData   map[string]string
 }
 
 // Block keeps block headers
@@ -74,10 +75,11 @@ func NewGenesisBlock() *Block {
 	return NewBlock(BlockData{
 		Timestamp:  "",
 		PublicKey:  "",
-		AuthorID:   "ProSe",
+		Signature:  "ProSe",
 		ProjectID:  "",
 		CommitHash: "421fdea6ec87b5531d196bb7498c96fb84f2880a",
 		FileHashes: map[string]string{},
+		MetaData:   map[string]string{},
 	}, "")
 }
 

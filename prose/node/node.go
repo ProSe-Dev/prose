@@ -42,11 +42,12 @@ type Node struct {
 func (n *Node) AddBlock(ctx context.Context, in *proto.AddBlockRequest) (resp *proto.AddBlockResponse, err error) {
 	data := mining.BlockData{
 		PublicKey:  in.Data.PublicKey,
-		AuthorID:   in.Data.AuthorID,
+		Signature:  in.Data.Signature,
 		ProjectID:  in.Data.ProjectID,
 		Timestamp:  in.Data.Timestamp,
 		CommitHash: in.Data.CommitHash,
 		FileHashes: in.Data.FileHashes,
+		MetaData:   in.Data.MetaData,
 	}
 	n.StateMachine.Printf("Enqueue %v", data)
 	mining.EnqueueTransactionData(&data)
@@ -68,11 +69,12 @@ func (n *Node) GetBlockchain(ctx context.Context, in *proto.GetBlockchainRequest
 			PrevBlockHash: b.PrevBlockHash,
 			Data: &proto.BlockData{
 				PublicKey:  b.Data.PublicKey,
-				AuthorID:   b.Data.AuthorID,
+				Signature:  b.Data.Signature,
 				ProjectID:  b.Data.ProjectID,
 				Timestamp:  b.Data.Timestamp,
 				CommitHash: b.Data.CommitHash,
 				FileHashes: b.Data.FileHashes,
+				MetaData:   b.Data.MetaData,
 			},
 			Hash: b.Hash,
 		})
@@ -112,11 +114,12 @@ func (n *Node) FastForward(ctx context.Context, in *proto.FastForwardRequest) (*
 				PrevBlockHash: blockOurs.PrevBlockHash,
 				Data: &proto.BlockData{
 					PublicKey:  blockOurs.Data.PublicKey,
-					AuthorID:   blockOurs.Data.AuthorID,
+					Signature:  blockOurs.Data.Signature,
 					ProjectID:  blockOurs.Data.ProjectID,
 					Timestamp:  blockOurs.Data.Timestamp,
 					CommitHash: blockOurs.Data.CommitHash,
 					FileHashes: blockOurs.Data.FileHashes,
+					MetaData:   blockOurs.Data.MetaData,
 				},
 				Hash: blockOurs.Hash,
 			})
@@ -133,11 +136,12 @@ func (n *Node) FastForward(ctx context.Context, in *proto.FastForwardRequest) (*
 			PrevBlockHash: blockOurs.PrevBlockHash,
 			Data: &proto.BlockData{
 				PublicKey:  blockOurs.Data.PublicKey,
-				AuthorID:   blockOurs.Data.AuthorID,
+				Signature:  blockOurs.Data.Signature,
 				ProjectID:  blockOurs.Data.ProjectID,
 				Timestamp:  blockOurs.Data.Timestamp,
 				CommitHash: blockOurs.Data.CommitHash,
 				FileHashes: blockOurs.Data.FileHashes,
+				MetaData:   blockOurs.Data.MetaData,
 			},
 			Hash: blockOurs.Hash,
 		})
@@ -155,11 +159,12 @@ func (n *Node) FastForwardToInitNode(conn *grpc.ClientConn) error {
 			PrevBlockHash: b.PrevBlockHash,
 			Data: &proto.BlockData{
 				PublicKey:  b.Data.PublicKey,
-				AuthorID:   b.Data.AuthorID,
+				Signature:  b.Data.Signature,
 				ProjectID:  b.Data.ProjectID,
 				Timestamp:  b.Data.Timestamp,
 				CommitHash: b.Data.CommitHash,
 				FileHashes: b.Data.FileHashes,
+				MetaData:   b.Data.MetaData,
 			},
 			Hash: b.Hash,
 		})
@@ -184,11 +189,12 @@ func (n *Node) FastForwardToInitNode(conn *grpc.ClientConn) error {
 			PrevBlockHash: b.PrevBlockHash,
 			Data: mining.BlockData{
 				PublicKey:  b.Data.PublicKey,
-				AuthorID:   b.Data.AuthorID,
+				Signature:  b.Data.Signature,
 				ProjectID:  b.Data.ProjectID,
 				Timestamp:  b.Data.Timestamp,
 				CommitHash: b.Data.CommitHash,
 				FileHashes: b.Data.FileHashes,
+				MetaData:   b.Data.MetaData,
 			},
 			Hash: b.Hash,
 		})

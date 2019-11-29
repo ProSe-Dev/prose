@@ -26,8 +26,8 @@ function Project(projectData) {
   }
   console.log(projectData);
   let heading = projectData[0].Data.ProjectID;
-  let author = projectData[0].Data.AuthorID;
-  let contact = projectData[0].Data.PublicKey;
+  let contact = projectData[0].Data.Signature;
+  let author = projectData[0].Data.PublicKey;
   return {
     heading: heading,
     content: (

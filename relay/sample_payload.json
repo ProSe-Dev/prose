@@ -1,12 +1,16 @@
 {
-    "PublicKey": "my-public-key",
-    "AuthorID": "signed(MD5(my@email.com + myPassword))",
-    "ProjectID": "some-unique-uuid",
-    "CommitHash": "f040627201ccdc49e0f6eb7e352ef94d4117bbd7",
-    "FileHashes": {
-	"141c484055763f02cc64f31b1dec007712c91e6f261852bcca2777df1b221405" : "hello_world.txt",
-        "ad488703f13c05b77140e22de6f782ccf16fd271ec4df4102f108311f23db79b" : "File1",
-        "a7c4be9ef6d1c66650084ee0d4456085e30e192b961752f4a2d836dac89259a9" : "File2",
-        "4ea2e56cd280fc7c5cd9ba8dbf9611b8540a0066753407af59b4ed98e8b74c55" : "File3"
-    }
+  "PublicKey": "my-public-key",
+  "Signature": "signed(SHA256(PROSE:email=dev@prose.org:link=prose.org/hello_world))",
+  "ProjectID": "some-unique-uuid",
+  "CommitHash": "f040627201ccdc49e0f6eb7e352ef94d4117bbd7",
+  "FileHashes": {
+    "141c484055763f02cc64f31b1dec007712c91e6f261852bcca2777df1b221405": "hello_world.txt",
+    "ad488703f13c05b77140e22de6f782ccf16fd271ec4df4102f108311f23db79b": "File1",
+    "a7c4be9ef6d1c66650084ee0d4456085e30e192b961752f4a2d836dac89259a9": "File2",
+    "4ea2e56cd280fc7c5cd9ba8dbf9611b8540a0066753407af59b4ed98e8b74c55": "File3"
+  },
+  "MetaData": {
+    "email": "dev@prose.org",
+    "link": "prose.org/hello_world"
+  }
 }

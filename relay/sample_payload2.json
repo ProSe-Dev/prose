@@ -1,9 +1,12 @@
 {
-    "PublicKey": "foobar-pubkey",
-    "AuthorID": "foo@bar.com",
-    "ProjectID": "some-unique-uuid2",
-    "CommitHash": "8784775b29049977bc6f662d950cbb0d1fcc4817",
-    "FileHashes": {
-        "f10e2821bbbea527ea02200352313bc059445190" : "secret.txt"
-    }
+  "PublicKey": "foobar-pubkey",
+  "Signature": "signed(SHA256(PROSE:email=foo@bar.com))",
+  "ProjectID": "some-unique-uuid2",
+  "CommitHash": "8784775b29049977bc6f662d950cbb0d1fcc4817",
+  "FileHashes": {
+    "f10e2821bbbea527ea02200352313bc059445190": "secret.txt"
+  },
+  "MetaData": {
+    "email": "foo@bar.com"
+  }
 }

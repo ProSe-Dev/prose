@@ -73,11 +73,12 @@ type evilNode struct {
 func (n *evilNode) AddBlock(ctx context.Context, in *proto.AddBlockRequest) (resp *proto.AddBlockResponse, err error) {
 	data := mining.BlockData{
 		PublicKey:  "publickey",
-		AuthorID:   "L33T H4CK0R",
+		Signature:  "L33T H4CK0R",
 		ProjectID:  "coolproject",
 		Timestamp:  mining.TimeToString(time.Now().UTC()),
 		CommitHash: "abcdefgthisisahash123",
 		FileHashes: map[string]string{},
+		MetaData:   map[string]string{},
 	}
 	n.StateMachine.Printf("MUAHAHAHAAA")
 	mining.EnqueueTransactionData(&data)

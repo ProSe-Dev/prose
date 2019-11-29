@@ -26,14 +26,14 @@ var (
 )
 
 type projectKey struct {
-	AuthorID  string
+	PublicKey string
 	ProjectID string
 }
 
 // Message body expected to be received from client
 type Message struct {
 	PublicKey  string
-	AuthorID   string
+	Signature  string
 	ProjectID  string
 	CommitHash string
 	FileHashes map[string]string
@@ -125,7 +125,7 @@ func handleWriteBlock(w http.ResponseWriter, r *http.Request) {
 	gossip.Broadcast(relayNode.Client, func(conn *grpc.ClientConn) {
 		m := &proto.AddBlockRequest{Data: &proto.BlockData{
 			PublicKey:  m.PublicKey,
-			AuthorID:   m.AuthorID,
+			Signature:  m.Signature,
 			ProjectID:  m.ProjectID,
 			CommitHash: m.CommitHash,
 			FileHashes: m.FileHashes,
@@ -142,7 +142,7 @@ func handleWriteBlock(w http.ResponseWriter, r *http.Request) {
 	// the relay node needs to participate too!
 	mining.EnqueueTransactionData(&mining.BlockData{
 		PublicKey:  m.PublicKey,
-		AuthorID:   m.AuthorID,
+		Signature:  m.Signature,
 		ProjectID:  m.ProjectID,
 		CommitHash: m.CommitHash,
 		FileHashes: m.FileHashes,
@@ -192,7 +192,7 @@ func updateMaps() {
 
 func updateMapWithBlock(block *mining.Block) {
 	key := projectKey{
-		AuthorID:  block.Data.AuthorID,
+		PublicKey: block.Data.PublicKey,
 		ProjectID: block.Data.ProjectID,
 	}
 	hash, _ := hashstructure.Hash(key, nil)
