@@ -32,18 +32,7 @@ function SnapshotUptodateAlert() {
   return <div class="alert alert-primary">Everything is up to date!</div>;
 }
 
-const test_snapshot_rows = [];
 const excludedFiles = new Set([]);
-
-/** creates a html table from list of certificates */
-function getSnapshots() {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      resolve(test_snapshot_rows);
-    }, 100);
-  });
-}
-
 const FILE_TABLE_HEADERS = ["Status", "File Name", "Add to Certificate"];
 
 class Files extends React.Component {
@@ -57,7 +46,7 @@ class Files extends React.Component {
   }
 }
 
-const SNAPSHOT_TABLE_HEADERS = ["#", "Date and Time", "Status", "Block ID"];
+const SNAPSHOT_TABLE_HEADERS = ["#", "Date", "Certificate ID"];
 
 //TODO: rename to cerificate
 class Snapshots extends React.Component {
@@ -65,6 +54,7 @@ class Snapshots extends React.Component {
     return (
       <div>
         <div className="projectpage-heading">Certificate</div>
+        <Table headers={SNAPSHOT_TABLE_HEADERS} rows={this.props.snapshots} />
       </div>
     );
   }
@@ -84,6 +74,22 @@ class ProjectPage extends React.Component {
     this.handleSnapshot = this.handleSnapshot.bind(this);
     this.deleteProject = this.deleteProject.bind(this);
     this.fileToRow = this.fileToRow.bind(this);
+    this.snapshotToRow = this.snapshotToRow.bind(this);
+  }
+
+  snapshotToRow(snapshot, idx) {
+    return [
+      idx,
+      new Date(Date.parse(snapshot.creationDate)).toLocaleString("default", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+        hour: "numeric",
+        minute: "numeric",
+        second: "numeric"
+      }),
+      snapshot.id
+    ];
   }
 
   fileToRow(file) {
@@ -170,11 +176,6 @@ class ProjectPage extends React.Component {
         5000
       );
     })();
-    return Promise.all([getSnapshots()]).then(results => {
-      this.setState({
-        snapshots: results[1]
-      });
-    });
   }
 
   componentWillUnmount() {
@@ -224,7 +225,13 @@ class ProjectPage extends React.Component {
                 : []
             }
           />
-          <Snapshots snapshots={this.state.snapshots} />
+          <Snapshots
+            snapshots={
+              this.state.project
+                ? this.state.project.snapshots.map(this.snapshotToRow)
+                : []
+            }
+          />
         </div>
         <SettingsModal
           onClose={this.toggleSettings}

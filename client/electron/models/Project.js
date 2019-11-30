@@ -6,19 +6,19 @@ const SNAPSHOT_FILE_NAME = "snapshots.json";
 const git = require("../helpers/git");
 const Log = require("../helpers/log");
 const constants = require("../../src/shared/constants");
-
+const CONFIG_NAME = ".prose";
 class Project {
   constructor(projectID, name, contact, abspath, creationDate, colorClass) {
     this.name = name;
     this.contact = contact;
     this.path = abspath;
     this.projectID = projectID;
-    this.snapshots = null;
-    this.files = null;
+    this.snapshots = [];
+    this.files = [];
     this.creationDate = creationDate;
     this.colorClass = colorClass;
     this.isSynced = false;
-    this.commit = this.commit.bind(this);
+    this.excludedFiles = [CONFIG_NAME];
   }
 
   async initialize() {
@@ -28,19 +28,20 @@ class Project {
     if (!isExistingProject) {
       await git.init(this.path);
     }
-    await this.writeConfig([this.getConfigPath()]);
+    await this.writeConfig();
     await this.commit();
     await this.updateFiles();
   }
 
   getConfigPath() {
-    return resolve(this.path, ".prose");
+    return resolve(this.path, CONFIG_NAME);
   }
 
-  async writeConfig(excludedFiles) {
+  async writeConfig() {
     let projectInfo = {
       projectID: this.projectID,
-      excludedFiles: excludedFiles
+      excludedFiles: this.excludedFiles,
+      snapsshots: this.snapshots
     };
     await fs.writeFileAsync(this.getConfigPath(), JSON.stringify(projectInfo));
   }
@@ -67,15 +68,15 @@ class Project {
   }
 
   async commit() {
-    return await git.commit(this.path);
-  }
-
-  async addSnapshot() {
-    // TODO:
-    // 1) new git commit
-    // 2) create a Snapshot
-    // 3) call the relay
-    // 4) (in the background) backup snapshot to snapshots.json
+    let commitHash = await git.commit(this.path);
+    if (!commitHash) {
+      return;
+    }
+    this.snapshots.push({
+      id: commitHash,
+      creationDate: new Date()
+    });
+    await this.writeConfig();
   }
 
   async getFiles() {
