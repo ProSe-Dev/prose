@@ -1,8 +1,8 @@
 const { ipcMain } = require("electron");
 const { selectDirAsync, selectFileAsync } = require("../helpers/dialog");
 const Log = require("../helpers/log");
+const git = require("../helpers/git");
 const { generateUUID } = require("../helpers/id");
-
 const events = require("../../src/shared/ipc-events");
 const color = require("../../src/shared/color");
 const s = require("../../src/shared/settings");
@@ -15,17 +15,6 @@ projectList.forEach(p => {
   projectIDMap[p.projectID] = p;
   projectPathMap[p.path] = p;
 });
-
-/**
- * checks if a directory is already a prose project
- * @param projectPath - absolute path to the project folder
- * @return boolean
- */
-function isProseProject(projectPath) {
-  return projectList.some(p => {
-    return p.path === projectPath;
-  });
-}
 
 ipcMain.handle(events.GET_EXISTING_PROJECTS, (event, ...args) => {
   Log.ipcLog(events.GET_EXISTING_PROJECTS, args);
@@ -73,8 +62,8 @@ ipcMain.handle(events.ADD_PROJECT, async (event, ...args) => {
 
   try {
     // return if folder is already a prose project
-    if (isProseProject(path)) {
-      return;
+    if (projectPathMap.hasOwnProperty(path)) {
+      return projectPathMap[path];
     }
 
     project = new Project(
