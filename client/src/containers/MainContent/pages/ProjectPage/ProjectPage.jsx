@@ -39,8 +39,12 @@ class Files extends React.Component {
   render() {
     return (
       <div>
-        <div className="projectpage-heading">Project Files</div>
-        <Table headers={FILE_TABLE_HEADERS} rows={this.props.files} />
+        <div className="projectpage-heading">Files</div>
+        {this.props.files.length > 0 ? (
+          <Table headers={FILE_TABLE_HEADERS} rows={this.props.files} />
+        ) : (
+          <p style={{ textAlign: "left" }}>Add some files to your project!</p>
+        )}
       </div>
     );
   }
@@ -53,8 +57,14 @@ class Snapshots extends React.Component {
   render() {
     return (
       <div>
-        <div className="projectpage-heading">Certificate</div>
-        <Table headers={SNAPSHOT_TABLE_HEADERS} rows={this.props.snapshots} />
+        <div className="projectpage-heading">Certificates</div>
+        {this.props.snapshots.length > 0 ? (
+          <Table headers={SNAPSHOT_TABLE_HEADERS} rows={this.props.snapshots} />
+        ) : (
+          <p style={{ textAlign: "left" }}>
+            Add some certificates to your project!
+          </p>
+        )}
       </div>
     );
   }
@@ -115,12 +125,12 @@ class ProjectPage extends React.Component {
       <ToggleSwitch
         toggled={isIncluded}
         onChange={async () => {
-          console.log('toggle switched');
+          console.log("toggle switched");
           if (file.status === constants.GIT_EXCLUDED) {
-            console.log('removed');
+            console.log("removed");
             excludedFiles.delete(file.path);
           } else {
-            console.log('added');
+            console.log("added");
             excludedFiles.add(file.path);
           }
 
@@ -130,13 +140,16 @@ class ProjectPage extends React.Component {
             Array.from(excludedFiles)
           );
 
-          let updatedProject = await ipc.invoke(events.GET_PROJECT_INFO, this.state.project.projectID);
+          let updatedProject = await ipc.invoke(
+            events.GET_PROJECT_INFO,
+            this.state.project.projectID
+          );
 
           // console.log('updatedProject:', updatedProject);
 
           if (success) {
             this.setState({
-              project: updatedProject,
+              project: updatedProject
             });
           }
         }}
@@ -176,7 +189,7 @@ class ProjectPage extends React.Component {
   }
 
   componentDidMount() {
-    console.log('mounting');
+    console.log("mounting");
     (async () => {
       const { projectID } = this.props.match.params;
       console.log(projectID);
@@ -202,7 +215,7 @@ class ProjectPage extends React.Component {
   }
 
   render() {
-    console.log('rendering:', this.state.project);
+    console.log("rendering:", this.state.project);
     return (
       <div class="main-container">
         <TitleBar

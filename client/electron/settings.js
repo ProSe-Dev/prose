@@ -8,6 +8,7 @@ let __state;
  * should be called on start up
  */
 function start() {
+  //settings.setAll({});
   __state = settings.getAll();
   console.log(__state);
 }
