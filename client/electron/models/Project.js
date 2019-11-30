@@ -7,6 +7,9 @@ const git = require("../helpers/git");
 const Log = require("../helpers/log");
 const constants = require("../../src/shared/constants");
 const CONFIG_NAME = ".prose";
+const child = require("child_process").execFile;
+var isWin = process.platform === "win32";
+
 class Project {
   constructor(projectID, name, contact, abspath, creationDate, colorClass) {
     this.name = name;
@@ -31,6 +34,19 @@ class Project {
     await this.writeConfig();
     await this.commit();
     await this.updateFiles();
+    // Hacky
+    let hookFile = isWin ? "hook.exe" : "hook";
+    let postCommitFile = isWin ? "post-commit.exe" : "post-commit";
+    Log.debugLog(
+      "Copying commit hook from " +
+        resolve(__dirname, "..", "..", "hook", hookFile) +
+        " to " +
+        resolve(this.path, ".git", "hooks", postCommitFile)
+    );
+    fs.copyFileSync(
+      resolve(__dirname, "..", "..", "hook", hookFile),
+      resolve(this.path, ".git", "hooks", postCommitFile)
+    );
   }
 
   getConfigPath() {
@@ -79,6 +95,16 @@ class Project {
     });
     await this.writeConfig();
     Log.debugLog("Completed commit");
+    // Manually execute the git commit hook
+    let executablePath = resolve(this.path, ".git", "hooks", "post-commit");
+    Log.debugLog("Executing " + executablePath);
+    child(executablePath, function(err, data) {
+      if (err) {
+        Log.debugLog(err);
+        return;
+      }
+      Log.debugLog(data.toString());
+    });
   }
 
   async getFiles() {
