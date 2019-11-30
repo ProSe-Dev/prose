@@ -1,10 +1,12 @@
 .Sidebar {
   background: #515151;
   height: 100%;
-  font-size: 15px;
+  font-size: 18px;
+  font-weight: 400;
   text-align: left;
   color: white;
   padding-top: 10px;
+  min-width: 14em;
 }
 
 .sidebar-logo {
@@ -24,6 +26,12 @@
   margin: 15px;
 }
 
+.sidebar-heading {
+  margin-top: 2px;
+  font-size: 1.3em;
+  font-weight: 400;
+}
+
 .sidebar-item {
   background-color: Transparent;
   background-repeat: no-repeat;
@@ -31,19 +39,23 @@
   cursor: pointer;
   overflow: hidden;
   outline: none;
-  color: white;
+  color: white !important;
   text-align: left;
   color: "lightgray";
   width: 100%;
-  height: 50px;
+  height: fit-content;
+  padding: 6px 0px 6px 4px;
+}
+.sidebar-item.active {
+  background: rgb(95, 145, 192, 0.5);
 }
 .sidebar-text {
   margin-left: 10px;
 }
-button:hover {
+.sidebar-item:hover {
   background-color: rgba(204, 204, 204, 0.5);
 }
-button:focus {
+.sidebar-item:focus {
   outline: 0;
 }
 
@@ -57,7 +69,20 @@ button:focus {
   font-size: 16px;
 }
 
-.collapse-container {
+
+/* .collapse-container {
   margin-bottom: -30px;
   margin-top: -15px;
+} */
+
+.sidebar-link {
+  color: inherit;
+  text-decoration: inherit;
+  height: 100%;
+  width: 100%;
+  display: inline-block;
+}
+.sidebar-link:hover {
+  color: inherit;
+  text-decoration: inherit;
 }

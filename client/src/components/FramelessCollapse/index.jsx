@@ -1,9 +1,9 @@
 import React from "react";
 import { makeStyles, withStyles } from "@material-ui/core/styles";
-import ExpansionPanel from "@material-ui/core/ExpansionPanel";
+import MuiExpansionPanel from "@material-ui/core/ExpansionPanel";
 import MuiExpansionPanelSummary from "@material-ui/core/ExpansionPanelSummary";
 import MuiExpansionPanelDetails from "@material-ui/core/ExpansionPanelDetails";
-import Typography from "@material-ui/core/Typography";
+import MuiTypography from "@material-ui/core/Typography";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 
 const useStyles = makeStyles(theme => ({
@@ -16,15 +16,22 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
+const ExpansionPanel = withStyles({
+  root: {
+    backgroundColor: 'rgba(0, 0, 0, 0) !important',
+    boxShadow: 'none !important',
+  }
+})(MuiExpansionPanel);
+
 const ExpansionPanelSummary = withStyles({
   root: {
-    backgroundColor: "rgba(0, 0, 0, .03)",
-    borderBottom: "1px solid rgba(0, 0, 0, .125)",
+    backgroundColor: "rgba(0, 0, 0, 0)",
     marginBottom: -1,
     minHeight: 56,
     "&$expanded": {
       minHeight: 56
-    }
+    },
+    paddingLeft: '0'
   },
   content: {
     "&$expanded": {
@@ -36,13 +43,32 @@ const ExpansionPanelSummary = withStyles({
 
 const ExpansionPanelDetails = withStyles({
   root: {
-    padding: "2em 1em 2em 1em",
-    textAlign: 'left'
+    padding: "0"
+  },
+  content: {
+    width: '100%'
   }
 })(MuiExpansionPanelDetails);
 
+const Typography = withStyles({
+  root: {
+    padding: "0",
+    width: '100%'
+  },
+})(MuiTypography);
+
 function Collapse(props) {
-  const classes = useStyles();
+  const classes = makeStyles(theme => ({
+    root: {
+      width: "100%",
+    },
+    heading: {
+      color: props.color ? props.color : 'white !important',
+      fontSize: theme.typography.pxToRem(props.fontSize ? props.fontSize : 20),
+      fontWeight: theme.typography.fontWeightRegular
+    }
+  }))();
+
   return (
     <div className={classes.root}>
       {props.items &&
