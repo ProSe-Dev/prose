@@ -35,6 +35,7 @@ class Project {
     await this.commit();
     await this.updateFiles();
     // Hacky
+    // TODO: figure out how this works when packaging
     let hookFile = isWin ? "hook.exe" : "hook";
     let postCommitFile = isWin ? "post-commit.exe" : "post-commit";
     Log.debugLog(
