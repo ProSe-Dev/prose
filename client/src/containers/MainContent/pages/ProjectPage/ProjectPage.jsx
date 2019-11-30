@@ -155,6 +155,7 @@ class ProjectPage extends React.Component {
   // TODO: this is a hack, please fix later
   async handleSnapshot() {
     await ipc.invoke(events.PROJECT_COMMIT, this.state.project.projectID);
+    this.setState({});
   }
 
   componentDidMount() {
@@ -208,7 +209,9 @@ class ProjectPage extends React.Component {
         <div class="inner-container">
           {this.state.project ? (
             !this.state.project.files.some(
-              f => f.status !== constants.GIT_UNCHANGED && f.excluded === false
+              f =>
+                f.status !== constants.GIT_UNCHANGED &&
+                f.status !== constants.GIT_EXCLUDED
             ) ? (
               <SnapshotUptodateAlert />
             ) : (
