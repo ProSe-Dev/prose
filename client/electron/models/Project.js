@@ -5,6 +5,7 @@ const PROJECT_CONFIG_FOLDER_NAME = ".prose";
 const SNAPSHOT_FILE_NAME = "snapshots.json";
 const git = require("../helpers/git");
 const Log = require("../helpers/log");
+const constants = require("../../src/shared/constants");
 
 class Project {
   constructor(projectID, name, contact, abspath, creationDate, colorClass) {
@@ -27,8 +28,42 @@ class Project {
     if (!isExistingProject) {
       await git.init(this.path);
     }
-    await fs.writeFileAsync(resolve(this.path, ".prose_id"), this.projectID);
+    await this.writeConfig([this.getConfigPath()]);
     await this.commit();
+    await this.updateFiles();
+  }
+
+  getConfigPath() {
+    return resolve(this.path, ".prose");
+  }
+
+  async writeConfig(excludedFiles) {
+    let projectInfo = {
+      projectID: this.projectID,
+      excludedFiles: excludedFiles
+    };
+    await fs.writeFileAsync(this.getConfigPath(), JSON.stringify(projectInfo));
+  }
+
+  async updateFiles() {
+    let fileStatuses = await git.projectStatus(this.path);
+    Log.debugLog(JSON.stringify(fileStatuses));
+    this.files = fileStatuses;
+    if (fs.existsSync(this.getConfigPath())) {
+      let config = JSON.parse(fs.readFileSync(this.getConfigPath()));
+      Log.debugLog(JSON.stringify(config.excludedFiles));
+      config.excludedFiles.forEach(exclude => {
+        let existing = this.files.find(f => f.path === exclude);
+        if (existing) {
+          existing.status = constants.GIT_EXCLUDED;
+        } else {
+          this.files.push({
+            path: exclude,
+            status: constants.GIT_EXCLUDED
+          });
+        }
+      });
+    }
   }
 
   async commit() {

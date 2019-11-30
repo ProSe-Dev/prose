@@ -40,5 +40,11 @@ module.exports = {
   PROJECT_DELETE: "project-delete",
   // return true if project committed, false if failed
   // args[<project id>]
-  PROJECT_COMMIT: "project-commit"
+  PROJECT_COMMIT: "project-commit",
+  // return list of files and their statuses
+  // args[<project id>]
+  PROJECT_UPDATE_FILES: "project-update-files",
+  // return true if updated, false if failed
+  // args[<project id>, <excluded files>]
+  PROJECT_UPDATE_EXCLUDED_FILES: "project-update-excluded-files"
 };

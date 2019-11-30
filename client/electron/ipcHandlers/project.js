@@ -1,6 +1,7 @@
 const { ipcMain } = require("electron");
 const { selectDirAsync, selectFileAsync } = require("../helpers/dialog");
 const Log = require("../helpers/log");
+const git = require("../helpers/git");
 const { generateUUID } = require("../helpers/id");
 const events = require("../../src/shared/ipc-events");
 const color = require("../../src/shared/color");
@@ -101,7 +102,6 @@ ipcMain.handle(events.ADD_PROJECT, async (event, ...args) => {
     project = null;
     Log.debugLog(err);
   }
-
   Log.debugLog(JSON.stringify(project));
   return project;
 });
@@ -114,5 +114,29 @@ ipcMain.handle(events.PROJECT_COMMIT, async (event, ...args) => {
   }
   let project = projectIDMap[id];
   await project.commit();
+  return true;
+});
+
+ipcMain.handle(events.PROJECT_UPDATE_FILES, async (event, ...args) => {
+  Log.ipcLog(events.PROJECT_UPDATE_FILES, args);
+  let id = args[0];
+  if (!projectIDMap.hasOwnProperty(id)) {
+    return [];
+  }
+  let project = projectIDMap[id];
+  await project.updateFiles();
+  return project;
+});
+
+ipcMain.handle(events.PROJECT_UPDATE_EXCLUDED_FILES, async (event, ...args) => {
+  Log.ipcLog(events.PROJECT_UPDATE_EXCLUDED_FILES, args);
+  let id = args[0];
+  let excludedFiles = args[1];
+  if (!projectIDMap.hasOwnProperty(id)) {
+    return false;
+  }
+  let project = projectIDMap[id];
+  await project.writeConfig(excludedFiles);
+  await project.updateFiles();
   return true;
 });

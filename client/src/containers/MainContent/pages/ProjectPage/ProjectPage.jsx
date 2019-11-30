@@ -6,9 +6,11 @@ import ToggleSwitch from "components/ToggleSwitch";
 import SettingsModal from "./SettingsModal";
 import uuid from "uuid/v4";
 import events from "shared/ipc-events";
+import constants from "shared/constants";
 import settings from "shared/settings";
 import Icon from "@material-ui/core/Icon";
 import { withRouter } from "react-router-dom";
+import { stat } from "fs";
 const ipc = window.require("electron").ipcRenderer;
 
 function SnapshotOutdatedAlert(props) {
@@ -30,33 +32,8 @@ function SnapshotUptodateAlert() {
   return <div class="alert alert-primary">Everything is up to date!</div>;
 }
 
-const UpToDateStatus = (
-  <span className="badge badge-pill badge-success">UPTODATE</span>
-);
-const OutdatedStatus = (
-  <span className="badge badge-pill badge-danger">OUTDATED</span>
-);
-const ExcludedStatus = (
-  <span className="badge badge-pill badge-secondary">EXCLUDED</span>
-);
-const test_file_rows = [
-  [OutdatedStatus, "Cover Page.pdf", <ToggleSwitch toggled />],
-  [OutdatedStatus, "Canvas.png", <ToggleSwitch toggled />],
-  [OutdatedStatus, "Canvas.raw", <ToggleSwitch toggled />],
-  [OutdatedStatus, "Intro.doc", <ToggleSwitch toggled />],
-  [OutdatedStatus, "Report.doc", <ToggleSwitch toggled />]
-];
-
-/** creates a html table from list of files */
-function getFiles() {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      resolve(test_file_rows);
-    }, 100);
-  });
-}
-
 const test_snapshot_rows = [];
+const excludedFiles = new Set([]);
 
 /** creates a html table from list of certificates */
 function getSnapshots() {
@@ -67,7 +44,7 @@ function getSnapshots() {
   });
 }
 
-const FILE_TABLE_HEADERS = ["Status", "File Name", "Include In Certificate"];
+const FILE_TABLE_HEADERS = ["Status", "File Name", "Add to Certificate"];
 
 class Files extends React.Component {
   render() {
@@ -88,11 +65,6 @@ class Snapshots extends React.Component {
     return (
       <div>
         <div className="projectpage-heading">Certificate</div>
-        <Table
-          headers={SNAPSHOT_TABLE_HEADERS}
-          rows={this.props.snapshots}
-          headerBGColor="#F0AD4E"
-        />
       </div>
     );
   }
@@ -102,7 +74,6 @@ class ProjectPage extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      files: [],
       snapshots: [],
       showSettings: false,
       snapshotUpdated: false,
@@ -112,6 +83,50 @@ class ProjectPage extends React.Component {
     this.handleSaveSettings = this.handleSaveSettings.bind(this);
     this.handleSnapshot = this.handleSnapshot.bind(this);
     this.deleteProject = this.deleteProject.bind(this);
+    this.fileToRow = this.fileToRow.bind(this);
+  }
+
+  fileToRow(file) {
+    let statusClass;
+    if (file.status === constants.GIT_UNCHANGED) {
+      statusClass = "badge-success";
+    } else if (
+      file.status === constants.GIT_CHANGED ||
+      file.status === constants.GIT_REMOVED ||
+      file.status === constants.GIT_NEW
+    ) {
+      statusClass = "badge-danger";
+    } else if (file.status === constants.GIT_EXCLUDED) {
+      // TODO: not actually related to git
+      statusClass = "badge-secondary";
+    } else {
+      throw new Error("Unexpected status: " + file.status);
+    }
+    console.log("OOF");
+    return [
+      <span className={"badge badge-pill " + statusClass}>{file.status}</span>,
+      file.path,
+      <ToggleSwitch
+        toggled={
+          excludedFiles.has(file) || !(file.status === constants.GIT_EXCLUDED)
+        }
+        onChange={async () => {
+          if (file.status === constants.GIT_EXCLUDED) {
+            excludedFiles.delete(file.path);
+          } else {
+            excludedFiles.add(file.path);
+          }
+          this.setState({
+            project: this.state.project
+          });
+          await ipc.invoke(
+            events.PROJECT_UPDATE_EXCLUDED_FILES,
+            this.state.project.projectID,
+            Array.from(excludedFiles)
+          );
+        }}
+      />
+    ];
   }
 
   deleteProject() {
@@ -133,20 +148,8 @@ class ProjectPage extends React.Component {
   }
 
   // TODO: this is a hack, please fix later
-  handleSnapshot() {
-    /*setTimeout(() => {
-      test_snapshot_rows.push([
-        test_snapshot_rows.length + 1,
-        new Date().toLocaleString(),
-        <span className="badge badge-success">LIVE</span>,
-        <span className="badge badge-warning">{uuid()}</span>
-      ]);
-      test_file_rows.forEach(row => {
-        row[0] = UpToDateStatus;
-      });
-      this.setState({ snapshotUpdated: true });
-    }, 500);*/
-    ipc.invoke(events.PROJECT_COMMIT, this.state.project.projectID);
+  async handleSnapshot() {
+    await ipc.invoke(events.PROJECT_COMMIT, this.state.project.projectID);
   }
 
   componentDidMount() {
@@ -157,10 +160,19 @@ class ProjectPage extends React.Component {
         project: await ipc.invoke(events.GET_PROJECT_INFO, projectID)
       });
       console.log(this.state.project);
+      this.interval = setInterval(
+        async () =>
+          this.setState({
+            project: await ipc.invoke(
+              events.PROJECT_UPDATE_FILES,
+              this.state.project.projectID
+            )
+          }),
+        5000
+      );
     })();
-    return Promise.all([getFiles(), getSnapshots()]).then(results => {
+    return Promise.all([getSnapshots()]).then(results => {
       this.setState({
-        files: results[0],
         snapshots: results[1]
       });
     });
@@ -190,13 +202,25 @@ class ProjectPage extends React.Component {
           onDeleteClicked={this.deleteProject}
         />
         <div class="inner-container">
-          {this.state.snapshotUpdated ? (
-            <SnapshotUptodateAlert />
+          {this.state.project ? (
+            !this.state.project.files.some(
+              f => f.status !== constants.GIT_UNCHANGED && f.excluded === false
+            ) ? (
+              <SnapshotUptodateAlert />
+            ) : (
+              <SnapshotOutdatedAlert onClick={this.handleSnapshot} />
+            )
           ) : (
-            <SnapshotOutdatedAlert onClick={this.handleSnapshot} />
+            <div />
           )}
 
-          <Files files={this.state.files} />
+          <Files
+            files={
+              this.state.project
+                ? this.state.project.files.map(this.fileToRow)
+                : []
+            }
+          />
           <Snapshots snapshots={this.state.snapshots} />
         </div>
         <SettingsModal

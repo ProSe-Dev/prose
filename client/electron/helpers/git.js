@@ -3,19 +3,20 @@ const git = require("isomorphic-git");
 const globby = require("globby");
 const Log = require("./log");
 const path = require("path");
+const constants = require("../../src/shared/constants");
 
 const statusMapping = {
-  ignored: "EXCLUDED",
-  unmodified: "UNCHANGED",
-  "*modified": "CHANGED",
-  "*deleted": "REMOVED",
-  "*added": "NEW",
-  absent: "REMOVED",
-  modified: "CHANGED",
-  deleted: "REMOVED",
-  added: "NEW",
-  "*unmodified": "SOMETHING FUCKED UP",
-  "*absent": "REMOVED"
+  ignored: constants.GIT_EXCLUDED,
+  unmodified: constants.GIT_UNCHANGED,
+  "*modified": constants.GIT_CHANGED,
+  "*deleted": constants.GIT_REMOVED,
+  "*added": constants.GIT_NEW,
+  absent: constants.GIT_REMOVED,
+  modified: constants.GIT_CHANGED,
+  deleted: constants.GIT_REMOVED,
+  added: constants.GIT_NEW,
+  "*unmodified": "nani",
+  "*absent": constants.GIT_REMOVED
 };
 
 async function isGit(projectPath) {
@@ -29,6 +30,27 @@ async function isGit(projectPath) {
       return false;
     }
     throw err; // something else went wrong, we don't have rights, ...
+  }
+}
+
+async function projectStatus(projPath) {
+  const paths = await globby(["./**", "./**/.*", "!node_modules"], {
+    gitignore: true,
+    cwd: projPath
+  });
+  results = [];
+  try {
+    for (const p of paths) {
+      let status = await git.status({ fs, dir: projPath, filepath: p });
+      results.push({
+        path: p,
+        status: statusMapping[status]
+      });
+    }
+    return results;
+  } catch (err) {
+    Log.debugLog(err);
+    throw err;
   }
 }
 
@@ -123,5 +145,6 @@ module.exports = {
   fileStatus,
   commit,
   init,
-  isGit
+  isGit,
+  projectStatus
 };
