@@ -16,11 +16,22 @@ class App extends React.Component {
   }
 
   componentDidMount() {
-    // uncomment to clear projects
-    (async () => {
-      await ipc.invoke(events.SETTINGS_SET, settings.PROJECTS_LIST, []);
-    })();
-    this.updateProjectList();
+    // TODO: maybe consider moving this to another worker;
+    // for our purposes now this is easier
+    this.interval = setInterval(async function() {
+      let projects = await ipc.invoke(events.GET_EXISTING_PROJECTS);
+      projects.forEach(async p => {
+        console.log("Looking at project:\n" + JSON.stringify(p));
+        if (p.isSynced) {
+          console.log("Commiting for " + p.path);
+          await ipc.invoke(events.PROJECT_COMMIT, p.projectID);
+        }
+      });
+    }, 10000);
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.interval);
   }
 
   updateProjectList() {

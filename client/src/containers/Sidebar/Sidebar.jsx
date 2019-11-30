@@ -13,16 +13,6 @@ class Sidebar extends React.Component {
       selectedProject: null,
       isSelectingProject: false
     };
-    // uncomment to clear projects
-    /*(async () => {
-      await ipc.invoke(events.SETTINGS_SET, settings.PROJECTS_LIST, []);
-    })();*/
-  }
-
-  componentDidMount() {
-    ipc.invoke(events.GET_EXISTING_PROJECTS).then(result => {
-      this.setState({ projectList: result });
-    });
   }
 
   expandProjectPanel() {

@@ -40,8 +40,7 @@ class Project {
   async writeConfig() {
     let projectInfo = {
       projectID: this.projectID,
-      excludedFiles: this.excludedFiles,
-      snapsshots: this.snapshots
+      excludedFiles: this.excludedFiles
     };
     await fs.writeFileAsync(this.getConfigPath(), JSON.stringify(projectInfo));
   }
@@ -68,7 +67,9 @@ class Project {
   }
 
   async commit() {
-    let commitHash = await git.commit(this.path);
+    Log.debugLog("COMMITING");
+    let commitHash = await git.commit(this.path, this.excludedFiles);
+    Log.debugLog("Hash was: " + commitHash);
     if (!commitHash) {
       return;
     }
@@ -77,6 +78,7 @@ class Project {
       creationDate: new Date()
     });
     await this.writeConfig();
+    Log.debugLog("Completed commit");
   }
 
   async getFiles() {

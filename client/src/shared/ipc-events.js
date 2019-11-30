@@ -46,5 +46,8 @@ module.exports = {
   PROJECT_UPDATE_FILES: "project-update-files",
   // return true if updated, false if failed
   // args[<project id>, <excluded files>]
-  PROJECT_UPDATE_EXCLUDED_FILES: "project-update-excluded-files"
+  PROJECT_UPDATE_EXCLUDED_FILES: "project-update-excluded-files",
+  // return updated project
+  // args[<project>]
+  PROJECT_UPDATE_INFO: "project-update-info"
 };

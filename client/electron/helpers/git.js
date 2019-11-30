@@ -95,18 +95,31 @@ async function init(projPath) {
  * stage all modified files, exluding .gitignored files
  * @param {String} projPath
  */
-async function addAll(projPath) {
+async function addAll(projPath, excludes) {
   try {
     Log.debugLog("addAll started");
     const paths = await globby(["./**", "./**/.*", "!node_modules"], {
       gitignore: true,
       cwd: projPath
     });
+    filteredPaths = [];
     Log.debugLog(JSON.stringify(paths));
+    let statuses = await fileStatus(projPath, paths);
+    Log.debugLog("statuses: " + JSON.stringify(statuses));
+    let excludesSet = new Set(excludes);
     for (const filepath of paths) {
+      if (
+        (excludes && excludesSet.has(filepath)) ||
+        statuses[filepath] === constants.GIT_UNCHANGED
+      ) {
+        continue;
+      }
+      filteredPaths.push(filepath);
       Log.debugLog("addAll", "adding file:" + filepath);
+      Log.debugLog("status: " + statuses[filepath]);
       await git.add({ fs, dir: projPath, filepath });
     }
+    return filteredPaths;
   } catch (err) {
     Log.error(err);
     throw err;
@@ -119,13 +132,17 @@ async function addAll(projPath) {
  * @param {String} projPath
  * @return {Promise<String>} commitId
  */
-async function commit(projPath) {
+async function commit(projPath, excludes) {
   if (!(await isGit(projPath))) {
     throw new Error(projPath + " is not a git repository");
   }
 
   try {
-    await addAll(projPath);
+    let paths = await addAll(projPath, excludes);
+    Log.debugLog("COMMIT Got paths: " + JSON.stringify(paths));
+    if (!paths || paths.length == 0) {
+      return;
+    }
     let commitId = await git.commit({
       fs,
       dir: projPath,

@@ -91,13 +91,12 @@ ipcMain.handle(events.ADD_PROJECT, async (event, ...args) => {
       new Date(),
       color.randomColorClass()
     );
-
-    projectList.push(project);
     projectIDMap[project.projectID] = project;
     projectPathMap[project.path] = project;
     settings.set(s.PROJECTS_LIST, projectList);
     Log.debugLog(JSON.stringify(projectIDMap));
     await project.initialize();
+    projectList.push(project);
   } catch (err) {
     project = null;
     Log.debugLog(err);
@@ -139,4 +138,23 @@ ipcMain.handle(events.PROJECT_UPDATE_EXCLUDED_FILES, async (event, ...args) => {
   await project.writeConfig(excludedFiles);
   await project.updateFiles();
   return true;
+});
+
+ipcMain.handle(events.PROJECT_UPDATE_INFO, async (event, ...args) => {
+  Log.ipcLog(events.PROJECT_UPDATE_INFO, args);
+  let id = args[0];
+  let deltas = args[1];
+
+  if (!projectIDMap.hasOwnProperty(id)) {
+    return;
+  }
+  let project = projectIDMap[id];
+
+  Object.keys(deltas).forEach(dkey => {
+    if (project.hasOwnProperty(dkey)) {
+      project[dkey] = deltas[dkey];
+    }
+  });
+
+  return project;
 });

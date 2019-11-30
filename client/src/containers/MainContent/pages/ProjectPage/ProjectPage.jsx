@@ -79,7 +79,7 @@ class ProjectPage extends React.Component {
 
   snapshotToRow(snapshot, idx) {
     return [
-      idx,
+      idx + 1,
       new Date(Date.parse(snapshot.creationDate)).toLocaleString("default", {
         day: "numeric",
         month: "long",
@@ -147,7 +147,14 @@ class ProjectPage extends React.Component {
     this.setState({ showSettings: !this.state.showSettings });
   }
 
-  handleSaveSettings(settings) {
+  async handleSaveSettings(settings) {
+    this.setState({
+      project: await ipc.invoke(
+        events.PROJECT_UPDATE_INFO,
+        this.state.project.projectID,
+        { isSynced: settings.autoSnapshot }
+      )
+    });
     console.log("automatic snapshot:", settings.autoSnapshot);
     this.toggleSettings();
   }
