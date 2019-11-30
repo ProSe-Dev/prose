@@ -102,7 +102,6 @@ class ProjectPage extends React.Component {
     } else {
       throw new Error("Unexpected status: " + file.status);
     }
-    console.log("OOF");
     return [
       <span className={"badge badge-pill " + statusClass}>{file.status}</span>,
       file.path,
