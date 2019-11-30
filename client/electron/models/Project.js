@@ -4,6 +4,7 @@ const { resolve } = require("path");
 const PROJECT_CONFIG_FOLDER_NAME = ".prose";
 const SNAPSHOT_FILE_NAME = "snapshots.json";
 const git = require("../helpers/git");
+const Log = require("../helpers/log");
 
 class Project {
   constructor(projectID, name, contact, abspath, creationDate, colorClass) {
@@ -19,16 +20,17 @@ class Project {
   }
 
   async initialize() {
-    let isExistingProject = git.isGit(this.path);
+    let isExistingProject = await git.isGit(this.path);
+    Log.debugLog(isExistingProject);
     this.isSynced = !isExistingProject;
     if (!isExistingProject) {
-      git.init(this.path);
+      await git.init(this.path);
     }
-    await fs.writeFileAsync(resolve(this.path, ".proseid"), this.projectID);
-    this.commit();
+    await fs.writeFileAsync(resolve(this.path, ".prose_id"), this.projectID);
+    await this.commit();
   }
 
-  commit() {
+  async commit() {
     git.commit(this.path);
   }
 

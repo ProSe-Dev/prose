@@ -61,6 +61,7 @@ async function fileStatus(projPath, filepaths) {
 async function init(projPath) {
   try {
     await git.init({ fs, dir: projPath });
+    Log.debugLog("Initialized repo at " + projPath);
     return true;
   } catch (err) {
     Log.debugLog(err);
@@ -74,7 +75,12 @@ async function init(projPath) {
  */
 async function addAll(projPath) {
   try {
-    const paths = await globby([`./**`], { gitignore: true, cwd: projPath });
+    Log.debugLog("addAll started");
+    const paths = await globby(["./**", "./**/.*", "!node_modules"], {
+      gitignore: true,
+      cwd: projPath
+    });
+    Log.debugLog(JSON.stringify(paths));
     for (const filepath of paths) {
       Log.debugLog("addAll", "adding file:" + filepath);
       await git.add({ fs, dir: projPath, filepath });
@@ -93,7 +99,7 @@ async function addAll(projPath) {
  */
 async function commit(projPath) {
   if (!(await isGit(projPath))) {
-    throw new Error("not a git repository");
+    throw new Error(projPath + " is not a git repository");
   }
 
   try {
@@ -116,5 +122,6 @@ async function commit(projPath) {
 module.exports = {
   fileStatus,
   commit,
-  init
+  init,
+  isGit
 };

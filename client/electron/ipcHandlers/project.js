@@ -7,7 +7,6 @@ const color = require("../../src/shared/color");
 const s = require("../../src/shared/settings");
 const { Project } = require("../models/Project");
 const settings = require("electron-settings");
-const git = require("../helpers/git");
 const projectList = settings.get(s.PROJECTS_LIST, []);
 const projectIDMap = {};
 const projectPathMap = {};
@@ -97,7 +96,7 @@ ipcMain.handle(events.ADD_PROJECT, async (event, ...args) => {
     projectPathMap[project.path] = project;
     settings.set(s.PROJECTS_LIST, projectList);
     Log.debugLog(JSON.stringify(projectIDMap));
-    project.initialize();
+    await project.initialize();
   } catch (err) {
     project = null;
     Log.debugLog(err);
