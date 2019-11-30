@@ -24,13 +24,15 @@ function Modal(props) {
             {props.children}
           </div>
           <div className="modal-footer">
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={props.onSubmit}
-            >
-            { props.buttonText }
-            </button>
+            {props.buttons && props.buttons.map(({style, onclick, text}) => (
+              <button
+                type="button"
+                className={`btn btn-${style}`}
+                onClick={onclick}
+              >
+                { text }
+              </button>
+            ))}
           </div>
         </div>
       </div>
