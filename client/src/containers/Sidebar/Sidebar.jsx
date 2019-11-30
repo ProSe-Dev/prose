@@ -13,11 +13,22 @@ class Sidebar extends React.Component {
       selectedProject: null,
       isSelectingProject: false
     };
-    this.handleSelectPage = this.handleSelectPage.bind(this);
+    // uncomment to clear projects
+    /*(async () => {
+      await ipc.invoke(events.SETTINGS_SET, settings.PROJECTS_LIST, []);
+    })();*/
   }
 
-  handleSelectPage(pageName) {
-    this.setState({ selectedPage: pageName });
+  componentDidMount() {
+    ipc.invoke(events.GET_EXISTING_PROJECTS).then(result => {
+      this.setState({ projectList: result });
+    });
+  }
+
+  expandProjectPanel() {
+    // hack to open project panel programmatically :)
+    let projectPanel = document.querySelector("#project .MuiButtonBase-root");
+    projectPanel.click();
   }
 
   render() {
@@ -27,15 +38,17 @@ class Sidebar extends React.Component {
       <div class="Sidebar">
         <div className="sidebar-logo">
           <Link
+            className="disable-link-style"
             style={{ textDecoration: "none", color: "white" }}
+            name="home"
+            onClick={() => this.setState({ selectedPage: "home" })}
             to="/"
-            onClick={() => this.handleSelectPage("home")}
           >
-            <h3>ProSe</h3>
+            ProSe
           </Link>
         </div>
 
-        <div class="projects">
+        <div id="project" class="projects">
           <Collapse
             disabled={this.props.projectList.length === 0}
             items={[
@@ -101,7 +114,11 @@ class Sidebar extends React.Component {
                 }
                 this.props.updateProjectList();
                 this.props.history.push(`/project/${project.projectID}`);
-                this.handleSelectPage("add-project");
+                this.setState({
+                  selectedPage: "project",
+                  selectedProject: project.projectID
+                });
+                this.expandProjectPanel();
               }
               this.setState({
                 isSelectingProject: false
@@ -119,7 +136,7 @@ class Sidebar extends React.Component {
             }`}
             onClick={async e => {
               this.props.history.push("/file-search");
-              this.handleSelectPage("ip-check");
+              this.setState({ selectedPage: "ip-check" });
             }}
           >
             <span class="sidebar-text">&#9656;&nbsp;&nbsp;IP Checker</span>
@@ -131,7 +148,7 @@ class Sidebar extends React.Component {
             class={`sidebar-item ${selectedPage === "faq" ? "active" : ""}`}
             onClick={async e => {
               this.props.history.push("/faq");
-              this.handleSelectPage("faq");
+              this.setState({ selectedPage: "faq" });
             }}
           >
             <span class="sidebar-text">&#9656;&nbsp;&nbsp;FAQ</span>
