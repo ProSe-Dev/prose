@@ -7,8 +7,25 @@ const events = require("../../src/shared/ipc-events");
 const color = require("../../src/shared/color");
 const s = require("../../src/shared/settings");
 const { Project } = require("../models/Project");
-const settings = require("electron-settings");
-const projectList = settings.get(s.PROJECTS_LIST, []);
+const settings = require("../settings");
+let loadedProjects =
+  settings.getVal(s.NAMESPACES.PROJECT, s.PROJECTS_LIST) || [];
+const projectList = loadedProjects.map(
+  p =>
+    new Project(
+      p.projectID,
+      p.name,
+      p.contact,
+      p.path,
+      p.creationDate,
+      p.colorClass,
+      p.isSynced,
+      p.excludedFiles,
+      p.snapshots,
+      p.files
+    )
+);
+Log.debugLog("INITIAL PROJECTS: " + JSON.stringify(projectList));
 const projectIDMap = {};
 const projectPathMap = {};
 projectList.forEach(p => {
@@ -93,7 +110,7 @@ ipcMain.handle(events.ADD_PROJECT, async (event, ...args) => {
     );
     projectIDMap[project.projectID] = project;
     projectPathMap[project.path] = project;
-    settings.set(s.PROJECTS_LIST, projectList);
+    settings.set(s.NAMESPACES.PROJECT, s.PROJECTS_LIST, projectList);
     Log.debugLog(JSON.stringify(projectIDMap));
     await project.initialize();
     projectList.push(project);

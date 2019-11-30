@@ -32,9 +32,6 @@ module.exports = {
   // return value corresponding to name
   // args[<name>, (defaultValue)]
   SETTINGS_GET: "settings-get",
-  // return true if name exists in settings, otherwise false
-  // args[<name>]
-  SETTINGS_HAS: "settings-has",
   // return true if project deleted, false if failed
   // args[<project id>]
   PROJECT_DELETE: "project-delete",

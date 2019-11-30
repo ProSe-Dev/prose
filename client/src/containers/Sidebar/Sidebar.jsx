@@ -15,6 +15,10 @@ class Sidebar extends React.Component {
     };
   }
 
+  componentDidMount() {
+    this.props.updateProjectList();
+  }
+
   expandProjectPanel() {
     // hack to open project panel programmatically :)
     let projectPanel = document.querySelector("#project .MuiButtonBase-root");

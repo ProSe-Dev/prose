@@ -11,17 +11,28 @@ const child = require("child_process").execFile;
 var isWin = process.platform === "win32";
 
 class Project {
-  constructor(projectID, name, contact, abspath, creationDate, colorClass) {
+  constructor(
+    projectID,
+    name,
+    contact,
+    abspath,
+    creationDate,
+    colorClass,
+    isSynced,
+    excludedFiles,
+    snapshots,
+    files
+  ) {
+    this.projectID = projectID;
     this.name = name;
     this.contact = contact;
     this.path = abspath;
-    this.projectID = projectID;
-    this.snapshots = [];
-    this.files = [];
     this.creationDate = creationDate;
     this.colorClass = colorClass;
-    this.isSynced = false;
-    this.excludedFiles = [CONFIG_NAME];
+    this.isSynced = isSynced || false;
+    this.excludedFiles = excludedFiles || [CONFIG_NAME];
+    this.snapshots = snapshots || [];
+    this.files = files || [];
   }
 
   async initialize() {

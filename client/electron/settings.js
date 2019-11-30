@@ -8,6 +8,7 @@ let __state;
  * should be called on start up
  */
 function start() {
+  //settings.setAll({});
   __state = settings.getAll();
   console.log(__state);
 }
@@ -18,7 +19,7 @@ function start() {
  * @param {String} key
  * @param {any} value
  */
-function add(namespace, key, value) {
+function set(namespace, key, value) {
   if (!__state[namespace]) {
     __state[namespace] = {};
   }
@@ -65,7 +66,7 @@ function end() {
 
 module.exports = {
   start,
-  add,
+  set,
   get,
   end,
   getVal
