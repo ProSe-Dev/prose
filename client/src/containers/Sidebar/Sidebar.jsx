@@ -11,7 +11,7 @@ class Sidebar extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      selectedProject: null,
+      selectedPage: null,
       isSelectingProject: false,
       projectList: []
     };
@@ -19,6 +19,7 @@ class Sidebar extends React.Component {
     /*(async () => {
       await ipc.invoke(events.SETTINGS_SET, settings.PROJECTS_LIST, []);
     })();*/
+    this.handleSelectPage = this.handleSelectPage.bind(this);
   }
 
   componentDidMount() {
@@ -27,11 +28,17 @@ class Sidebar extends React.Component {
     });
   }
 
+  handleSelectPage(pageName) {
+    this.setState({ selectedPage: pageName });
+  }
+
   render() {
+    const { selectedPage } = this.state;
+
     return (
       <div class="Sidebar">
         <div className="sidebar-logo">
-          <Link style={{ textDecoration: "none", color: "white" }} to="/">
+          <Link style={{ textDecoration: "none", color: "white" }} to="/" onClick={() => this.handleSelectPage('home')}>
             <h3>ProSe</h3>
           </Link>
         </div>
@@ -90,6 +97,7 @@ class Sidebar extends React.Component {
                   projectList: await ipc.invoke(events.GET_EXISTING_PROJECTS)
                 });
                 this.props.history.push(`/project/${project.projectID}`);
+                this.handleSelectPage('add-project');
               }
               this.setState({
                 isSelectingProject: false
@@ -102,9 +110,10 @@ class Sidebar extends React.Component {
 
         <div>
           <button
-            class="sidebar-item"
-            onClick={async () => {
+            class={`sidebar-item ${selectedPage === 'ip-check' ? 'active' : ''}`}
+            onClick={async (e) => {
               this.props.history.push("/file-search");
+              this.handleSelectPage('ip-check');
             }}
           >
             <h6 class="sidebar-text">IP Checker</h6>
@@ -113,9 +122,10 @@ class Sidebar extends React.Component {
 
         <div>
           <button
-            class="sidebar-item"
-            onClick={async () => {
+            class={`sidebar-item ${selectedPage === 'faq' ? 'active' : ''}`}
+            onClick={async (e) => {
               this.props.history.push("/faq");
+              this.handleSelectPage('faq');
             }}
           >
             <h6 class="sidebar-text">FAQ</h6>
