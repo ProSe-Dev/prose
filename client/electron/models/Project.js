@@ -3,12 +3,7 @@ const fs = require("../helpers/fs");
 const { resolve } = require("path");
 const PROJECT_CONFIG_FOLDER_NAME = ".prose";
 const SNAPSHOT_FILE_NAME = "snapshots.json";
-
-function createProject() {}
-
-function loadProject(abspath) {
-  return new Project("", "", abspath);
-}
+const git = require("../helpers/git");
 
 class Project {
   constructor(projectID, name, contact, abspath, creationDate, colorClass) {
@@ -20,6 +15,21 @@ class Project {
     this.files = null;
     this.creationDate = creationDate;
     this.colorClass = colorClass;
+    this.isSynced = false;
+  }
+
+  async initialize() {
+    let isExistingProject = git.isGit(path);
+    this.isSynced = !isExistingProject;
+    if (!isExistingProject) {
+      git.init(this.path);
+    }
+    await fs.writeFileAsync(resolve(this.path, ".proseid"), this.projectID);
+    this.commit();
+  }
+
+  commit() {
+    git.commit(this.path);
   }
 
   async addSnapshot() {
@@ -47,6 +57,5 @@ class Project {
 }
 
 module.exports = {
-  loadProject,
   Project
 };

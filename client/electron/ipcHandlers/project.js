@@ -1,13 +1,13 @@
 const { ipcMain } = require("electron");
 const { selectDirAsync, selectFileAsync } = require("../helpers/dialog");
 const Log = require("../helpers/log");
-const git = require("../helpers/git");
 const { generateUUID } = require("../helpers/id");
 const events = require("../../src/shared/ipc-events");
 const color = require("../../src/shared/color");
 const s = require("../../src/shared/settings");
 const { Project } = require("../models/Project");
 const settings = require("electron-settings");
+const git = require("../helpers/git");
 const projectList = settings.get(s.PROJECTS_LIST, []);
 const projectIDMap = {};
 const projectPathMap = {};
@@ -80,8 +80,7 @@ ipcMain.handle(events.ADD_PROJECT, async (event, ...args) => {
     projectPathMap[project.path] = project;
     settings.set(s.PROJECTS_LIST, projectList);
     Log.debugLog(JSON.stringify(projectIDMap));
-
-    // TODO: should set up git here
+    project.initialize();
   } catch (err) {
     project = null;
     Log.debugLog(err);

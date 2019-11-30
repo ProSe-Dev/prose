@@ -23,7 +23,7 @@ class Sidebar extends React.Component {
 
   componentDidMount() {
     ipc.invoke(events.GET_EXISTING_PROJECTS).then(result => {
-      this.setState({ projects: result });
+      this.setState({ projectList: result });
     });
   }
 

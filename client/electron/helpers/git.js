@@ -1,31 +1,31 @@
-const fs = require('./fs');
-const git = require('isomorphic-git');
-const globby = require('globby');
-const Log = require('./log');
-const path = require('path');
+const fs = require("./fs");
+const git = require("isomorphic-git");
+const globby = require("globby");
+const Log = require("./log");
+const path = require("path");
 
 const statusMapping = {
-  'ignored': 'EXCLUDED', 
-  'unmodified': 'UNCHANGED', 
-  '*modified': 'CHANGED', 
-  '*deleted': 'REMOVED', 
-  '*added': 'NEW', 
-  'absent': 'REMOVED', 
-  'modified': 'CHANGED', 
-  'deleted': 'REMOVED', 
-  'added': 'NEW', 
-  '*unmodified': 'SOMETHING FUCKED UP', 
-  '*absent': 'REMOVED'
+  ignored: "EXCLUDED",
+  unmodified: "UNCHANGED",
+  "*modified": "CHANGED",
+  "*deleted": "REMOVED",
+  "*added": "NEW",
+  absent: "REMOVED",
+  modified: "CHANGED",
+  deleted: "REMOVED",
+  added: "NEW",
+  "*unmodified": "SOMETHING FUCKED UP",
+  "*absent": "REMOVED"
 };
 
 async function isGit(projectPath) {
-  const gitPath = path.join(projectPath, '.git', 'HEAD');
-  try  {
+  const gitPath = path.join(projectPath, ".git", "HEAD");
+  try {
     let stat = await fs.statAsync(gitPath);
-    return stat.isFile()
-  }
-  catch (err) {
-    if (err.code == 'ENOENT') { // no such file or directory. File really does not exist
+    return stat.isFile();
+  } catch (err) {
+    if (err.code == "ENOENT") {
+      // no such file or directory. File really does not exist
       return false;
     }
     throw err; // something else went wrong, we don't have rights, ...
@@ -35,15 +35,15 @@ async function isGit(projectPath) {
 /**
  * returns the status of each file in the project directory
  * status include: "modified" / "unmodified"
- * @param {String} projPath 
+ * @param {String} projPath
  * @param {String[]} filepaths list of files paths relative to the project directory
  * @return {Promise<Object>} { 'file1': 'modified', 'filed2': 'unmodified' ... }
  */
 async function fileStatus(projPath, filepaths) {
-  let ret = {}
+  let ret = {};
   try {
     for (const fp of filepaths) {
-      let status = await git.status({fs, dir: projPath, filepath: fp});
+      let status = await git.status({ fs, dir: projPath, filepath: fp });
       ret[fp] = statusMapping[status];
     }
     return ret;
@@ -56,14 +56,13 @@ async function fileStatus(projPath, filepaths) {
 /**
  * initalize a directory into a git repository
  * if directory has already been initialized, nothing happens
- * @param {String} projPath 
+ * @param {String} projPath
  */
 async function init(projPath) {
   try {
     await git.init({ fs, dir: projPath });
     return true;
-  }
-  catch (err) {
+  } catch (err) {
     Log.debugLog(err);
     throw err;
   }
@@ -71,13 +70,13 @@ async function init(projPath) {
 
 /**
  * stage all modified files, exluding .gitignored files
- * @param {String} projPath 
+ * @param {String} projPath
  */
 async function addAll(projPath) {
   try {
     const paths = await globby([`./**`], { gitignore: true, cwd: projPath });
     for (const filepath of paths) {
-      Log.debugLog('addAll', 'adding file:' + filepath);
+      Log.debugLog("addAll", "adding file:" + filepath);
       await git.add({ fs, dir: projPath, filepath });
     }
   } catch (err) {
@@ -92,9 +91,9 @@ async function addAll(projPath) {
  * @param {String} projPath
  * @return {Promise<String>} commitId
  */
-async function commit(projPath, authorName, authorEmail, commitMsg) {
+async function commit(projPath) {
   if (!(await isGit(projPath))) {
-    throw new Error('not a git repository');
+    throw new Error("not a git repository");
   }
 
   try {
@@ -103,10 +102,10 @@ async function commit(projPath, authorName, authorEmail, commitMsg) {
       fs,
       dir: projPath,
       author: {
-        name: authorName,
-        email: authorEmail
+        name: "Prose Bot",
+        email: "bot@prose.org"
       },
-      message: commitMsg
+      message: "Auto-generated commit message"
     });
     return commitId;
   } catch (err) {
@@ -117,5 +116,5 @@ async function commit(projPath, authorName, authorEmail, commitMsg) {
 module.exports = {
   fileStatus,
   commit,
-  init,
+  init
 };
