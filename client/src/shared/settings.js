@@ -4,5 +4,7 @@ module.exports = {
     PROJECT: "project"
   },
   // list of projects
-  PROJECTS_LIST: "projectsList"
+  KEYS: {
+    PROJECTS_LIST: "projectsList"
+  }
 };

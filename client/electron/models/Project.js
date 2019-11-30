@@ -9,6 +9,7 @@ const constants = require("../../src/shared/constants");
 const CONFIG_NAME = ".prose";
 const child = require("child_process").execFile;
 var isWin = process.platform === "win32";
+const crypto = require("crypto");
 
 class Project {
   constructor(
@@ -65,11 +66,33 @@ class Project {
     return resolve(this.path, CONFIG_NAME);
   }
 
+  async getFileHashes() {
+    let hashes = [];
+    for (let f of this.files) {
+      if (f.status === constants.GIT_EXCLUDED) {
+        continue;
+      }
+      let fileContent = await fs.readFileAsync(resolve(this.path, f.path));
+      let hash = crypto.createHash("sha256");
+      hash.update(fileContent);
+      hashes.push(hash.digest("hex"));
+    }
+    Log.debugLog(
+      "Got hashes: " +
+        JSON.stringify(hashes) +
+        " from files " +
+        JSON.stringify(this.files)
+    );
+    return hashes;
+  }
+
   async writeConfig() {
     let projectInfo = {
       projectID: this.projectID,
-      excludedFiles: this.excludedFiles
+      excludedFiles: this.excludedFiles,
+      fileHashes: await this.getFileHashes()
     };
+    Log.debugLog(JSON.stringify(projectInfo));
     await fs.writeFileAsync(this.getConfigPath(), JSON.stringify(projectInfo));
   }
 
