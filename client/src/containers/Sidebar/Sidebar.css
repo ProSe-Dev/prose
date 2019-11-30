@@ -10,7 +10,9 @@
 }
 
 .sidebar-logo {
-  text-align: center;
+  padding-left: 0.25em;
+  font-family: 'Petit Formal Script';
+  font-size: 3em;
 }
 
 .sidebar-logo:hover {
