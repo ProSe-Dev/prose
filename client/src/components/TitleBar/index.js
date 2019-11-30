@@ -1,6 +1,7 @@
 import React from "react";
 import "./style.css";
 import SettingsIcon from "@material-ui/icons/Settings";
+import DeleteForeverIcon from "@material-ui/icons/DeleteForever";
 import color from "shared/color";
 
 function TitleBar(props) {
@@ -18,17 +19,26 @@ function TitleBar(props) {
         <div className="titlebar-title">{props.title}</div>
         <div className="titlebar-subtitle">{props.subtitle}</div>
       </div>
-      {props.showSettings && (
-        <div className="titlebar-settings vcenter-wrapper hleft-wrapper">
+      <div className="titlebar-settings vcenter-wrapper hleft-wrapper">
+        {props.showSettings && (
           <button
             type="button"
-            className="btn btn-secondary"
+            className="btn btn-secondary option-btn"
             onClick={props.onSettingsClicked}
           >
             <SettingsIcon />
           </button>
-        </div>
-      )}
+        )}
+        {props.showDelete && (
+          <button
+            type="button"
+            className="btn btn-secondary option-btn"
+            onClick={props.onDeleteClicked}
+          >
+            <DeleteForeverIcon />
+          </button>
+        )}
+      </div>
     </div>
   );
 }

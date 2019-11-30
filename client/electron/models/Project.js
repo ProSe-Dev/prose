@@ -19,7 +19,7 @@ class Project {
   }
 
   async initialize() {
-    let isExistingProject = git.isGit(path);
+    let isExistingProject = git.isGit(this.path);
     this.isSynced = !isExistingProject;
     if (!isExistingProject) {
       git.init(this.path);

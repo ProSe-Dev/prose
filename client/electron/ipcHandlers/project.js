@@ -29,6 +29,23 @@ ipcMain.handle(events.GET_PROJECT_INFO, async (event, ...args) => {
   return projectIDMap[id];
 });
 
+ipcMain.handle(events.DELETE_PROJECT, (event, ...args) => {
+  Log.ipcLog(events.DELETE_PROJECT, args);
+  let id = args[0];
+  if (!projectIDMap.hasOwnProperty(id)) {
+    return false;
+  }
+  let index = projectList.indexOf(projectIDMap[id]);
+  if (index > -1) {
+    projectList.splice(index, 1);
+    delete projectPathMap[projectIDMap[id].path];
+    delete projectIDMap[id];
+  } else {
+    return false;
+  }
+  return true;
+});
+
 ipcMain.handle(events.SELECT_FOLDER, async (event, ...args) => {
   Log.ipcLog(events.SELECT_FOLDER, args);
   let result = await selectDirAsync();

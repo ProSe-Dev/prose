@@ -8,6 +8,7 @@ import uuid from "uuid/v4";
 import events from "shared/ipc-events";
 import settings from "shared/settings";
 import Icon from "@material-ui/core/Icon";
+import { withRouter } from "react-router-dom";
 const ipc = window.require("electron").ipcRenderer;
 
 function SnapshotOutdatedAlert(props) {
@@ -110,6 +111,16 @@ class ProjectPage extends React.Component {
     this.toggleSettings = this.toggleSettings.bind(this);
     this.handleSaveSettings = this.handleSaveSettings.bind(this);
     this.handleSnapshot = this.handleSnapshot.bind(this);
+    this.deleteProject = this.deleteProject.bind(this);
+  }
+
+  deleteProject() {
+    ipc
+      .invoke(events.DELETE_PROJECT, this.state.project.projectID)
+      .then(res => {
+        if (res) this.props.updateProjectList();
+        this.props.history.push("/");
+      });
   }
 
   toggleSettings() {
@@ -174,6 +185,8 @@ class ProjectPage extends React.Component {
           }
           showSettings
           onSettingsClicked={this.toggleSettings}
+          showDelete
+          onDeleteClicked={this.deleteProject}
         />
         <div class="inner-container">
           {this.state.snapshotUpdated ? (
@@ -195,4 +208,4 @@ class ProjectPage extends React.Component {
   }
 }
 
-export default ProjectPage;
+export default withRouter(ProjectPage);

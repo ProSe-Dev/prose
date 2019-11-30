@@ -11,7 +11,7 @@
 
 .titlebar-title {
   font-size: 1.5em;
-  color: white; 
+  color: white;
 }
 
 .titlebar-subtile {
@@ -21,4 +21,8 @@
 
 .titlebar-settings {
   align-content: left;
+}
+
+.option-btn {
+  margin: 5px;
 }
