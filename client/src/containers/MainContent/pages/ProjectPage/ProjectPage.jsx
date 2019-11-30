@@ -178,6 +178,10 @@ class ProjectPage extends React.Component {
     });
   }
 
+  componentWillUnmount() {
+    clearInterval(this.interval);
+  }
+
   render() {
     return (
       <div class="main-container">
