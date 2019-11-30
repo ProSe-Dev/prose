@@ -3,7 +3,7 @@ import { Link, withRouter } from "react-router-dom";
 import "./Sidebar.css";
 import events from "shared/ipc-events";
 import settings from "shared/settings";
-import Collapse from "components/Collapse";
+import Collapse from "components/FramelessCollapse";
 import color from "shared/color";
 const ipc = window.require("electron").ipcRenderer;
 
@@ -12,6 +12,7 @@ class Sidebar extends React.Component {
     super(props);
     this.state = {
       selectedPage: null,
+      selectedProject: null,
       isSelectingProject: false,
       projectList: []
     };
@@ -33,7 +34,7 @@ class Sidebar extends React.Component {
   }
 
   render() {
-    const { selectedPage } = this.state;
+    const { selectedPage, selectedProject } = this.state;
 
     return (
       <div class="Sidebar">
@@ -45,19 +46,28 @@ class Sidebar extends React.Component {
 
         <div class="projects">
           <Collapse
-            disabled={this.state.projectList.length == 0}
+            disabled={this.state.projectList.length === 0}
             items={[
               {
                 heading: "Projects",
                 content: (
                   <div className="collapse-container">
                     {this.state.projectList.map((proj, ind) => (
-                      <div className="project-item" key={ind}>
+                      <div 
+                        class={`sidebar-item ${selectedPage === 'project' && selectedProject === proj.projectID ? 'active' : ''}`}
+                        key={ind}
+                      >
                         <Link
-                          style={{ color: "black" }}
+                          class="sidebar-link"
                           to={`/project/${proj.projectID}`}
+                          onClick={() => {
+                            this.setState({
+                              selectedPage: 'project',
+                              selectedProject: proj.projectID
+                            });
+                          }}
                         >
-                          <h7> {`${proj.name}`} </h7>
+                          <span class="sidebar-text">{`>  ${proj.name}`}</span>
                         </Link>
                       </div>
                     ))}
@@ -104,7 +114,7 @@ class Sidebar extends React.Component {
               });
             }}
           >
-            <h6 class="sidebar-text">&#9656;&nbsp;&nbsp;Add Project</h6>
+            <span class="sidebar-text">&#9656;&nbsp;&nbsp;Add Project</span>
           </button>
         </div>
 
@@ -116,7 +126,7 @@ class Sidebar extends React.Component {
               this.handleSelectPage('ip-check');
             }}
           >
-            <h6 class="sidebar-text">&#9656;&nbsp;&nbsp;IP Checker</h6>
+            <span class="sidebar-text">&#9656;&nbsp;&nbsp;IP Checker</span>
           </button>
         </div>
 
@@ -128,7 +138,7 @@ class Sidebar extends React.Component {
               this.handleSelectPage('faq');
             }}
           >
-            <h6 class="sidebar-text">&#9656;&nbsp;&nbsp;FAQ</h6>
+            <span class="sidebar-text">&#9656;&nbsp;&nbsp;FAQ</span>
           </button>
         </div>
       </div>
