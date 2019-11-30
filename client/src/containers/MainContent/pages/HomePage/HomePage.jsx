@@ -10,18 +10,6 @@ class HomePage extends React.Component {
   constructor(props) {
     super(props);
     this.state = {};
-    this.handleAddProject = this.handleAddProject.bind(this);
-  }
-
-  handleAddProject() {
-    console.log('handleAddProject');
-    ipc.invoke(events.SELECT_FOLDER)
-      .then((path) => {
-        return ipc.invoke(events.ADD_PROJECT, 'prose', 'prose@gmail.com', path);
-      })
-      .then((project) => {
-        this.props.history.push(`/project?id=${project.projectId}`);
-      });
   }
 
   render() {
@@ -39,7 +27,7 @@ class HomePage extends React.Component {
           }}
           type="button"
           className="btn btn-success"
-          onClick={this.handleAddProject}
+          onClick={this.props.onAddProject}
         >
           ADD NEW PROJECT
         </button>

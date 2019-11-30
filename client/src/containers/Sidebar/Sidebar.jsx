@@ -8,11 +8,7 @@ const ipc = window.require("electron").ipcRenderer;
 class Sidebar extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {
-      selectedPage: null,
-      selectedProject: null,
-      isSelectingProject: false
-    };
+    this.state = {};
   }
 
   componentDidMount() {
@@ -26,7 +22,7 @@ class Sidebar extends React.Component {
   }
 
   render() {
-    const { selectedPage, selectedProject } = this.state;
+    const selectedPage = this.props.currentPage;
 
     return (
       <div class="Sidebar">
@@ -35,7 +31,7 @@ class Sidebar extends React.Component {
             className="disable-link-style"
             style={{ textDecoration: "none", color: "white" }}
             name="home"
-            onClick={() => this.setState({ selectedPage: "home" })}
+            onClick={() => this.props.onPageChange({ name: "home" })}
             to="/"
           >
             ProSe
@@ -53,8 +49,8 @@ class Sidebar extends React.Component {
                     {this.props.projectList.map((proj, ind) => (
                       <div
                         class={`sidebar-item ${
-                          selectedPage === "project" &&
-                          selectedProject === proj.projectID
+                          selectedPage.name === "project" &&
+                          selectedPage.projectId === proj.projectID
                             ? "active"
                             : ""
                         }`}
@@ -64,9 +60,9 @@ class Sidebar extends React.Component {
                           class="sidebar-link"
                           to={`/project/${proj.projectID}`}
                           onClick={() => {
-                            this.setState({
-                              selectedPage: "project",
-                              selectedProject: proj.projectID
+                            this.props.onPageChange({
+                              name: "project",
+                              projectId: proj.projectID
                             });
                           }}
                         >
@@ -84,40 +80,7 @@ class Sidebar extends React.Component {
         <div>
           <button
             class="sidebar-item"
-            onClick={async () => {
-              if (this.state.isSelectingProject) {
-                return;
-              }
-              this.setState({
-                isSelectingProject: true
-              });
-              let folderPath = await ipc.invoke(events.SELECT_FOLDER);
-              if (folderPath) {
-                let basename = folderPath.split(/[\\/]/).pop();
-                let project = await ipc.invoke(
-                  events.ADD_PROJECT,
-                  basename,
-                  folderPath,
-                  "dev@prose.org"
-                );
-                if (!project) {
-                  this.setState({
-                    isSelectingProject: false
-                  });
-                  return;
-                }
-                this.props.updateProjectList();
-                this.props.history.push(`/project/${project.projectID}`);
-                this.setState({
-                  selectedPage: "project",
-                  selectedProject: project.projectID
-                });
-                this.expandProjectPanel();
-              }
-              this.setState({
-                isSelectingProject: false
-              });
-            }}
+            onClick={this.props.onAddProject}
           >
             <span class="sidebar-text">&#9656;&nbsp;&nbsp;Add Project</span>
           </button>
@@ -126,11 +89,11 @@ class Sidebar extends React.Component {
         <div>
           <button
             class={`sidebar-item ${
-              selectedPage === "ip-check" ? "active" : ""
+              selectedPage.name === "ip-check" ? "active" : ""
             }`}
             onClick={async e => {
               this.props.history.push("/file-search");
-              this.setState({ selectedPage: "ip-check" });
+              this.props.onPageChange({ name: "ip-check" });
             }}
           >
             <span class="sidebar-text">&#9656;&nbsp;&nbsp;IP Checker</span>
@@ -139,10 +102,10 @@ class Sidebar extends React.Component {
 
         <div>
           <button
-            class={`sidebar-item ${selectedPage === "faq" ? "active" : ""}`}
+            class={`sidebar-item ${selectedPage.name === "faq" ? "active" : ""}`}
             onClick={async e => {
               this.props.history.push("/faq");
-              this.setState({ selectedPage: "faq" });
+              this.props.onPageChange({ name: "faq" });
             }}
           >
             <span class="sidebar-text">&#9656;&nbsp;&nbsp;FAQ</span>
