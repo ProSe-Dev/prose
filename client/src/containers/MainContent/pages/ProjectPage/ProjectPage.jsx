@@ -116,7 +116,7 @@ class ProjectPage extends React.Component {
 
   deleteProject() {
     ipc
-      .invoke(events.DELETE_PROJECT, this.state.project.projectID)
+      .invoke(events.PROJECT_DELETE, this.state.project.projectID)
       .then(res => {
         if (res) this.props.updateProjectList();
         this.props.history.push("/");
@@ -134,7 +134,7 @@ class ProjectPage extends React.Component {
 
   // TODO: this is a hack, please fix later
   handleSnapshot() {
-    setTimeout(() => {
+    /*setTimeout(() => {
       test_snapshot_rows.push([
         test_snapshot_rows.length + 1,
         new Date().toLocaleString(),
@@ -145,7 +145,8 @@ class ProjectPage extends React.Component {
         row[0] = UpToDateStatus;
       });
       this.setState({ snapshotUpdated: true });
-    }, 500);
+    }, 500);*/
+    ipc.invoke(events.PROJECT_COMMIT, this.state.project.projectID);
   }
 
   componentDidMount() {

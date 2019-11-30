@@ -37,5 +37,8 @@ module.exports = {
   SETTINGS_HAS: "settings-has",
   // return true if project deleted, false if failed
   // args[<project id>]
-  DELETE_PROJECT: "delete-project"
+  PROJECT_DELETE: "project-delete",
+  // return true if project committed, false if failed
+  // args[<project id>]
+  PROJECT_COMMIT: "project-commit"
 };

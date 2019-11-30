@@ -3,6 +3,7 @@ import Sidebar from "./containers/Sidebar/Sidebar.jsx";
 import MainContent from "./containers/MainContent/MainContent.js";
 import "./App.css";
 import events from "shared/ipc-events";
+import settings from "shared/settings";
 const ipc = window.require("electron").ipcRenderer;
 
 class App extends React.Component {
@@ -12,13 +13,13 @@ class App extends React.Component {
       projectList: []
     };
     this.updateProjectList = this.updateProjectList.bind(this);
-    // uncomment to clear projects
-    /*(async () => {
-      await ipc.invoke(events.SETTINGS_SET, settings.PROJECTS_LIST, []);
-    })();*/
   }
 
   componentDidMount() {
+    // uncomment to clear projects
+    (async () => {
+      await ipc.invoke(events.SETTINGS_SET, settings.PROJECTS_LIST, []);
+    })();
     this.updateProjectList();
   }
 

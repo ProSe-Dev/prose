@@ -17,6 +17,7 @@ class Project {
     this.creationDate = creationDate;
     this.colorClass = colorClass;
     this.isSynced = false;
+    this.commit = this.commit.bind(this);
   }
 
   async initialize() {
@@ -31,7 +32,7 @@ class Project {
   }
 
   async commit() {
-    git.commit(this.path);
+    return await git.commit(this.path);
   }
 
   async addSnapshot() {

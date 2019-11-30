@@ -28,8 +28,8 @@ ipcMain.handle(events.GET_PROJECT_INFO, async (event, ...args) => {
   return projectIDMap[id];
 });
 
-ipcMain.handle(events.DELETE_PROJECT, (event, ...args) => {
-  Log.ipcLog(events.DELETE_PROJECT, args);
+ipcMain.handle(events.PROJECT_DELETE, (event, ...args) => {
+  Log.ipcLog(events.PROJECT_DELETE, args);
   let id = args[0];
   if (!projectIDMap.hasOwnProperty(id)) {
     return false;
@@ -104,4 +104,15 @@ ipcMain.handle(events.ADD_PROJECT, async (event, ...args) => {
 
   Log.debugLog(JSON.stringify(project));
   return project;
+});
+
+ipcMain.handle(events.PROJECT_COMMIT, async (event, ...args) => {
+  Log.ipcLog(events.PROJECT_COMMIT, args);
+  let id = args[0];
+  if (!projectIDMap.hasOwnProperty(id)) {
+    return false;
+  }
+  let project = projectIDMap[id];
+  await project.commit();
+  return true;
 });
