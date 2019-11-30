@@ -152,7 +152,8 @@ ipcMain.handle(events.PROJECT_UPDATE_EXCLUDED_FILES, async (event, ...args) => {
     return false;
   }
   let project = projectIDMap[id];
-  await project.writeConfig(excludedFiles);
+  project.excludedFiles = excludedFiles;
+  await project.writeConfig();
   await project.updateFiles();
   return true;
 });

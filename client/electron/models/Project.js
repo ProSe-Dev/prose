@@ -6,7 +6,7 @@ const SNAPSHOT_FILE_NAME = "snapshots.json";
 const git = require("../helpers/git");
 const Log = require("../helpers/log");
 const constants = require("../../src/shared/constants");
-const CONFIG_NAME = ".prose";
+const CONFIG_NAME = ".git/.prose";
 const child = require("child_process").execFile;
 var isWin = process.platform === "win32";
 
@@ -30,7 +30,7 @@ class Project {
     this.creationDate = creationDate;
     this.colorClass = colorClass;
     this.isSynced = isSynced || false;
-    this.excludedFiles = excludedFiles || [CONFIG_NAME];
+    this.excludedFiles = excludedFiles || [];
     this.snapshots = snapshots || [];
     this.files = files || [];
   }
@@ -75,23 +75,21 @@ class Project {
 
   async updateFiles() {
     let fileStatuses = await git.projectStatus(this.path);
-    Log.debugLog(JSON.stringify(fileStatuses));
-    this.files = fileStatuses;
-    if (fs.existsSync(this.getConfigPath())) {
-      let config = JSON.parse(fs.readFileSync(this.getConfigPath()));
-      Log.debugLog(JSON.stringify(config.excludedFiles));
-      config.excludedFiles.forEach(exclude => {
-        let existing = this.files.find(f => f.path === exclude);
-        if (existing) {
-          existing.status = constants.GIT_EXCLUDED;
-        } else {
-          this.files.push({
-            path: exclude,
-            status: constants.GIT_EXCLUDED
-          });
-        }
-      });
-    }
+    Log.debugLog('updateFiles', 'fileStatuses', fileStatuses);
+    let files = fileStatuses;
+    this.excludedFiles.forEach(exclude => {
+      let existing = files.find(f => f.path === exclude);
+      if (existing) {
+        existing.status = constants.GIT_EXCLUDED;
+      } else {
+        files.push({
+          path: exclude,
+          status: constants.GIT_EXCLUDED
+        });
+      }
+    });
+    Log.debugLog('updateFiles', 'files:',files);
+    this.files = files;
   }
 
   async commit() {

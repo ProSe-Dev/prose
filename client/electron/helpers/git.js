@@ -38,7 +38,8 @@ async function projectStatus(projPath) {
     gitignore: true,
     cwd: projPath
   });
-  results = [];
+  Log.debugLog('projectStatus', paths);
+  let results = [];
   try {
     for (const p of paths) {
       let status = await git.status({ fs, dir: projPath, filepath: p });
@@ -47,6 +48,8 @@ async function projectStatus(projPath) {
         status: statusMapping[status]
       });
     }
+    Log.debugLog('projectStatus', 'result:', results);
+
     return results;
   } catch (err) {
     Log.debugLog(err);
