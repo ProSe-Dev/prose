@@ -1,3 +1,4 @@
+const FUNCTION_FILTER = null;
 const LOG_HEADER = '>>';
 
 function ipcLog(event, args) {
@@ -5,7 +6,10 @@ function ipcLog(event, args) {
 }
 
 function debugLog(functionName, ...args) {
-  console.log(LOG_HEADER, `${functionName}()`, ':::', ...args);
+  // if function filter is set, only print if function name matches the filter
+  if (!FUNCTION_FILTER || functionName === FUNCTION_FILTER) {
+    console.log(LOG_HEADER, `${functionName}()`, ':::', ...args);
+  }
 }
 
 function error(err) {

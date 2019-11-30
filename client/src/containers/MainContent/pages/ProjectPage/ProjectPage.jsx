@@ -108,27 +108,37 @@ class ProjectPage extends React.Component {
     } else {
       throw new Error("Unexpected status: " + file.status);
     }
+    let isIncluded = !(file.status === constants.GIT_EXCLUDED);
     return [
       <span className={"badge badge-pill " + statusClass}>{file.status}</span>,
       file.path,
       <ToggleSwitch
-        toggled={
-          excludedFiles.has(file) || !(file.status === constants.GIT_EXCLUDED)
-        }
+        toggled={isIncluded}
         onChange={async () => {
+          console.log('toggle switched');
           if (file.status === constants.GIT_EXCLUDED) {
+            console.log('removed');
             excludedFiles.delete(file.path);
           } else {
+            console.log('added');
             excludedFiles.add(file.path);
           }
-          this.setState({
-            project: this.state.project
-          });
-          await ipc.invoke(
+
+          let success = await ipc.invoke(
             events.PROJECT_UPDATE_EXCLUDED_FILES,
             this.state.project.projectID,
             Array.from(excludedFiles)
           );
+
+          let updatedProject = await ipc.invoke(events.GET_PROJECT_INFO, this.state.project.projectID);
+
+          // console.log('updatedProject:', updatedProject);
+
+          if (success) {
+            this.setState({
+              project: updatedProject,
+            });
+          }
         }}
       />
     ];
@@ -166,6 +176,7 @@ class ProjectPage extends React.Component {
   }
 
   componentDidMount() {
+    console.log('mounting');
     (async () => {
       const { projectID } = this.props.match.params;
       console.log(projectID);
@@ -191,6 +202,7 @@ class ProjectPage extends React.Component {
   }
 
   render() {
+    console.log('rendering:', this.state.project);
     return (
       <div class="main-container">
         <TitleBar
