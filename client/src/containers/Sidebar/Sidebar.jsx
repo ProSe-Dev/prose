@@ -2,9 +2,7 @@ import React from "react";
 import { Link, withRouter } from "react-router-dom";
 import "./Sidebar.css";
 import events from "shared/ipc-events";
-import settings from "shared/settings";
 import Collapse from "components/FramelessCollapse";
-import color from "shared/color";
 const ipc = window.require("electron").ipcRenderer;
 
 class Sidebar extends React.Component {
@@ -20,7 +18,6 @@ class Sidebar extends React.Component {
     /*(async () => {
       await ipc.invoke(events.SETTINGS_SET, settings.PROJECTS_LIST, []);
     })();*/
-    this.handleSelectPage = this.handleSelectPage.bind(this);
   }
 
   componentDidMount() {
@@ -29,8 +26,10 @@ class Sidebar extends React.Component {
     });
   }
 
-  handleSelectPage(pageName) {
-    this.setState({ selectedPage: pageName });
+  expandProjectPanel() {
+    // hack to open project panel programmatically :)
+    let projectPanel = document.querySelector('#project .MuiButtonBase-root');
+    projectPanel.click();
   }
 
   render() {
@@ -39,12 +38,18 @@ class Sidebar extends React.Component {
     return (
       <div class="Sidebar">
         <div className="sidebar-logo">
-          <Link style={{ textDecoration: "none", color: "white" }} to="/" onClick={() => this.handleSelectPage('home')}>
-            <h3>ProSe</h3>
+          <Link
+            className="disable-link-style"
+            style={{ textDecoration: "none", color: "white" }}
+            name="home"
+            onClick={() => this.setState({ selectedPage: 'home' })}
+            to="/"
+          >
+            ProSe
           </Link>
         </div>
 
-        <div class="projects">
+        <div id="project" class="projects">
           <Collapse
             disabled={this.state.projectList.length === 0}
             items={[
@@ -107,7 +112,11 @@ class Sidebar extends React.Component {
                   projectList: await ipc.invoke(events.GET_EXISTING_PROJECTS)
                 });
                 this.props.history.push(`/project/${project.projectID}`);
-                this.handleSelectPage('add-project');
+                this.setState({
+                  selectedPage: 'project',
+                  selectedProject: project.projectID
+                });
+                this.expandProjectPanel();
               }
               this.setState({
                 isSelectingProject: false
@@ -123,7 +132,7 @@ class Sidebar extends React.Component {
             class={`sidebar-item ${selectedPage === 'ip-check' ? 'active' : ''}`}
             onClick={async (e) => {
               this.props.history.push("/file-search");
-              this.handleSelectPage('ip-check');
+              this.setState({ selectedPage: 'ip-check' });
             }}
           >
             <span class="sidebar-text">&#9656;&nbsp;&nbsp;IP Checker</span>
@@ -135,7 +144,7 @@ class Sidebar extends React.Component {
             class={`sidebar-item ${selectedPage === 'faq' ? 'active' : ''}`}
             onClick={async (e) => {
               this.props.history.push("/faq");
-              this.handleSelectPage('faq');
+              this.setState({ selectedPage: 'faq' });
             }}
           >
             <span class="sidebar-text">&#9656;&nbsp;&nbsp;FAQ</span>
