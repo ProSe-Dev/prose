@@ -104,7 +104,7 @@ class Sidebar extends React.Component {
               });
             }}
           >
-            <h6 class="sidebar-text">Add Project</h6>
+            <h6 class="sidebar-text">&#9656;&nbsp;&nbsp;Add Project</h6>
           </button>
         </div>
 
@@ -116,7 +116,7 @@ class Sidebar extends React.Component {
               this.handleSelectPage('ip-check');
             }}
           >
-            <h6 class="sidebar-text">IP Checker</h6>
+            <h6 class="sidebar-text">&#9656;&nbsp;&nbsp;IP Checker</h6>
           </button>
         </div>
 
@@ -128,7 +128,7 @@ class Sidebar extends React.Component {
               this.handleSelectPage('faq');
             }}
           >
-            <h6 class="sidebar-text">FAQ</h6>
+            <h6 class="sidebar-text">&#9656;&nbsp;&nbsp;FAQ</h6>
           </button>
         </div>
       </div>
