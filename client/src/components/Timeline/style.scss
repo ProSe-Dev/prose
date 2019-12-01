@@ -1,4 +1,5 @@
 $timelinecolor: #3498db;
+$blockcolorHighlighted: #c7ffc5;
 $blockcolor: #c5e9ff;
 
 .time-line-ctnr {
@@ -8,7 +9,7 @@ $blockcolor: #c5e9ff;
     padding: 0;
     list-style: none;
     &:before {
-      content: '';
+      content: "";
       position: absolute;
       top: 0;
       bottom: -10px;
@@ -40,6 +41,32 @@ $blockcolor: #c5e9ff;
         // box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
         border-radius: 3px;
         background: $blockcolor;
+        color: #444;
+        margin-right: 15px;
+        position: relative;
+        margin-left: 50px;
+        > .time-line-header,
+        .time {
+          font-size: 14px;
+          padding: 6px 10px;
+        }
+        .time {
+          font-size: 12px;
+          color: #999;
+          float: left;
+        }
+        .time-line-header {
+          margin: 0;
+          color: #555;
+          border-bottom: 1px solid #f4f4f4;
+          line-height: 1.7;
+        }
+      }
+      > .time-line-item-highlighted {
+        // -webkit-box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+        // box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+        border-radius: 3px;
+        background: $blockcolorHighlighted;
         color: #444;
         margin-right: 15px;
         position: relative;

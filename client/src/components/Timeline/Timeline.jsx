@@ -10,15 +10,17 @@ import TimelineItem from "./TimelineItem";
  */
 function getFormattedData(items) {
   const activities = {};
-  items.forEach(({ ts, text }, index) => {
+  items.forEach(({ ts, text, highlighted, highlightedText }, index) => {
     const date = new Date(ts);
     // format of of MMM DD YYYY
     const dateStr = date.toDateString().substring(4);
     const list = activities[dateStr] || [];
     list.push({
-      time: date.toTimeString().substring(0,8),
+      time: date.toTimeString().substring(0, 8),
       text,
-      key: index,
+      highlighted,
+      highlightedText,
+      key: index
     });
     activities[dateStr] = list;
   });
@@ -37,9 +39,17 @@ function Timeline({ items }) {
               <span>{d}</span>
             </div>
           </li>
-          {activities[d].map(({ time, text, key }) => (
-            <TimelineItem time={time} text={text} key={key} />
-          ))}
+          {activities[d].map(
+            ({ time, text, highlighted, highlightedText, key }) => (
+              <TimelineItem
+                time={time}
+                text={text}
+                highlighted={highlighted}
+                highlightedText={highlightedText}
+                key={key}
+              />
+            )
+          )}
         </ul>
       ))}
     </div>

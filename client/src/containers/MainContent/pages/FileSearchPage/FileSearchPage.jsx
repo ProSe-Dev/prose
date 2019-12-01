@@ -7,6 +7,7 @@ import Timeline from "components/Timeline";
 import Spinner from "components/Spinner";
 import events from "shared/ipc-events";
 import FindInPageIcon from "@material-ui/icons/FindInPage";
+import FingerprintIcon from "@material-ui/icons/Fingerprint";
 
 // workaround for served react app to get access to electron module
 // reference: https://github.com/electron/electron/issues/7300
@@ -16,25 +17,30 @@ function blocksToTimelineEvent(blocks) {
   return blocks.map(b => {
     return {
       ts: b.Data.Timestamp,
-      text: b.Data.CommitHash
+      text: b.Data.CommitHash,
+      highlighted: b.IsContainingBlock || false,
+      highlightedText: "FOUND FILE"
     };
   });
 }
 
-function Project(projectData) {
-  if (projectData.length == 0) {
-    return null;
-  }
+function Project(projectData, idx) {
   console.log(projectData);
-  let heading = projectData[0].Data.ProjectID;
-  let contact = projectData[0].Data.Signature;
-  let author = projectData[0].Data.PublicKey;
+  let heading = (
+    <div>
+      {projectData.IsOwnedByMe ? <FingerprintIcon /> : ""}
+      &nbsp;&nbsp;
+      {projectData.ProjectID}
+    </div>
+  );
+  let contact = projectData.Signature;
+  let author = projectData.PublicKey;
   return {
     heading: heading,
     content: (
       <div>
         <ProjectContact author={author} contact={contact} />
-        <Timeline items={blocksToTimelineEvent(projectData)} />
+        <Timeline items={blocksToTimelineEvent(projectData.Data)} />
       </div>
     )
   };
@@ -129,7 +135,7 @@ class FileSearchPage extends React.Component {
                     projectList: [],
                     message: {
                       class: "danger",
-                      value: "Could not connect to the server."
+                      value: "Failed to connect to the server."
                     }
                   });
                 }
@@ -150,7 +156,7 @@ class FileSearchPage extends React.Component {
                       class: "success",
                       value:
                         projects.length +
-                        " project(s) were found to contain the file!"
+                        " project(s) were found to contain the file! See the sorted list below."
                     }
                   });
                 }

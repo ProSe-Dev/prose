@@ -35,10 +35,46 @@ ipcMain.handle(events.SEARCH_FILE, async (e, ...args) => {
   searchUrl.search = `filehash=${fileHash}`;
   Log.debugLog(events.SEARCH_FILE, "request: " + searchUrl.toString());
   let result;
-  res = await fetch(searchUrl.toString());
+  try {
+    res = await fetch(searchUrl.toString());
+  } catch (e) {
+    throw e;
+  }
   if (res.status === 200) {
     result = await res.json();
-    Log.debugLog(events.SEARCH_FILE, result);
+    resultsProcessed = [];
+    let myPublicKey = await settings.getVal(
+      s.NAMESPACES.APP,
+      s.KEYS.MASTER_KEYS
+    ).publicKey;
+    for (const p of result) {
+      let projectOrder = Number.MAX_SAFE_INTEGER;
+      let isOwnedByMe = false;
+      if (p.length === 0) {
+        return;
+      }
+      isOwnedByMe = p[0].Data.PublicKey === myPublicKey;
+      p.forEach((b, idx) => {
+        if (b.Data.FileHashes.hasOwnProperty(fileHash)) {
+          projectOrder = Math.min(projectOrder, Date.parse(b.Data.Timestamp));
+          p[idx].IsContainingBlock = true;
+        }
+      });
+      resultsProcessed.push({
+        Order: projectOrder,
+        IsOwnedByMe: isOwnedByMe,
+        Data: p,
+        ProjectID: p[0].Data.ProjectID,
+        Signature: p[0].Data.Signature,
+        PublicKey: p[0].Data.PublicKey
+      });
+    }
+    resultsProcessed.sort((a, b) => {
+      return a.Order - b.Order;
+    });
+    result = resultsProcessed;
+    Log.debugLog(events.SEARCH_FILE, myPublicKey);
+    Log.debugLog(events.SEARCH_FILE, resultsProcessed);
   } else {
     Log.debugLog(events.SEARCH_FILE, res);
     throw new Error("Bad response");
