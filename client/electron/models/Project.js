@@ -86,7 +86,8 @@ class Project {
       excludedFiles: this.excludedFiles,
       publicKey: settings.getVal(s.NAMESPACES.APP, s.KEYS.MASTER_KEYS)
         .publicKey,
-      trackedFiles: await this.getTrackedFiles()
+      trackedFiles: await this.getTrackedFiles(),
+      contact: this.contact
     };
     Log.debugLog(JSON.stringify(projectInfo));
     await fs.writeFileAsync(this.getConfigPath(), JSON.stringify(projectInfo));

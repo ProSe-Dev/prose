@@ -2,7 +2,9 @@ package main
 
 import (
 	"bytes"
+	"crypto/ed25519"
 	"crypto/sha256"
+	"crypto/x509"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -10,6 +12,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/user"
 
 	"gopkg.in/src-d/go-git.v4"
 )
@@ -30,9 +33,25 @@ func getenv(key, fallback string) string {
 	return value
 }
 
-func sign(data []byte) string {
-	sum := sha256.Sum256(data)
-	return hex.EncodeToString(sum[:])
+func sign(data []byte) (signature string, err error) {
+	var usr *user.User
+	usr, err = user.Current()
+	if err != nil {
+		return
+	}
+	var privateKeyPath = usr.HomeDir + "/.prose/id_ed25519"
+	var privateKeyContent []byte
+	privateKeyContent, err = ioutil.ReadFile(privateKeyPath)
+	if err != nil {
+		return
+	}
+	var key interface{}
+	key, err = x509.ParsePKCS8PrivateKey(privateKeyContent)
+	switch key := key.(type) {
+	case ed25519.PrivateKey:
+		signature = hex.EncodeToString(ed25519.Sign(key, data))
+	}
+	return
 }
 
 func main() {
@@ -80,7 +99,11 @@ func main() {
 	sum := sha256.Sum256([]byte(hashData))
 	var hashOfFileHashes = hex.EncodeToString(sum[:])
 	byteArray = append(byteArray, []byte(hashOfFileHashes)...)
-	var signature = sign(byteArray)
+	signature, err := sign(byteArray)
+	if err != nil {
+		log.Printf("[ProSe] FAILED: could not sign:\n%v\n", err)
+		return
+	}
 	values := map[string]interface{}{
 		"PublicKey":  result["publicKey"],
 		"Signature":  signature,
