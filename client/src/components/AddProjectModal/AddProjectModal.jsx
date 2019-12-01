@@ -49,7 +49,16 @@ class AddProjectModal extends React.Component {
       style: 'success',
       onclick: this.handleSubmit
     };
-  
+
+    let folderPathText = this.state.folder;
+    if (!folderPathText) {
+      folderPathText = 'no folder chosen';
+    } else {
+      if (folderPathText.length > 40) {
+        folderPathText = '...' + folderPathText.substring(folderPathText.length - 40, folderPathText.length);
+      }
+    }
+
     return (
       <Modal
         title="Add New Project"
@@ -81,7 +90,7 @@ class AddProjectModal extends React.Component {
                   Choose Folder
                 </button>
                 &nbsp;&nbsp;
-                { this.state.folder ? this.state.folder : 'no project chosen'}
+                { folderPathText }
               </div>
             </div>
           </form>
