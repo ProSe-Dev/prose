@@ -9,7 +9,7 @@ const s = require("../../src/shared/settings");
 const { Project } = require("../models/Project");
 const settings = require("../settings");
 let loadedProjects =
-  settings.getVal(s.NAMESPACES.PROJECT, s.PROJECTS_LIST) || [];
+  settings.getVal(s.NAMESPACES.PROJECT, s.KEYS.PROJECTS_LIST) || [];
 const projectList = loadedProjects.map(
   p =>
     new Project(
@@ -110,7 +110,7 @@ ipcMain.handle(events.ADD_PROJECT, async (event, ...args) => {
     );
     projectIDMap[project.projectID] = project;
     projectPathMap[project.path] = project;
-    settings.set(s.NAMESPACES.PROJECT, s.PROJECTS_LIST, projectList);
+    settings.set(s.NAMESPACES.PROJECT, s.KEYS.PROJECTS_LIST, projectList);
     Log.debugLog(JSON.stringify(projectIDMap));
     await project.initialize();
     projectList.push(project);

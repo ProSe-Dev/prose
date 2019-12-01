@@ -9,6 +9,8 @@ const constants = require("../../src/shared/constants");
 const CONFIG_NAME = ".prose";
 const child = require("child_process").execFile;
 var isWin = process.platform === "win32";
+const settings = require("../settings");
+const s = require("../../src/shared/settings");
 
 class Project {
   constructor(
@@ -68,7 +70,8 @@ class Project {
   async writeConfig() {
     let projectInfo = {
       projectID: this.projectID,
-      excludedFiles: this.excludedFiles
+      excludedFiles: this.excludedFiles,
+      publicKey: settings.getVal(s.NAMESPACES.APP, s.KEYS.MASTER_KEYS).publicKey
     };
     await fs.writeFileAsync(this.getConfigPath(), JSON.stringify(projectInfo));
   }
