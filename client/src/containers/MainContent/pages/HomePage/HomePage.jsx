@@ -39,7 +39,7 @@ class HomePage extends React.Component {
 
           <div className="textBlock">
             <h5>Performing an IP check</h5>
-            <p>Find the copyright information of a file registered to ProSe</p>
+            <p>Find the copyright information of a file registered to ProSe.</p>
             <button
               style={{
                 width: "7em"
