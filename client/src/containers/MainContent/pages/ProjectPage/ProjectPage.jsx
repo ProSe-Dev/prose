@@ -5,6 +5,7 @@ import Table from "components/Table";
 import ToggleSwitch from "components/ToggleSwitch";
 import SettingsModal from "./SettingsModal";
 import events from "shared/ipc-events";
+import settings from "shared/settings";
 import constants from "shared/constants";
 import FolderIcon from "@material-ui/icons/Folder";
 import { withRouter } from "react-router-dom";
@@ -75,7 +76,8 @@ class ProjectPage extends React.Component {
       snapshots: [],
       showSettings: false,
       snapshotUpdated: false,
-      project: null
+      project: null,
+      secondsBetweenSync: null
     };
     this.toggleSettings = this.toggleSettings.bind(this);
     this.handleSaveSettings = this.handleSaveSettings.bind(this);
@@ -173,11 +175,10 @@ class ProjectPage extends React.Component {
       project: await ipc.invoke(
         events.PROJECT_UPDATE_INFO,
         this.state.project.projectID,
-        { isSynced: settings.autoSnapshot }
+        { isSynced: settings.isSynced }
       )
     });
-    console.log("automatic snapshot:", settings.autoSnapshot);
-    this.toggleSettings();
+    console.log("automatic snapshot:", settings.isSynced);
   }
 
   // TODO: this is a hack, please fix later
@@ -192,7 +193,13 @@ class ProjectPage extends React.Component {
       const { projectID } = this.props.match.params;
       console.log(projectID);
       this.setState({
-        project: await ipc.invoke(events.GET_PROJECT_INFO, projectID)
+        project: await ipc.invoke(events.GET_PROJECT_INFO, projectID),
+        secondsBetweenSync: await ipc.invoke(
+          events.SETTINGS_GET,
+          settings.NAMESPACES.PROJECT,
+          settings.KEYS.SECONDS_BETWEEN_PROJECT_UPDATE,
+          settings.DEFAULTS.SECONDS_BETWEEN_PROJECT_UPDATE
+        )
       });
       console.log(this.state.project);
       this.interval = setInterval(
@@ -203,7 +210,7 @@ class ProjectPage extends React.Component {
               this.state.project.projectID
             )
           }),
-        5000
+        this.state.secondsBetweenSync * 1000
       );
     })();
   }
@@ -273,8 +280,12 @@ class ProjectPage extends React.Component {
         </div>
         <SettingsModal
           onClose={this.toggleSettings}
-          onSave={this.handleSaveSettings}
+          onSubmit={this.handleSaveSettings}
           show={this.state.showSettings}
+          isSynced={
+            (this.state.project || false) && this.state.project.isSynced
+          }
+          secondsBetweenSync={this.state.secondsBetweenSync}
         />
       </div>
     );

@@ -15,5 +15,6 @@ ipcMain.handle(events.SETTINGS_GET, async (e, ...args) => {
   Log.ipcLog(events.SETTINGS_GET, args);
   let namespace = args[0];
   let key = args[1];
-  return settings.getVal(namespace, key);
+  let defaultVal = args[2];
+  return settings.getVal(namespace, key, defaultVal);
 });

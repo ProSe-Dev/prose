@@ -44,14 +44,15 @@ function get(namespace) {
  * returns value
  * @param {String} namespace
  * @param {String} key
+ * @param {Object} defaultVal
  */
-function getVal(namespace, key) {
+function getVal(namespace, key, defaultVal) {
   let ns = __state[namespace];
 
   if (!ns) {
-    return null;
+    return defaultVal || null;
   } else {
-    return ns[key];
+    return ns.hasOwnProperty(key) ? ns[key] : defaultVal || null;
   }
 }
 

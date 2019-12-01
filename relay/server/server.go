@@ -203,7 +203,7 @@ func updateMapWithBlock(block *mining.Block) {
 		projectMap[hash] = []*mining.Block{block}
 	}
 
-	for fileHash := range block.Data.FileHashes {
+	for _, fileHash := range block.Data.FileHashes {
 		projectKeySet, ok := fileToProjectMap[fileHash]
 		if ok {
 			projectKeySet[hash] = struct{}{}

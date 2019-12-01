@@ -1,10 +1,10 @@
 import React from "react";
 import Sidebar from "./containers/Sidebar/Sidebar.jsx";
 import MainContent from "./containers/MainContent/MainContent.js";
-import AddProjectModal from './components/AddProjectModal';
+import AddProjectModal from "./components/AddProjectModal";
 import "./App.css";
 import events from "shared/ipc-events";
-import { withRouter } from 'react-router-dom';
+import { withRouter } from "react-router-dom";
 import settings from "shared/settings";
 const ipc = window.require("electron").ipcRenderer;
 
@@ -13,7 +13,7 @@ class App extends React.Component {
     super(props);
     this.state = {
       projectList: [],
-      currentPage: { name: 'home' },
+      currentPage: { name: "home" },
       showAddProjectModal: false,
       isSelectingProject: false
     };
@@ -26,16 +26,25 @@ class App extends React.Component {
   componentDidMount() {
     // TODO: maybe consider moving this to another worker;
     // for our purposes now this is easier
-    this.interval = setInterval(async function() {
-      let projects = await ipc.invoke(events.GET_EXISTING_PROJECTS);
-      projects.forEach(async p => {
-        console.log("Looking at project:\n" + JSON.stringify(p));
-        if (p.isSynced) {
-          console.log("Commiting for " + p.path);
-          await ipc.invoke(events.PROJECT_COMMIT, p.projectID);
-        }
+    ipc
+      .invoke(
+        events.SETTINGS_GET,
+        settings.NAMESPACES.PROJECT,
+        settings.KEYS.SECONDS_BETWEEN_SYNC,
+        settings.DEFAULTS.SECONDS_BETWEEN_SYNC
+      )
+      .then(result => {
+        this.interval = setInterval(async function() {
+          let projects = await ipc.invoke(events.GET_EXISTING_PROJECTS);
+          projects.forEach(async p => {
+            console.log("Looking at project:\n" + JSON.stringify(p));
+            if (p.isSynced) {
+              console.log("Commiting for " + p.path);
+              await ipc.invoke(events.PROJECT_COMMIT, p.projectID);
+            }
+          });
+        }, result * 1000);
       });
-    }, 10000);
   }
 
   componentWillUnmount() {
@@ -50,8 +59,7 @@ class App extends React.Component {
 
   handlePageChange(page, redirect) {
     this.setState({ currentPage: page });
-    if (redirect)
-      this.props.history.push(`/${page.name}`);
+    if (redirect) this.props.history.push(`/${page.name}`);
   }
 
   async handleAddProjectSubmit(info) {
@@ -77,11 +85,11 @@ class App extends React.Component {
     // hack to open project panel programmatically :)
     let projectPanel = document.querySelector("#project .MuiButtonBase-root");
     // only expand if it's currently closed
-    if (!projectPanel.classList.contains('Mui-expanded')) {
+    if (!projectPanel.classList.contains("Mui-expanded")) {
       projectPanel.click();
     }
   }
-  
+
   async toggleAddProjectModal() {
     this.setState({ showAddProjectModal: !this.state.showAddProjectModal });
   }

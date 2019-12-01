@@ -28,9 +28,11 @@ ipcMain.handle(events.SEARCH_FILE, async (e, ...args) => {
   hash.update(fileContent);
   let fileHash = hash.digest("hex");
   Log.debugLog(events.SEARCH_FILE, "computed hash: " + fileHash);
-  let relayUrl =
-    settings.getVal(s.NAMESPACES.APP, s.KEYS.RELAY_HOST_ADDRESS) ||
-    "http://localhost:8080";
+  let relayUrl = settings.getVal(
+    s.NAMESPACES.APP,
+    s.KEYS.RELAY_HOST_ADDRESS,
+    s.DEFAULTS.RELAY_HOST_ADDRESS
+  );
   let searchUrl = new URL("/search", relayUrl);
   searchUrl.search = `filehash=${fileHash}`;
   Log.debugLog(events.SEARCH_FILE, "request: " + searchUrl.toString());

@@ -21,10 +21,6 @@ const (
 	configFile = ".prose"
 )
 
-var (
-	server = getenv("RELAY_URL", "http://localhost:8080")
-)
-
 func getenv(key, fallback string) string {
 	value := os.Getenv(key)
 	if len(value) == 0 {
@@ -93,7 +89,7 @@ func main() {
 		}
 		sum := sha256.Sum256(b)
 		hash := hex.EncodeToString(sum[:])
-		fileHashes[hash] = filepathStr
+		fileHashes[filepathStr] = hash
 		hashData += hash
 	}
 	sum := sha256.Sum256([]byte(hashData))
@@ -104,6 +100,7 @@ func main() {
 		log.Printf("[ProSe] FAILED: could not sign:\n%v\n", err)
 		return
 	}
+	var server = result["relayHost"].(string)
 	values := map[string]interface{}{
 		"PublicKey":  result["publicKey"],
 		"Signature":  signature,

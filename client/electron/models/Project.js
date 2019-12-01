@@ -46,9 +46,8 @@ class Project {
     if (!isExistingProject) {
       await git.init(this.path);
     }
-    await this.writeConfig();
-    await this.commit();
     await this.updateFiles();
+    await this.writeConfig();
     // Hacky
     // TODO: figure out how this works when packaging
     Log.debugLog(
@@ -61,6 +60,7 @@ class Project {
       resolve(__dirname, "..", "..", "hook", hookFile),
       resolve(this.path, ".git", "hooks", postCommitFile)
     );
+    await this.commit();
   }
 
   getConfigPath() {
@@ -86,7 +86,12 @@ class Project {
       publicKey: settings.getVal(s.NAMESPACES.APP, s.KEYS.MASTER_KEYS)
         .publicKey,
       trackedFiles: await this.getTrackedFiles(),
-      contact: this.contact
+      contact: this.contact,
+      relayHost: settings.getVal(
+        s.NAMESPACES.APP,
+        s.KEYS.RELAY_HOST_ADDRESS,
+        s.DEFAULTS.RELAY_HOST_ADDRESS
+      )
     };
     Log.debugLog(JSON.stringify(projectInfo));
     await fs.writeFileAsync(this.getConfigPath(), JSON.stringify(projectInfo));
@@ -135,6 +140,7 @@ class Project {
       Log.debugLog("STDOUT: " + stdout.toString());
       Log.debugLog("STDERR: " + stderr.toString());
     });
+    await this.updateFiles();
   }
 
   async getFiles() {

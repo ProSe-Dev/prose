@@ -34,11 +34,12 @@ class AdvancedPage extends React.Component {
       .invoke(
         events.SETTINGS_GET,
         settings.NAMESPACES.APP,
-        settings.KEYS.RELAY_HOST_ADDRESS
+        settings.KEYS.RELAY_HOST_ADDRESS,
+        settings.DEFAULTS.RELAY_HOST_ADDRESS
       )
       .then(result => {
         this.setState({
-          relayHostAddress: result || "http://localhost:8080"
+          relayHostAddress: result
         });
       });
   }
