@@ -37,6 +37,7 @@ type Message struct {
 	ProjectID  string
 	CommitHash string
 	FileHashes map[string]string
+	MetaData   map[string]string
 }
 
 func run(port uint64) error {
@@ -130,6 +131,7 @@ func handleWriteBlock(w http.ResponseWriter, r *http.Request) {
 			CommitHash: m.CommitHash,
 			FileHashes: m.FileHashes,
 			Timestamp:  timestamp,
+			MetaData:   m.MetaData,
 		}}
 		client := proto.NewBlockchainClient(conn)
 		resp, err := client.AddBlock(context.Background(), m)
@@ -147,6 +149,7 @@ func handleWriteBlock(w http.ResponseWriter, r *http.Request) {
 		CommitHash: m.CommitHash,
 		FileHashes: m.FileHashes,
 		Timestamp:  timestamp,
+		MetaData:   m.MetaData,
 	})
 	// if we're in the middle of consensus already, just do nothing
 	if relayNode.StateMachine.State == node.StateIdle {

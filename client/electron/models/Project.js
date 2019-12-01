@@ -127,6 +127,7 @@ class Project {
       id: commitHash,
       creationDate: new Date()
     });
+    await this.updateFiles();
     await this.writeConfig();
     Log.debugLog("Completed commit");
     // Manually execute the git commit hook

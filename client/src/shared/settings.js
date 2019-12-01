@@ -18,7 +18,7 @@ module.exports = {
   },
   DEFAULTS: {
     RELAY_HOST_ADDRESS: "http://localhost:8080",
-    SECONDS_BETWEEN_SYNC: 10,
+    SECONDS_BETWEEN_SYNC: 15,
     SECONDS_BETWEEN_PROJECT_UPDATE: 5
   }
 };
