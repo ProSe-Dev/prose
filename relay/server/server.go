@@ -45,7 +45,7 @@ func run(port uint64) error {
 	log.Printf("Listening on %s", portStr)
 	c := cors.New(cors.Options{
 		AllowCredentials: true,
-		Debug:            true,
+		Debug:            false,
 	})
 	handler := c.Handler(mux)
 	s := &http.Server{
