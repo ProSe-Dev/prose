@@ -3,6 +3,14 @@ const path = require("path");
 const url = require("url");
 const ipcHandlers = require("./ipcHandlers");
 const settings = require("./settings");
+const s = require("../src/shared/settings");
+const keygen = require("./helpers/keygen");
+const fs = require("./helpers/fs");
+const { resolve } = require("path");
+const os = require('os');
+const APP_CONFIG_FOLDER = ".prose";
+const PRIVATE_KEY_FILE = "id_ed25519";
+const PUBLIC_KEY_FILE = "id_ed25519.pub";
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -44,10 +52,28 @@ function createWindow() {
   });
 }
 
+function getKeys() {
+  console.log("Getting keys...");
+  let keyPair = settings.getVal(s.NAMESPACES.APP, s.KEYS.MASTER_KEYS);
+  if (!keyPair) {
+    keyPair = keygen.createKeyPair();
+    console.log("Generated keypair: ", keyPair);
+    settings.set(s.NAMESPACES.APP, s.KEYS.MASTER_KEYS, keyPair);
+    
+    console.log("Writing private key to: ", resolve(os.homedir(), APP_CONFIG_FOLDER));
+    fs.mkdirSync(resolve(os.homedir(), APP_CONFIG_FOLDER), { recursive: true });
+    fs.writeFileSync(resolve(os.homedir(), APP_CONFIG_FOLDER, PRIVATE_KEY_FILE), keyPair.privateKey);
+    fs.writeFileSync(resolve(os.homedir(), APP_CONFIG_FOLDER, PUBLIC_KEY_FILE), keyPair.publicKey);
+
+    // TODO: write public key to projects config
+  }
+}
+
 function onReady() {
   createWindow();
   settings.start();
   ipcHandlers.bootstrap();
+  getKeys();
 }
 
 // This method will be called when Electron has finished

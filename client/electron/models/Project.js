@@ -9,6 +9,8 @@ const constants = require("../../src/shared/constants");
 const CONFIG_NAME = ".git/.prose";
 const child = require("child_process").execFile;
 var isWin = process.platform === "win32";
+const settings = require("../settings");
+const s = require("../../src/shared/settings");
 const crypto = require("crypto");
 
 class Project {
@@ -66,31 +68,25 @@ class Project {
     return resolve(this.path, CONFIG_NAME);
   }
 
-  async getFileHashes() {
-    let hashes = [];
+  async getTrackedFiles() {
+    let fileLocations = [];
     for (let f of this.files) {
       if (f.status === constants.GIT_EXCLUDED) {
         continue;
       }
-      let fileContent = await fs.readFileAsync(resolve(this.path, f.path));
-      let hash = crypto.createHash("sha256");
-      hash.update(fileContent);
-      hashes.push(hash.digest("hex"));
+      fileLocations.push(f.path);
     }
-    Log.debugLog(
-      "Got hashes: " +
-        JSON.stringify(hashes) +
-        " from files " +
-        JSON.stringify(this.files)
-    );
-    return hashes;
+    Log.debugLog("Got file locations: " + JSON.stringify(fileLocations));
+    return fileLocations;
   }
 
   async writeConfig() {
     let projectInfo = {
       projectID: this.projectID,
       excludedFiles: this.excludedFiles,
-      fileHashes: await this.getFileHashes()
+      publicKey: settings.getVal(s.NAMESPACES.APP, s.KEYS.MASTER_KEYS)
+        .publicKey,
+      trackedFiles: await this.getTrackedFiles()
     };
     Log.debugLog(JSON.stringify(projectInfo));
     await fs.writeFileAsync(this.getConfigPath(), JSON.stringify(projectInfo));
@@ -98,7 +94,7 @@ class Project {
 
   async updateFiles() {
     let fileStatuses = await git.projectStatus(this.path);
-    Log.debugLog('updateFiles', 'fileStatuses', fileStatuses);
+    Log.debugLog("updateFiles", "fileStatuses", fileStatuses);
     let files = fileStatuses;
     this.excludedFiles.forEach(exclude => {
       let existing = files.find(f => f.path === exclude);
@@ -111,7 +107,7 @@ class Project {
         });
       }
     });
-    Log.debugLog('updateFiles', 'files:',files);
+    Log.debugLog("updateFiles", "files:", files);
     this.files = files;
   }
 

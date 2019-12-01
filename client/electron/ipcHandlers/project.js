@@ -9,7 +9,7 @@ const s = require("../../src/shared/settings");
 const { Project } = require("../models/Project");
 const settings = require("../settings");
 let loadedProjects =
-  settings.getVal(s.NAMESPACES.PROJECT, s.PROJECTS_LIST) || [];
+  settings.getVal(s.NAMESPACES.PROJECT, s.KEYS.PROJECTS_LIST) || [];
 const projectList = loadedProjects.map(
   p =>
     new Project(
@@ -40,9 +40,9 @@ ipcMain.handle(events.GET_EXISTING_PROJECTS, (event, ...args) => {
 });
 
 ipcMain.handle(events.GET_PROJECT_INFO, async (event, ...args) => {
-  Log.ipcLog(events.GET_PROJECT_INFO, args);
+  //Log.ipcLog(events.GET_PROJECT_INFO, args);
   let id = args[0];
-  Log.debugLog("Result: " + JSON.stringify(projectIDMap[id]));
+  //Log.debugLog("Result: " + JSON.stringify(projectIDMap[id]));
   return projectIDMap[id];
 });
 
@@ -110,7 +110,7 @@ ipcMain.handle(events.ADD_PROJECT, async (event, ...args) => {
     );
     projectIDMap[project.projectID] = project;
     projectPathMap[project.path] = project;
-    settings.set(s.NAMESPACES.PROJECT, s.PROJECTS_LIST, projectList);
+    settings.set(s.NAMESPACES.PROJECT, s.KEYS.PROJECTS_LIST, projectList);
     Log.debugLog(JSON.stringify(projectIDMap));
     await project.initialize();
     projectList.push(project);
@@ -134,7 +134,7 @@ ipcMain.handle(events.PROJECT_COMMIT, async (event, ...args) => {
 });
 
 ipcMain.handle(events.PROJECT_UPDATE_FILES, async (event, ...args) => {
-  Log.ipcLog(events.PROJECT_UPDATE_FILES, args);
+  //Log.ipcLog(events.PROJECT_UPDATE_FILES, args);
   let id = args[0];
   if (!projectIDMap.hasOwnProperty(id)) {
     return [];

@@ -1,10 +1,13 @@
 // keys for settings
 module.exports = {
   NAMESPACES: {
-    PROJECT: "project"
+    PROJECT: "project",
+    APP: "app"
   },
-  // list of projects
   KEYS: {
-    PROJECTS_LIST: "projectsList"
+    // list of projects
+    PROJECTS_LIST: "projectsList",
+    // public-private key-pair
+    MASTER_KEYS: "masterKeys"
   }
 };
