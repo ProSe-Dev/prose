@@ -36,9 +36,37 @@ class HomePage extends React.Component {
               ADD NEW PROJECT
             </button>
           </div>
+
           <div className="textBlock">
-            <h5>Documentation</h5>
+            <h5>Performing an IP check</h5>
+            <p>
+              Find the copyright information of a file registered to ProSe 
+            </p>
+            <button
+              style={{
+                width: '7em'
+              }}
+              type="button"
+              className="btn btn-outline-primary"
+              onClick={this.props.onAddProject}
+            >
+              IP Checker
+            </button>
+          </div>
+
+          <div className="textBlock">
+            <h5>Have Questions?</h5>
             <p>For more details on how to use this app, see the FAQ page!</p>
+            <button
+              style={{
+                width: '6em'
+              }}
+              type="button"
+              className="btn btn-outline-info"
+              onClick={() => {this.props.onPageChange({ name: 'faq' }, true)}}
+            >
+              FAQ Page
+            </button>
           </div>
         </div>
       </div>

@@ -86,11 +86,10 @@ class Sidebar extends React.Component {
         <div>
           <button
             class={`sidebar-item ${
-              selectedPage.name === "ip-check" ? "active" : ""
+              selectedPage.name === "file-search" ? "active" : ""
             }`}
             onClick={async e => {
-              this.props.history.push("/file-search");
-              this.props.onPageChange({ name: "ip-check" });
+              this.props.onPageChange({ name: "file-search" }, true);
             }}
           >
             <span class="sidebar-text">&#9656;&nbsp;&nbsp;IP Checker</span>
@@ -103,8 +102,7 @@ class Sidebar extends React.Component {
               selectedPage.name === "advanced" ? "active" : ""
             }`}
             onClick={async e => {
-              this.props.history.push("/advanced");
-              this.props.onPageChange({ name: "advanced" });
+              this.props.onPageChange({ name: "advanced" }, true);
             }}
           >
             <span class="sidebar-text">&#9656;&nbsp;&nbsp;Advanced</span>
@@ -117,8 +115,7 @@ class Sidebar extends React.Component {
               selectedPage.name === "faq" ? "active" : ""
             }`}
             onClick={async e => {
-              this.props.history.push("/faq");
-              this.props.onPageChange({ name: "faq" });
+              this.props.onPageChange({ name: "faq" }, true);
             }}
           >
             <span class="sidebar-text">&#9656;&nbsp;&nbsp;FAQ</span>

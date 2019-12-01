@@ -48,8 +48,10 @@ class App extends React.Component {
     });
   }
 
-  handlePageChange(page) {
-    this.setState({ currentPage: page })
+  handlePageChange(page, redirect) {
+    this.setState({ currentPage: page });
+    if (redirect)
+      this.props.history.push(`/${page.name}`);
   }
 
   async handleAddProjectSubmit(info) {
