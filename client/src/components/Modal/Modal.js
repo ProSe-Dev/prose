@@ -1,14 +1,9 @@
 import React from 'react';
 
 function Modal(props) {
-  let style = props.show ?
-    { display: 'block', opacity: '100' } :
-    { display: 'none', opacity: '0' };
-
   return (
-    <div className="modal fade in" role="dialog" style={style}>
-      <div></div>
-      <div className="modal-dialog" style={{paddingTop: '100px'}}>
+    <div className={`modal fade in ${props.show ? 'active' : ''}`} role="dialog">
+      <div className="modal-dialog" style={{ maxWidth: props.maxWidth ? props.maxWidth : '500px', paddingTop: '100px'}}>
         <div className="modal-content">
           <div className="modal-header">
             <h5 className="modal-title">{props.title}</h5>
