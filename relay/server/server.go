@@ -80,8 +80,6 @@ func handleGetBlockchain(w http.ResponseWriter, r *http.Request) {
 
 func handleSearchBlockchain(w http.ResponseWriter, r *http.Request) {
 	fileHashes, ok := r.URL.Query()["filehash"]
-	log.Printf("FileToProject:\n%v\n", fileToProjectMap)
-	log.Printf("ProjectMap:\n%v\n", projectMap)
 
 	if !ok || len(fileHashes[0]) < 1 {
 		respondWithJSON(w, r, http.StatusBadRequest, r.Body)
