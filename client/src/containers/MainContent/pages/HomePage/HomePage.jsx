@@ -39,16 +39,16 @@ class HomePage extends React.Component {
 
           <div className="textBlock">
             <h5>Performing an IP check</h5>
-            <p>
-              Find the copyright information of a file registered to ProSe 
-            </p>
+            <p>Find the copyright information of a file registered to ProSe</p>
             <button
               style={{
-                width: '7em'
+                width: "7em"
               }}
               type="button"
               className="btn btn-outline-primary"
-              onClick={this.props.onAddProject}
+              onClick={() => {
+                this.props.onPageChange({ name: "file-search" }, true);
+              }}
             >
               IP Checker
             </button>
@@ -59,11 +59,13 @@ class HomePage extends React.Component {
             <p>For more details on how to use this app, see the FAQ page!</p>
             <button
               style={{
-                width: '6em'
+                width: "6em"
               }}
               type="button"
               className="btn btn-outline-info"
-              onClick={() => {this.props.onPageChange({ name: 'faq' }, true)}}
+              onClick={() => {
+                this.props.onPageChange({ name: "faq" }, true);
+              }}
             >
               FAQ Page
             </button>

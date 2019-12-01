@@ -252,21 +252,24 @@ class ProjectPage extends React.Component {
             <div />
           )}
 
-          <Files
-            files={
-              this.state.project
-                ? this.state.project.files.map(this.fileToRow)
-                : []
-            }
-          />
-          <div className="mb-5" />
-          <Snapshots
-            snapshots={
-              this.state.project
-                ? this.state.project.snapshots.map(this.snapshotToRow)
-                : []
-            }
-          />
+          <div className="pb-5">
+            <Files
+              files={
+                this.state.project
+                  ? this.state.project.files.map(this.fileToRow)
+                  : []
+              }
+            />
+          </div>
+          <div className="pb-5">
+            <Snapshots
+              snapshots={
+                this.state.project
+                  ? this.state.project.snapshots.map(this.snapshotToRow)
+                  : []
+              }
+            />
+          </div>
         </div>
         <SettingsModal
           onClose={this.toggleSettings}
