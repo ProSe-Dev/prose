@@ -259,6 +259,7 @@ class ProjectPage extends React.Component {
                 : []
             }
           />
+          <div className="mb-5" />
           <Snapshots
             snapshots={
               this.state.project

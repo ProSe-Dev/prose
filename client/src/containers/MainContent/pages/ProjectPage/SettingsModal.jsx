@@ -10,7 +10,7 @@ function SettingsModal(props) {
         text: 'Save',
         onclick: () =>
           props.onSave({
-            autoSnapshot: document.querySelector("#auto-snapshot-input").checked
+            autoSnapshot: document.querySelector("#auto-certification-input").checked
           })
       }]}
       onClose={props.onClose}
@@ -18,13 +18,31 @@ function SettingsModal(props) {
     >
       <div>
         <form>
-          Project Name
-          <input id="auto-snapshot-input" type="checkbox" />
-          Turn on automatic snapshot
-          <input id="auto-snapshot-input" type="checkbox" />
-          <br />
-          Time between snapshots:
-          <input type="number" name="quantity" min="1" max="5" />
+          <div className="form-group row mb-0">
+            <label
+              for="contact-info"
+              className="text-right col-sm-8 col-form-label"
+              style={{ fontSize: '1.2em' }}
+            >
+              Turn on automatic certification
+            </label>
+            <div className="col-sm-2 vcenter-wrapper">
+              <input 
+                type="checkbox"
+                className="form-control" 
+                id="auto-certification-input"
+                style={{
+                  width: '1em',
+                  height: '1em'
+                }}
+              />
+            </div>
+          </div>
+          <div className="form-group row">
+            <label className="text-right col-sm-8 col-form-label">
+              generated every 5 minutes
+            </label>
+          </div>
         </form>
       </div>
     </Modal>
