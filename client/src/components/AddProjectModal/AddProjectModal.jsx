@@ -45,21 +45,9 @@ class AddProjectModal extends React.Component {
   }
 
   render() {
-    let closeButton = {
-      text: "CLOSE",
-      style: "outline-secondary",
-      onclick: this.handleClose
-    };
-
-    let addButton = {
-      text: "ADD PROJECT",
-      style: "success",
-      onclick: this.handleSubmit
-    };
-
     let folderPathText = this.state.folder;
     if (!folderPathText) {
-      folderPathText = "no folder chosen";
+      folderPathText = "No folder selected";
     } else {
       if (folderPathText.length > 40) {
         folderPathText =
@@ -70,6 +58,19 @@ class AddProjectModal extends React.Component {
           );
       }
     }
+
+    let closeButton = {
+      text: "CLOSE",
+      style: "outline-secondary",
+      onclick: this.handleClose
+    };
+
+    let addButton = {
+      text: "ADD PROJECT",
+      style: "success",
+      onclick: this.handleSubmit,
+      disabled: !this.state.folder
+    };
 
     return (
       <Modal
