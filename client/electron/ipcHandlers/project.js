@@ -40,9 +40,9 @@ ipcMain.handle(events.GET_EXISTING_PROJECTS, (event, ...args) => {
 });
 
 ipcMain.handle(events.GET_PROJECT_INFO, async (event, ...args) => {
-  Log.ipcLog(events.GET_PROJECT_INFO, args);
+  //Log.ipcLog(events.GET_PROJECT_INFO, args);
   let id = args[0];
-  Log.debugLog("Result: " + JSON.stringify(projectIDMap[id]));
+  //Log.debugLog("Result: " + JSON.stringify(projectIDMap[id]));
   return projectIDMap[id];
 });
 
@@ -134,7 +134,7 @@ ipcMain.handle(events.PROJECT_COMMIT, async (event, ...args) => {
 });
 
 ipcMain.handle(events.PROJECT_UPDATE_FILES, async (event, ...args) => {
-  Log.ipcLog(events.PROJECT_UPDATE_FILES, args);
+  //Log.ipcLog(events.PROJECT_UPDATE_FILES, args);
   let id = args[0];
   if (!projectIDMap.hasOwnProperty(id)) {
     return [];
@@ -152,7 +152,8 @@ ipcMain.handle(events.PROJECT_UPDATE_EXCLUDED_FILES, async (event, ...args) => {
     return false;
   }
   let project = projectIDMap[id];
-  await project.writeConfig(excludedFiles);
+  project.excludedFiles = excludedFiles;
+  await project.writeConfig();
   await project.updateFiles();
   return true;
 });

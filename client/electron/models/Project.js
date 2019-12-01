@@ -6,11 +6,12 @@ const SNAPSHOT_FILE_NAME = "snapshots.json";
 const git = require("../helpers/git");
 const Log = require("../helpers/log");
 const constants = require("../../src/shared/constants");
-const CONFIG_NAME = ".prose";
+const CONFIG_NAME = ".git/.prose";
 const child = require("child_process").execFile;
 var isWin = process.platform === "win32";
 const settings = require("../settings");
 const s = require("../../src/shared/settings");
+const crypto = require("crypto");
 
 class Project {
   constructor(
@@ -32,7 +33,7 @@ class Project {
     this.creationDate = creationDate;
     this.colorClass = colorClass;
     this.isSynced = isSynced || false;
-    this.excludedFiles = excludedFiles || [CONFIG_NAME];
+    this.excludedFiles = excludedFiles || [];
     this.snapshots = snapshots || [];
     this.files = files || [];
   }
@@ -67,34 +68,54 @@ class Project {
     return resolve(this.path, CONFIG_NAME);
   }
 
+  async getFileHashes() {
+    let hashes = [];
+    for (let f of this.files) {
+      if (f.status === constants.GIT_EXCLUDED) {
+        continue;
+      }
+      let fileContent = await fs.readFileAsync(resolve(this.path, f.path));
+      let hash = crypto.createHash("sha256");
+      hash.update(fileContent);
+      hashes.push(hash.digest("hex"));
+    }
+    Log.debugLog(
+      "Got hashes: " +
+        JSON.stringify(hashes) +
+        " from files " +
+        JSON.stringify(this.files)
+    );
+    return hashes;
+  }
+
   async writeConfig() {
     let projectInfo = {
       projectID: this.projectID,
       excludedFiles: this.excludedFiles,
-      publicKey: settings.getVal(s.NAMESPACES.APP, s.KEYS.MASTER_KEYS).publicKey
+      publicKey: settings.getVal(s.NAMESPACES.APP, s.KEYS.MASTER_KEYS).publicKey,
+      fileHashes: await this.getFileHashes()
     };
+    Log.debugLog(JSON.stringify(projectInfo));
     await fs.writeFileAsync(this.getConfigPath(), JSON.stringify(projectInfo));
   }
 
   async updateFiles() {
     let fileStatuses = await git.projectStatus(this.path);
-    Log.debugLog(JSON.stringify(fileStatuses));
-    this.files = fileStatuses;
-    if (fs.existsSync(this.getConfigPath())) {
-      let config = JSON.parse(fs.readFileSync(this.getConfigPath()));
-      Log.debugLog(JSON.stringify(config.excludedFiles));
-      config.excludedFiles.forEach(exclude => {
-        let existing = this.files.find(f => f.path === exclude);
-        if (existing) {
-          existing.status = constants.GIT_EXCLUDED;
-        } else {
-          this.files.push({
-            path: exclude,
-            status: constants.GIT_EXCLUDED
-          });
-        }
-      });
-    }
+    Log.debugLog('updateFiles', 'fileStatuses', fileStatuses);
+    let files = fileStatuses;
+    this.excludedFiles.forEach(exclude => {
+      let existing = files.find(f => f.path === exclude);
+      if (existing) {
+        existing.status = constants.GIT_EXCLUDED;
+      } else {
+        files.push({
+          path: exclude,
+          status: constants.GIT_EXCLUDED
+        });
+      }
+    });
+    Log.debugLog('updateFiles', 'files:',files);
+    this.files = files;
   }
 
   async commit() {
