@@ -41,8 +41,10 @@ class Project {
 
   async initialize() {
     let isExistingProject = await git.isGit(this.path);
-    Log.debugLog(isExistingProject);
-    this.isSynced = !isExistingProject;
+    //Log.debugLog(isExistingProject);
+    // TODO: add an option for this?
+    this.isSynced = false;
+    //this.isSynced = !isExistingProject;
     if (!isExistingProject) {
       await git.init(this.path);
     }
@@ -127,6 +129,7 @@ class Project {
       id: commitHash,
       creationDate: new Date()
     });
+    await this.updateFiles();
     await this.writeConfig();
     Log.debugLog("Completed commit");
     // Manually execute the git commit hook

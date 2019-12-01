@@ -57,7 +57,10 @@ ipcMain.handle(events.SEARCH_FILE, async (e, ...args) => {
       }
       isOwnedByMe = p[0].Data.PublicKey === myPublicKey;
       p.forEach((b, idx) => {
-        if (b.Data.FileHashes.hasOwnProperty(fileHash)) {
+        if (
+          b.Data.FileHashes &&
+          Object.values(b.Data.FileHashes).some(v => v === fileHash)
+        ) {
           projectOrder = Math.min(projectOrder, Date.parse(b.Data.Timestamp));
           p[idx].IsContainingBlock = true;
         }
@@ -67,7 +70,7 @@ ipcMain.handle(events.SEARCH_FILE, async (e, ...args) => {
         IsOwnedByMe: isOwnedByMe,
         Data: p,
         ProjectID: p[0].Data.ProjectID,
-        Signature: p[0].Data.Signature,
+        Contact: p[0].Data.MetaData.contact,
         PublicKey: p[0].Data.PublicKey
       });
     }

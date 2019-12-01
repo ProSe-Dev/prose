@@ -14,6 +14,7 @@ import FingerprintIcon from "@material-ui/icons/Fingerprint";
 const ipc = window.require("electron").ipcRenderer;
 
 function blocksToTimelineEvent(blocks) {
+  console.log(blocks);
   return blocks.map(b => {
     return {
       ts: b.Data.Timestamp,
@@ -22,28 +23,6 @@ function blocksToTimelineEvent(blocks) {
       highlightedText: "FOUND FILE"
     };
   });
-}
-
-function Project(projectData, idx) {
-  console.log(projectData);
-  let heading = (
-    <div>
-      {projectData.IsOwnedByMe ? <FingerprintIcon /> : ""}
-      &nbsp;&nbsp;
-      {projectData.ProjectID}
-    </div>
-  );
-  let contact = projectData.Signature;
-  let author = projectData.PublicKey;
-  return {
-    heading: heading,
-    content: (
-      <div>
-        <ProjectContact author={author} contact={contact} />
-        <Timeline items={blocksToTimelineEvent(projectData.Data)} />
-      </div>
-    )
-  };
 }
 
 function ProjectContact(props) {
@@ -96,7 +75,38 @@ class FileSearchPage extends React.Component {
       projectList: null,
       message: null
     };
+    this.toProject = this.toProject.bind(this);
   }
+
+  toProject(projectData, idx) {
+    console.log(projectData);
+    let heading = (
+      <div>
+        {projectData.IsOwnedByMe ? <FingerprintIcon /> : ""}
+        {projectData.IsOwnedByMe ? " " : ""}
+        {projectData.IsOwnedByMe ? <b>Belongs to you!</b> : ""}
+        &nbsp;&nbsp;
+        {projectData.IsOwnedByMe
+          ? "Project Name: " +
+            this.props.projectList.find(
+              p => p.projectID === projectData.ProjectID
+            ).name
+          : "Project ID: " + projectData.ProjectID}
+      </div>
+    );
+    let contact = projectData.Contact;
+    let author = projectData.PublicKey;
+    return {
+      heading: heading,
+      content: (
+        <div>
+          <ProjectContact author={author} contact={contact} />
+          <Timeline items={blocksToTimelineEvent(projectData.Data)} />
+        </div>
+      )
+    };
+  }
+
   // TODO: Dropzone should access files via IPC
   render() {
     return (
@@ -150,13 +160,13 @@ class FileSearchPage extends React.Component {
                   });
                 } else {
                   this.setState({
-                    projectList: projects.map(Project),
+                    projectList: projects.map(this.toProject),
                     fetching: false,
                     message: {
                       class: "success",
                       value:
                         projects.length +
-                        " project(s) were found to contain the file! See the sorted list below."
+                        " project(s) were found to contain the file! See results below (sorted by earliest appearance)."
                     }
                   });
                 }

@@ -106,7 +106,11 @@ func main() {
 		"Signature":  signature,
 		"ProjectID":  result["projectID"],
 		"CommitHash": ref.Hash().String(),
-		"FileHashes": fileHashes}
+		"FileHashes": fileHashes,
+		"MetaData": map[string]interface{}{
+			"contact": result["contact"].(string),
+		},
+	}
 
 	fmt.Printf("[ProSe] Submitting block: %v\n", values)
 
