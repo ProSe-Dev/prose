@@ -93,7 +93,7 @@ func main() {
 		}
 		sum := sha256.Sum256(b)
 		hash := hex.EncodeToString(sum[:])
-		fileHashes[filepathStr] = hash
+		fileHashes[hash] = filepathStr
 		hashData += hash
 	}
 	sum := sha256.Sum256([]byte(hashData))

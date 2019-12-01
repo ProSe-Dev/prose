@@ -11,7 +11,8 @@ const child = require("child_process").execFile;
 var isWin = process.platform === "win32";
 const settings = require("../settings");
 const s = require("../../src/shared/settings");
-const crypto = require("crypto");
+var hookFile = isWin ? "hook.exe" : "hook";
+var postCommitFile = isWin ? "post-commit.exe" : "post-commit";
 
 class Project {
   constructor(
@@ -50,8 +51,6 @@ class Project {
     await this.updateFiles();
     // Hacky
     // TODO: figure out how this works when packaging
-    let hookFile = isWin ? "hook.exe" : "hook";
-    let postCommitFile = isWin ? "post-commit.exe" : "post-commit";
     Log.debugLog(
       "Copying commit hook from " +
         resolve(__dirname, "..", "..", "hook", hookFile) +
@@ -126,14 +125,15 @@ class Project {
     await this.writeConfig();
     Log.debugLog("Completed commit");
     // Manually execute the git commit hook
-    let executablePath = resolve(this.path, ".git", "hooks", "post-commit");
+    let executablePath = resolve(this.path, ".git", "hooks", postCommitFile);
     Log.debugLog("Executing " + executablePath);
-    child(executablePath, function(err, data) {
+    child(executablePath, { cwd: this.path }, function(err, stdout, stderr) {
       if (err) {
-        Log.debugLog(err);
+        Log.debugLog("ERROR: " + err);
         return;
       }
-      Log.debugLog(data.toString());
+      Log.debugLog("STDOUT: " + stdout.toString());
+      Log.debugLog("STDERR: " + stderr.toString());
     });
   }
 

@@ -1,6 +1,6 @@
 const { ipcMain } = require("electron");
 const { URL } = require("url");
-const hash = require("crypto").createHash("sha256");
+const crypto = require("crypto");
 const fetch = require("node-fetch");
 const Log = require("../helpers/log");
 const events = require("../../src/shared/ipc-events");
@@ -25,6 +25,7 @@ ipcMain.handle(events.SEARCH_FILE, async (e, ...args) => {
     fileContent = await fs.readFileAsync(filePath);
   }
   Log.debugLog(events.SEARCH_FILE, "file content: " + fileContent);
+  let hash = crypto.createHash("sha256");
   hash.update(fileContent);
   let fileHash = hash.digest("hex");
   Log.debugLog(events.SEARCH_FILE, "computed hash: " + fileHash);
