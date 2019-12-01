@@ -7,70 +7,78 @@ class AddProjectModal extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      folder: null
+      folderPath: null,
+      projectName: null,
+      contract: null
     };
     this.handleChooseFolder = this.handleChooseFolder.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
     this.handleClose = this.handleClose.bind(this);
+    this.handleProjectNameChange = this.handleProjectNameChange.bind(this);
+    this.handleContactChange = this.handleContactChange.bind(this);
   }
 
   async handleChooseFolder() {
-    let folder = await ipc.invoke(events.SELECT_FOLDER);
-    if (folder) {
-      let projectName = document.getElementById("project-name").value;
-      if (projectName === "") {
-        let folderBaseName = folder.split(/[\\/]/).pop();
-        document.getElementById("project-name").value = folderBaseName;
-      }
-      this.setState({
-        folder
-      });
+    let folderPath = await ipc.invoke(events.SELECT_FOLDER);
+    if (folderPath) {
+      this.setState({ folderPath });
     }
   }
 
-  async handleSubmit() {
-    let projectName = document.getElementById("project-name").value;
-    let contact = document.getElementById("contact-info").value;
-    let path = this.state.folder;
+  handleProjectNameChange(e) {
+    this.setState({ projectName: e.target.value });
+  }
 
-    this.props.onSubmit({ projectName, contact, path });
-    this.handleClose();
+  handleContactChange(e) {
+    this.setState({ contact: e.target.value });
+  }
+
+
+  async handleSubmit() {
+    const { projectName, contact, folderPath } = this.state;
+    let canSubmit = projectName && contact && folderPath;
+
+    if (canSubmit) {
+      this.props.onSubmit({ projectName, contact, path: folderPath });
+      this.handleClose();
+    }
   }
 
   handleClose() {
-    document.getElementById("project-name").value = "";
-    document.getElementById("contact-info").value = "";
-    this.setState({ folder: null });
+    this.setState({
+      projectName: null,
+      contact: null,
+      folderPath: null
+    });
     this.props.onClose();
   }
 
   render() {
-    let folderPathText = this.state.folder;
+    const { projectName, contact, folderPath } = this.state;
+
+    let canSubmit = projectName && contact && folderPath;
+
+    let closeButton = {
+      text: 'CLOSE',
+      style: 'outline-secondary',
+      onclick: this.handleClose
+    };
+  
+    let addButton = {
+      text: 'ADD PROJECT',
+      style: 'success',
+      onclick: this.handleSubmit,
+      disabled: !canSubmit
+    };
+
+    let folderPathText = this.state.folderPath;
     if (!folderPathText) {
       folderPathText = "No folder selected";
     } else {
-      if (folderPathText.length > 40) {
-        folderPathText =
-          "..." +
-          folderPathText.substring(
-            folderPathText.length - 40,
-            folderPathText.length
-          );
+      if (folderPathText.length > 30) {
+        folderPathText = '...' + folderPathText.substring(folderPathText.length - 30, folderPathText.length);
       }
     }
-
-    let closeButton = {
-      text: "CLOSE",
-      style: "outline-secondary",
-      onclick: this.handleClose
-    };
-
-    let addButton = {
-      text: "ADD PROJECT",
-      style: "success",
-      onclick: this.handleSubmit,
-      disabled: !this.state.folder
-    };
 
     return (
       <Modal
@@ -87,11 +95,13 @@ class AddProjectModal extends React.Component {
                 Project Name
               </label>
               <div className="col-sm-8">
-                <input
-                  type="text"
-                  className="form-control"
-                  id="project-name"
-                  placeholder="Optional Name"
+                <input 
+                  type="text" 
+                  value={projectName || ''} 
+                  className="form-control" 
+                  id="project-name" 
+                  onChange={this.handleProjectNameChange} 
+                  placeholder="Name"
                 />
               </div>
             </div>
@@ -101,11 +111,13 @@ class AddProjectModal extends React.Component {
                 Contact Info
               </label>
               <div className="col-sm-8">
-                <input
-                  type="text"
-                  className="form-control"
-                  id="contact-info"
-                  placeholder="Optional Email, Website or Phone #"
+                <input 
+                  type="text" 
+                  value={contact || ''} 
+                  className="form-control" 
+                  id="contact-info" 
+                  onChange={this.handleContactChange} 
+                  placeholder="Email / Website / Phone #"
                 />
               </div>
             </div>
