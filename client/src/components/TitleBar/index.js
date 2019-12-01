@@ -17,7 +17,7 @@ function TitleBar(props) {
     >
       <div className="titlebar-text-container">
         {props.icon ? (
-          <div className="titlebar-title" style={{ display: 'grid', gridTemplateColumns: '0.35fr 10fr' }}>
+          <div className="titlebar-title" style={{ display: 'grid', gridTemplateColumns: '0.30fr 12fr' }}>
             <div className="vcenter-wrapper">{props.icon}</div>
             <span>{props.title}</span>
           </div>
