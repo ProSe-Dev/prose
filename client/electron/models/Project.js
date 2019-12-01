@@ -74,12 +74,9 @@ class Project {
       if (f.status === constants.GIT_EXCLUDED) {
         continue;
       }
-      fileLocations.put(f.path);
+      fileLocations.push(f.path);
     }
-    Log.debugLog(
-      "Got file locations: " +
-        JSON.stringify(fileLocations)
-    );
+    Log.debugLog("Got file locations: " + JSON.stringify(fileLocations));
     return fileLocations;
   }
 
@@ -87,7 +84,8 @@ class Project {
     let projectInfo = {
       projectID: this.projectID,
       excludedFiles: this.excludedFiles,
-      publicKey: settings.getVal(s.NAMESPACES.APP, s.KEYS.MASTER_KEYS).publicKey,
+      publicKey: settings.getVal(s.NAMESPACES.APP, s.KEYS.MASTER_KEYS)
+        .publicKey,
       trackedFiles: await this.getTrackedFiles()
     };
     Log.debugLog(JSON.stringify(projectInfo));
@@ -96,7 +94,7 @@ class Project {
 
   async updateFiles() {
     let fileStatuses = await git.projectStatus(this.path);
-    Log.debugLog('updateFiles', 'fileStatuses', fileStatuses);
+    Log.debugLog("updateFiles", "fileStatuses", fileStatuses);
     let files = fileStatuses;
     this.excludedFiles.forEach(exclude => {
       let existing = files.find(f => f.path === exclude);
@@ -109,7 +107,7 @@ class Project {
         });
       }
     });
-    Log.debugLog('updateFiles', 'files:',files);
+    Log.debugLog("updateFiles", "files:", files);
     this.files = files;
   }
 

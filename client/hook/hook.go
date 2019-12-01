@@ -2,13 +2,14 @@ package main
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
-	"crypto/sha256"
 
 	"gopkg.in/src-d/go-git.v4"
 )
@@ -29,11 +30,13 @@ func getenv(key, fallback string) string {
 	return value
 }
 
-func sign(data []byte) {
-	return hex.EncodeToString(sha256.Sum256(data)[:])
+func sign(data []byte) string {
+	sum := sha256.Sum256(data)
+	return hex.EncodeToString(sum[:])
 }
 
 func main() {
+	log.Printf("[ProSe] Started commit hook")
 	r, err := git.PlainOpen(".")
 	if err != nil {
 		log.Printf("[ProSe] FAILED: could not open repository:\n%v\n", err)
@@ -46,7 +49,7 @@ func main() {
 		return
 	}
 
-	jsonFile, err := os.Open(configFile)
+	jsonFile, err := os.Open(".git/" + configFile)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -57,22 +60,25 @@ func main() {
 	var result map[string]interface{}
 	json.Unmarshal([]byte(byteValue), &result)
 
-	var trackedFiles = result["trackedFiles"]
+	var trackedFiles = result["trackedFiles"].([]interface{})
 	var fileHashes = map[string]string{}
-	var byteArray []byte("prose")
-	var contact = result["contact"]
+	var byteArray = []byte("prose")
+	var contact = result["contact"].(string)
 	byteArray = append(byteArray, []byte(contact)...)
 	var hashData = ""
-	for _, file := range trackedFiles {
-		b, err := ioutil.ReadFile(file);
+	for _, filepath := range trackedFiles {
+		filepathStr := filepath.(string)
+		b, err := ioutil.ReadFile(filepathStr)
 		if err != nil {
-			log.Printf("[ProSe] FAILED: could not open file %s:\n%v\n", file, err);
+			log.Printf("[ProSe] FAILED: could not open file %s:\n%v\n", filepathStr, err)
 		}
-		hash := sha256.Sum256(b)
-		fileHashes[file] = hash
+		sum := sha256.Sum256(b)
+		hash := hex.EncodeToString(sum[:])
+		fileHashes[filepathStr] = hash
 		hashData += hash
 	}
-	var hashOfFileHashes = hex.EncodeToString(sha256.Sum256([]byte(hashData))[:])
+	sum := sha256.Sum256([]byte(hashData))
+	var hashOfFileHashes = hex.EncodeToString(sum[:])
 	byteArray = append(byteArray, []byte(hashOfFileHashes)...)
 	var signature = sign(byteArray)
 	values := map[string]interface{}{
