@@ -1,6 +1,7 @@
 import React from "react";
 import Sidebar from "./containers/Sidebar/Sidebar.jsx";
 import MainContent from "./containers/MainContent/MainContent.js";
+import AddProjectModal from './components/AddProjectModal';
 import "./App.css";
 import events from "shared/ipc-events";
 import { withRouter } from 'react-router-dom';
@@ -13,11 +14,13 @@ class App extends React.Component {
     this.state = {
       projectList: [],
       currentPage: { name: 'home' },
+      showAddProjectModal: false,
       isSelectingProject: false
     };
     this.updateProjectList = this.updateProjectList.bind(this);
     this.handlePageChange = this.handlePageChange.bind(this);
-    this.handleAddProject = this.handleAddProject.bind(this);
+    this.handleAddProjectSubmit = this.handleAddProjectSubmit.bind(this);
+    this.toggleAddProjectModal = this.toggleAddProjectModal.bind(this);
   }
 
   componentDidMount() {
@@ -49,61 +52,59 @@ class App extends React.Component {
     this.setState({ currentPage: page })
   }
 
-  async handleAddProject() {
-    if (this.state.isSelectingProject) {
+  async handleAddProjectSubmit(info) {
+    let project = await ipc.invoke(
+      events.ADD_PROJECT,
+      info.projectName,
+      info.path,
+      info.contact
+    );
+    if (!project) {
+      this.setState({
+        isSelectingProject: false
+      });
       return;
     }
+    this.updateProjectList();
+    this.props.history.push(`/project/${project.projectID}`);
     this.setState({
-      isSelectingProject: true
+      currentPage: { name: "project", projectId: project.projectID },
+      showAddProjectModal: false
     });
-    let folderPath = await ipc.invoke(events.SELECT_FOLDER);
-    if (folderPath) {
-      let basename = folderPath.split(/[\\/]/).pop();
-      let project = await ipc.invoke(
-        events.ADD_PROJECT,
-        basename,
-        folderPath,
-        "dev@prose.org"
-      );
-      if (!project) {
-        this.setState({
-          isSelectingProject: false
-        });
-        return;
-      }
-      this.updateProjectList();
-      this.props.history.push(`/project/${project.projectID}`);
-      this.setState({
-        currentPage: { name: "project", projectId: project.projectID }
-      });
-      // hack to open project panel programmatically :)
-      let projectPanel = document.querySelector("#project .MuiButtonBase-root");
-      // only expand if it's currently closed
-      if (!projectPanel.classList.contains('Mui-expanded')) {
-        projectPanel.click();
-      }
+
+    // hack to open project panel programmatically :)
+    let projectPanel = document.querySelector("#project .MuiButtonBase-root");
+    // only expand if it's currently closed
+    if (!projectPanel.classList.contains('Mui-expanded')) {
+      projectPanel.click();
     }
-    this.setState({
-      isSelectingProject: false
-    });
+  }
+  
+  async toggleAddProjectModal() {
+    this.setState({ showAddProjectModal: !this.state.showAddProjectModal });
   }
 
   render() {
     return (
       <div className="App">
+        <AddProjectModal
+          show={this.state.showAddProjectModal}
+          onSubmit={this.handleAddProjectSubmit}
+          onClose={this.toggleAddProjectModal}
+        />
         <Sidebar
           projectList={this.state.projectList}
           updateProjectList={this.updateProjectList}
           currentPage={this.state.currentPage}
           onPageChange={this.handlePageChange}
-          onAddProject={this.handleAddProject}
+          onAddProject={this.toggleAddProjectModal}
         />
         <MainContent
           projectList={this.state.projectList}
           updateProjectList={this.updateProjectList}
           currentPage={this.state.currentPage}
           onPageChange={this.handlePageChange}
-          onAddProject={this.handleAddProject}
+          onAddProject={this.toggleAddProjectModal}
         />
       </div>
     );

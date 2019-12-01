@@ -5,12 +5,14 @@ function SettingsModal(props) {
   return (
     <Modal
       title="Settings"
-      buttonText="Save"
-      onSubmit={() =>
-        props.onSave({
-          autoSnapshot: document.querySelector("#auto-snapshot-input").checked
-        })
-      }
+      buttons={[{
+        style:'primary',
+        text: 'Save',
+        onclick: () =>
+          props.onSave({
+            autoSnapshot: document.querySelector("#auto-snapshot-input").checked
+          })
+      }]}
       onClose={props.onClose}
       show={props.show}
     >
