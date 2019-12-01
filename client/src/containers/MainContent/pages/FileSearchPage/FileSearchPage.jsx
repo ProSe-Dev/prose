@@ -6,6 +6,7 @@ import Collapse from "components/Collapse";
 import Timeline from "components/Timeline";
 import Spinner from "components/Spinner";
 import events from "shared/ipc-events";
+import FindInPageIcon from "@material-ui/icons/FindInPage";
 
 // workaround for served react app to get access to electron module
 // reference: https://github.com/electron/electron/issues/7300
@@ -95,11 +96,19 @@ class FileSearchPage extends React.Component {
     return (
       <div>
         <TitleBar
+          icon={<FindInPageIcon />}
           title="IP Checker"
-          subtitle="Search for file owners on the blockchain"
+          subtitle="Search engine for file ownership"
           colorClass="blue"
         />
-        <div className="inner-container">
+        <div className="content">
+          <div className="textBlock">
+            <h5>Search for projects containing file</h5>
+            <p>
+              Use the search below to find projects that have certificates for a
+              file and when they were created.
+            </p>
+          </div>
           <Dropzone parent={this} />
           <div className="fstart-wrapper mt-4">
             <button

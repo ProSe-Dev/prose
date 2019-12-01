@@ -8,7 +8,7 @@ ipcMain.handle(events.SETTINGS_SET, async (e, ...args) => {
   let namespace = args[0];
   let key = args[1];
   let value = args[2];
-  return settings.add(namespace, key, value);
+  return settings.set(namespace, key, value);
 });
 
 ipcMain.handle(events.SETTINGS_GET, async (e, ...args) => {

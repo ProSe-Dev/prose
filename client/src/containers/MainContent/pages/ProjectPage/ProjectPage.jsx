@@ -4,13 +4,11 @@ import TitleBar from "components/TitleBar";
 import Table from "components/Table";
 import ToggleSwitch from "components/ToggleSwitch";
 import SettingsModal from "./SettingsModal";
-import uuid from "uuid/v4";
 import events from "shared/ipc-events";
 import constants from "shared/constants";
-import settings from "shared/settings";
-import Icon from "@material-ui/core/Icon";
+import FolderIcon from "@material-ui/icons/Folder";
 import { withRouter } from "react-router-dom";
-import { stat } from "fs";
+
 const ipc = window.require("electron").ipcRenderer;
 
 function SnapshotOutdatedAlert(props) {
@@ -219,6 +217,7 @@ class ProjectPage extends React.Component {
     return (
       <div class="main-container">
         <TitleBar
+          icon={<FolderIcon />}
           colorClass={this.state.project ? this.state.project.colorClass : null}
           title={this.state.project ? this.state.project.name : "Loading..."}
           subtitle={

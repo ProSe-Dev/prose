@@ -1,3 +1,12 @@
 .project-display {
   margin: 0em 0em 0 0em;
 }
+
+.textBlock {
+  text-align: left;
+  margin-bottom: 50px;
+}
+
+.content {
+  margin: 50px;
+}

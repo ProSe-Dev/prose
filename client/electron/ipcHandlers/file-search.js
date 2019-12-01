@@ -5,9 +5,8 @@ const fetch = require("node-fetch");
 const Log = require("../helpers/log");
 const events = require("../../src/shared/ipc-events");
 const fs = require("../helpers/fs");
-const RELAY_URL = process.env.RELAY_URL
-  ? process.env.RELAY_URL
-  : "http://localhost:8080";
+const s = require("../../src/shared/settings");
+const settings = require("../settings");
 
 ipcMain.handle(events.SEARCH_FILE, async (e, ...args) => {
   Log.ipcLog(events.SEARCH_FILE, args);
@@ -29,7 +28,10 @@ ipcMain.handle(events.SEARCH_FILE, async (e, ...args) => {
   hash.update(fileContent);
   let fileHash = hash.digest("hex");
   Log.debugLog(events.SEARCH_FILE, "computed hash: " + fileHash);
-  let searchUrl = new URL("/search", RELAY_URL);
+  let relayUrl =
+    settings.getVal(s.NAMESPACES.APP, s.KEYS.RELAY_HOST_ADDRESS) ||
+    "http://localhost:8080";
+  let searchUrl = new URL("/search", relayUrl);
   searchUrl.search = `filehash=${fileHash}`;
   Log.debugLog(events.SEARCH_FILE, "request: " + searchUrl.toString());
   let result;

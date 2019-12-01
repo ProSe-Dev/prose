@@ -5,6 +5,7 @@ import HomePage from "./pages/HomePage/HomePage";
 import ProjectPage from "./pages/ProjectPage/ProjectPage";
 import FileSearchPage from "./pages/FileSearchPage/FileSearchPage";
 import FAQPage from "./pages/FAQPage/FAQPage";
+import AdvancedPage from "./pages/AdvancedPage/AdvancedPage";
 
 class MainContent extends React.Component {
   constructor(props) {
@@ -41,6 +42,12 @@ class MainContent extends React.Component {
           <Route
             path="/faq"
             render={props => <FAQPage {...props} {...this.props} />}
+          />
+
+          {/* route to page for Advanced */}
+          <Route
+            path="/advanced"
+            render={props => <AdvancedPage {...props} {...this.props} />}
           />
 
           {/* load main page by default if none of the previous routes matched */}

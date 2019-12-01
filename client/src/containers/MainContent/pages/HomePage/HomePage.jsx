@@ -1,10 +1,8 @@
-import React from 'react';
-import { withRouter } from "react-router"
-import events from 'shared/ipc-events';
-
-// workaround for served react app to get access to electron module
-// reference: https://github.com/electron/electron/issues/7300
-const ipc = window.require('electron').ipcRenderer;
+import React from "react";
+import { withRouter } from "react-router";
+import "./style.css";
+import TitleBar from "components/TitleBar";
+import HomeIcon from "@material-ui/icons/Home";
 
 class HomePage extends React.Component {
   constructor(props) {
@@ -14,26 +12,38 @@ class HomePage extends React.Component {
 
   render() {
     return (
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          height: '100%',
-        }}>
-        <button 
-          style={{
-            width: 300,
-          }}
-          type="button"
-          className="btn btn-success"
-          onClick={this.props.onAddProject}
-        >
-          ADD NEW PROJECT
-        </button>
+      <div>
+        <TitleBar
+          icon={<HomeIcon />}
+          title="Home"
+          subtitle="Welcome to ProSe!"
+          colorClass="orange"
+        />
+        <div className="mainContent">
+          <div className="textBlock">
+            <h5>Getting Started</h5>
+            <p>
+              To start using ProSe, add a new or existing project for tracking.
+            </p>
+            <button
+              style={{
+                width: 300
+              }}
+              type="button"
+              className="btn btn-success"
+              onClick={this.props.onAddProject}
+            >
+              ADD NEW PROJECT
+            </button>
+          </div>
+          <div className="textBlock">
+            <h5>Documentation</h5>
+            <p>For more details on how to use this app, see the FAQ page!</p>
+          </div>
+        </div>
       </div>
     );
   }
-};
+}
 
 export default withRouter(HomePage);

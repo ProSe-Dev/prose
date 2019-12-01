@@ -1,7 +1,7 @@
 module.exports = {
   COLOR_MAP: {
     grey: "#979797",
-    blue: "#5e83b7",
+    blue: "#5a8fda",
     green: "#5bb85d",
     red: "#dc6878",
     orange: "#efad4d"

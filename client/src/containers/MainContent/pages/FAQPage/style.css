@@ -1,11 +1,8 @@
-.question {
+.qaBlock {
   text-align: left;
-}
-
-.answer {
-  text-align: left;
+  margin-bottom: 50px;
 }
 
 .content {
-  margin: 15px;
+  margin: 50px;
 }

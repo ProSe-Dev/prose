@@ -8,6 +8,8 @@ module.exports = {
     // list of projects
     PROJECTS_LIST: "projectsList",
     // public-private key-pair
-    MASTER_KEYS: "masterKeys"
+    MASTER_KEYS: "masterKeys",
+    // relay host address
+    RELAY_HOST_ADDRESS: "relayHostAddress"
   }
 };
