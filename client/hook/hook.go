@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"crypto/sha256"
 
 	"gopkg.in/src-d/go-git.v4"
 )
@@ -26,6 +27,10 @@ func getenv(key, fallback string) string {
 		return fallback
 	}
 	return value
+}
+
+func sign(data []byte) {
+	return hex.EncodeToString(sha256.Sum256(data)[:])
 }
 
 func main() {
@@ -52,12 +57,30 @@ func main() {
 	var result map[string]interface{}
 	json.Unmarshal([]byte(byteValue), &result)
 
+	var trackedFiles = result["trackedFiles"]
+	var fileHashes = map[string]string{}
+	var byteArray []byte("prose")
+	var contact = result["contact"]
+	byteArray = append(byteArray, []byte(contact)...)
+	var hashData = ""
+	for _, file := range trackedFiles {
+		b, err := ioutil.ReadFile(file);
+		if err != nil {
+			log.Printf("[ProSe] FAILED: could not open file %s:\n%v\n", file, err);
+		}
+		hash := sha256.Sum256(b)
+		fileHashes[file] = hash
+		hashData += hash
+	}
+	var hashOfFileHashes = hex.EncodeToString(sha256.Sum256([]byte(hashData))[:])
+	byteArray = append(byteArray, []byte(hashOfFileHashes)...)
+	var signature = sign(byteArray)
 	values := map[string]interface{}{
 		"PublicKey":  result["publicKey"],
-		"Signature":  result["signature"],
+		"Signature":  signature,
 		"ProjectID":  result["projectID"],
 		"CommitHash": ref.Hash().String(),
-		"FileHashes": result["fileHashes"]}
+		"FileHashes": fileHashes}
 
 	fmt.Printf("[ProSe] Submitting block: %v\n", values)
 

@@ -68,24 +68,19 @@ class Project {
     return resolve(this.path, CONFIG_NAME);
   }
 
-  async getFileHashes() {
-    let hashes = [];
+  async getTrackedFiles() {
+    let fileLocations = [];
     for (let f of this.files) {
       if (f.status === constants.GIT_EXCLUDED) {
         continue;
       }
-      let fileContent = await fs.readFileAsync(resolve(this.path, f.path));
-      let hash = crypto.createHash("sha256");
-      hash.update(fileContent);
-      hashes.push(hash.digest("hex"));
+      fileLocations.put(f.path);
     }
     Log.debugLog(
-      "Got hashes: " +
-        JSON.stringify(hashes) +
-        " from files " +
-        JSON.stringify(this.files)
+      "Got file locations: " +
+        JSON.stringify(fileLocations)
     );
-    return hashes;
+    return fileLocations;
   }
 
   async writeConfig() {
@@ -93,7 +88,7 @@ class Project {
       projectID: this.projectID,
       excludedFiles: this.excludedFiles,
       publicKey: settings.getVal(s.NAMESPACES.APP, s.KEYS.MASTER_KEYS).publicKey,
-      fileHashes: await this.getFileHashes()
+      trackedFiles: await this.getTrackedFiles()
     };
     Log.debugLog(JSON.stringify(projectInfo));
     await fs.writeFileAsync(this.getConfigPath(), JSON.stringify(projectInfo));
