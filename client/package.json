@@ -1,6 +1,6 @@
 {
-  "name": "client",
-  "version": "0.1.0",
+  "name": "ProSe",
+  "version": "beta",
   "private": true,
   "main": "public/electron/main.js",
   "homepage": "./",
@@ -27,14 +27,14 @@
   "scripts": {
     "start": "concurrently \"BROWSER=none npm run react-start\" \"wait-on http://localhost:3000 && npm run electron-start\"",
     "startwin": "concurrently \"npm run react-start\" \"wait-on http://localhost:3000 && npm run electron-startwin\"",
-    "package": "npm run prepackage && electron-builder build -c.extraMetadata.main=build/electron/main.js --publish never",
+    "package": "npm run prepackage && NODE_ENV='production' electron-builder build -c.extraMetadata.main=build/electron/main.js --publish never",
     "prepackage": "npm run react-build && npm run electron-build",
     "react-start": "react-scripts start",
     "react-build": "react-scripts build",
     "react-test": "react-scripts test",
     "react-eject": "react-scripts eject",
     "electron-build": "mkdir build/src && cp -r electron/. build/electron && cp -r src/shared/. build/src/shared",
-    "electron-start": "ELECTRON_START_URL='http://localhost:3000' electron ./electron/main.js",
+    "electron-start": "DEVELOPMENT='true' ELECTRON_START_URL='http://localhost:3000' electron ./electron/main.js",
     "electron-startwin": "set ELECTRON_START_URL=http://localhost:3000 && electron ./electron/main.js"
   },
   "eslintConfig": {

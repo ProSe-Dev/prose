@@ -8,9 +8,11 @@ const keygen = require("./helpers/keygen");
 const fs = require("./helpers/fs");
 const { resolve } = require("path");
 const os = require("os");
+const Log = require('./helpers/log');
 const APP_CONFIG_FOLDER = ".prose";
 const PRIVATE_KEY_FILE = "id_ed25519";
 const PUBLIC_KEY_FILE = "id_ed25519.pub";
+const inProduction = !process.env.DEVELOPMENT;
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -26,22 +28,27 @@ function createWindow() {
     }
   });
 
+  if (!inProduction) {
+    console.log('starting development....');
+  }
+
   // by default use URL set in environment
-  let startUrl = process.env.ELECTRON_START_URL;
   // or else must be packaging, use load React's build path
-  if (!startUrl) {
+  let startUrl;
+  if (inProduction) {
     startUrl = url.format({
       pathname: path.join(__dirname, "../index.html"),
       protocol: "file:",
       slashes: true
     });
+  } else {
+    startUrl = process.env.ELECTRON_START_URL || 'http://localhost:8080';
+    // Open the DevTools.
+    win.webContents.openDevTools();
   }
 
   // and load the index.html of the app.
   win.loadURL(startUrl);
-
-  // Open the DevTools.
-  win.webContents.openDevTools();
 
   // Emitted when the window is closed.
   win.on("closed", () => {
