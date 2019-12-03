@@ -1,5 +1,5 @@
-export SERVER_1=104.42.117.173
-export SERVER_1_USER=prose
-export SERVER_2=104.42.252.73
-export SERVER_2_USER=banango
+export SERVER_1=${SERVER_1:-104.42.117.173}
+export SERVER_1_USER=${SERVER_1_USER:-prose}
+export SERVER_2=${SERVER_2:-104.42.252.73}
+export SERVER_2_USER=${SERVER_2_USER:-banango}
 export ROOT_DIR=${ROOT_DIR:-~/go/src/github.com/ProSe-Dev/prose}
