@@ -211,7 +211,7 @@ func updateMapWithBlock(block *mining.Block) {
 		if ok {
 			projectKeySet[hash] = struct{}{}
 		} else {
-			fileToProjectMap[fileHash] = map[uint64]struct{}{hash: struct{}{}}
+			fileToProjectMap[fileHash] = map[uint64]struct{}{hash: {}}
 		}
 	}
 }
