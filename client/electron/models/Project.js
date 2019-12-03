@@ -13,6 +13,7 @@ const settings = require("../settings");
 const s = require("../../src/shared/settings");
 var hookFile = isWin ? "hook.exe" : "hook";
 var postCommitFile = isWin ? "post-commit.exe" : "post-commit";
+const inProduction = !process.env.DEVELOPMENT;
 
 class Project {
   constructor(
@@ -40,6 +41,7 @@ class Project {
   }
 
   async initialize() {
+    Log.debugLog("Project.initialize", `initalizing`);
     let isExistingProject = await git.isGit(this.path);
     //Log.debugLog(isExistingProject);
     // TODO: add an option for this?
@@ -52,16 +54,16 @@ class Project {
     await this.writeConfig();
     // Hacky
     // TODO: figure out how this works when packaging
-    Log.debugLog(
-      "Copying commit hook from " +
-        resolve(__dirname, "..", "..", "hook", hookFile) +
-        " to " +
-        resolve(this.path, ".git", "hooks", postCommitFile)
-    );
-    fs.copyFileSync(
-      resolve(__dirname, "..", "..", "hook", hookFile),
-      resolve(this.path, ".git", "hooks", postCommitFile)
-    );
+    let hookDes = resolve(this.path, ".git", "hooks", postCommitFile)
+    let hookSrc;
+    if (inProduction) {
+      hookSrc = resolve(__dirname, "hook", hookFile);
+    } else {
+      hookSrc = resolve(__dirname, "..", "..", "hook", hookFile);
+    }
+    Log.debugLog("Project.initialize", `Copying commit hook from ${hookSrc} to ${hookDes}`);
+    fs.copyFileSync(hookSrc, hookDes);
+
     await this.commit();
   }
 
@@ -119,9 +121,9 @@ class Project {
   }
 
   async commit() {
-    Log.debugLog("COMMITING");
+    Log.debugLog("Project.commit", "COMMITING");
     let commitHash = await git.commit(this.path, this.excludedFiles);
-    Log.debugLog("Hash was: " + commitHash);
+    Log.debugLog("Project.commit", "Hash was: " + commitHash);
     if (!commitHash) {
       return;
     }
@@ -131,17 +133,17 @@ class Project {
     });
     await this.updateFiles();
     await this.writeConfig();
-    Log.debugLog("Completed commit");
+    Log.debugLog("Project.commit", "Completed commit");
     // Manually execute the git commit hook
     let executablePath = resolve(this.path, ".git", "hooks", postCommitFile);
-    Log.debugLog("Executing " + executablePath);
+    Log.debugLog("Project.commit", "Executing " + executablePath);
     child(executablePath, { cwd: this.path }, function(err, stdout, stderr) {
       if (err) {
-        Log.debugLog("ERROR: " + err);
+        Log.debugLog("Project.commit", "ERROR: " + err);
         return;
       }
-      Log.debugLog("STDOUT: " + stdout.toString());
-      Log.debugLog("STDERR: " + stderr.toString());
+      Log.debugLog("Project.commit", "STDOUT: " + stdout.toString());
+      Log.debugLog("Project.commit", "STDERR: " + stderr.toString());
     });
     await this.updateFiles();
   }

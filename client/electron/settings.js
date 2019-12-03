@@ -20,6 +20,7 @@ function start() {
  * @param {any} value
  */
 function set(namespace, key, value) {
+  settings.setAll({});
   if (!__state[namespace]) {
     __state[namespace] = {};
   }

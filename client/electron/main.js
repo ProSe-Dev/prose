@@ -28,21 +28,19 @@ function createWindow() {
     }
   });
 
-  if (!inProduction) {
-    console.log('starting development....');
-  }
-
   // by default use URL set in environment
   // or else must be packaging, use load React's build path
   let startUrl;
   if (inProduction) {
+    console.log('production!, loading from index');
     startUrl = url.format({
       pathname: path.join(__dirname, "../index.html"),
       protocol: "file:",
       slashes: true
     });
   } else {
-    startUrl = process.env.ELECTRON_START_URL || 'http://localhost:8080';
+    console.log('starting development....');
+    startUrl = process.env.ELECTRON_START_URL || 'http://localhost:3000';
     // Open the DevTools.
     win.webContents.openDevTools();
   }
@@ -85,11 +83,22 @@ function getKeys() {
   }
 }
 
-function onReady() {
+async function relayBootstrap() {
+  // if relay host address hasn't been set yet, we should!
+  if (!settings.getVal(s.NAMESPACES.APP, s.KEYS.RELAY_HOST_ADDRESS)) {
+    let relayAddress = await require('./helpers/relay').getAddress();
+    settings.set(s.NAMESPACES.APP,
+      s.KEYS.RELAY_HOST_ADDRESS,
+      relayAddress);
+  }
+}
+
+async function onReady() {
   createWindow();
   settings.start();
   ipcHandlers.bootstrap();
   getKeys();
+  await relayBootstrap();
 }
 
 // This method will be called when Electron has finished

@@ -1,4 +1,4 @@
-const FUNCTION_FILTER = null;
+const FUNCTION_FILTER = ['Project.commit', 'Project.initialize'];
 const LOG_HEADER = '>>';
 
 function ipcLog(event, args) {
@@ -7,7 +7,7 @@ function ipcLog(event, args) {
 
 function debugLog(functionName, ...args) {
   // if function filter is set, only print if function name matches the filter
-  if (!FUNCTION_FILTER || functionName === FUNCTION_FILTER) {
+  if (!FUNCTION_FILTER || FUNCTION_FILTER.indexOf(functionName) > -1) {
     console.log(LOG_HEADER, `${functionName}()`, ':::', ...args);
   }
 }
