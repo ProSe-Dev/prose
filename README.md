@@ -1,4 +1,4 @@
-# ProSe
+# ProSe [![Golang Documentation](https://godoc.org/github.com/ProSe-Dev/prose?status.svg)](https://godoc.org/github.com/ProSe-Dev/prose) [![Build Status](https://travis-ci.com/ProSe-Dev/prose.svg)](https://travis-ci.com/ProSe-Dev/prose) [![Go Report Card](https://goreportcard.com/badge/github.com/ProSe-Dev/prose)](https://goreportcard.com/report/github.com/ProSe-Dev/prose)
 
 ProSe is a prototype blockchain for online intellectual property protection. As a service, it provides an untamperable recording of idea ownership as files are modified over time. Ownership can be easily retrieved using verified timestamps. Additionally, ProSe does not receive or store actual file content; only [file hashes](https://en.wikipedia.org/wiki/Hash_function). We integrate with Git for local file versioning so that file changes are stored and versioned, though no knowledge of Git is required.
 

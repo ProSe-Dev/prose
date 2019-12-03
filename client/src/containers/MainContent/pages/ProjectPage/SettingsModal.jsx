@@ -54,6 +54,7 @@ class SettingsModal extends React.Component {
     return returntext.trim();
   }
 
+  // TODO: fix time display
   render() {
     const { isSynced } = this.state;
 
@@ -89,8 +90,7 @@ class SettingsModal extends React.Component {
             </div>
             <div className="form-group row">
               <label className="text-right col-sm-8 col-form-label">
-                generated every{" "}
-                {this.secondsToString(this.props.secondsBetweenSync)}
+                generated every {this.secondsToString(15)}
               </label>
             </div>
           </form>
