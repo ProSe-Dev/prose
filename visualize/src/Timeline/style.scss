@@ -1,0 +1,93 @@
+$timelinecolor: #3498db;
+$blockcolorHighlighted: #c7ffc5;
+$blockcolor: #c5e9ff;
+
+.time-line-ctnr {
+  font-size: 20px;
+  .time-line {
+    position: relative;
+    margin: 0 0 0px 0;
+    padding: 0;
+    list-style: none;
+    &:before {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: -10px;
+      width: 0.2em;
+      background: $timelinecolor;
+      left: 31px;
+      border-radius: 2px;
+    }
+    > .time-label {
+      > div {
+        margin-left: 32px;
+        > span {
+          font-weight: 600;
+          padding: 5px 10px;
+          display: inline-block;
+          background-color: $timelinecolor;
+          color: #fff;
+          border-radius: 2px;
+          font-size: 1em;
+        }
+      }
+    }
+    > li {
+      position: relative;
+      margin-bottom: 10px;
+      margin-right: 0;
+      > .time-line-item {
+        display: grid;
+        grid-template-columns: 1fr 20fr;
+        // -webkit-box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+        // box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+        border-radius: 3px;
+        background: $blockcolor;
+        color: #444;
+        margin-right: 15px;
+        position: relative;
+        margin-left: 50px;
+        &.highlighted {
+          background: $blockcolorHighlighted;
+          color: #444;
+        }
+        > .time-line-header,
+        .time {
+          font-size: 1em;
+          padding: 6px 10px;
+        }
+        .time {
+          font-size: 1em;
+          color: #999;
+          float: left;
+        }
+        .time-line-header {
+          margin: 0;
+          color: #555;
+          border-bottom: 1px solid #f4f4f4;
+          line-height: 4em;
+        }
+      }
+      > .fa {
+        position: absolute;
+        border-radius: 50%;
+        width: 10px;
+        height: 10px;
+        color: #666;
+        background: #ecf0f1;
+        left: 28px;
+        top: 9px;
+        border: 2px solid #3498db;
+        display: inline-block;
+        box-sizing: border-box;
+      }
+    }
+  }
+}
+
+.fstart-wrapper {
+  display: -webkit-flex;
+  display: flex;
+  justify-content: flex-start;
+}
