@@ -3,29 +3,29 @@ windows:
 - window_name: dev window
   layout: tiled
   shell_command_before:
-    - cdf
+    - cd $ROOT_DIR
     - cd prose
   panes:
     - shell_command:
-        - printf '\033]2;%s\033\\' '[MINER]localhost:3000'
+        - printf '\033]2;%s\033\\' '[MINER]localhost:3001'
         - ./gen-protoc.sh
         - go build || read
-        - ./prose subvert 3000 |& tee log/1.log 
-    - shell_command:
-        - printf '\033]2;%s\033\\' '[MINER]localhost:3001'
-        - while ! nc -z localhost 3000; do sleep 1 && echo -n .; done
-        - ./prose mine 3001 -i localhost:3000 |& tee log/2.log
+        - ./prose mine 3001 |& tee log/1.log 
     - shell_command:
         - printf '\033]2;%s\033\\' '[MINER]localhost:3002'
-        - while ! nc -z localhost 3000; do sleep 1 && echo -n .; done
-        - ./prose mine 3002 -i localhost:3000 |& tee log/3.log
+        - while ! nc -z localhost 3001; do sleep 1 && echo -n .; done
+        - ./prose mine 3002 -i localhost:3001 |& tee log/2.log
     - shell_command:
-        - printf '\033]2;%s\033\\' '[SBVRT]localhost:3003'
-        - while ! nc -z localhost 3000; do sleep 1 && echo -n .; done
-        - ./prose mine 3003 -i localhost:3000 |& tee log/4.log
+        - printf '\033]2;%s\033\\' '[MINER]localhost:3003'
+        - while ! nc -z localhost 3001; do sleep 1 && echo -n .; done
+        - ./prose mine 3003 -i localhost:3001 |& tee log/3.log
     - shell_command:
-        - printf '\033]2;%s\033\\' '[RELAY]3004/8080'
+        - printf '\033]2;%s\033\\' '[SBVRT]localhost:3004'
+        - while ! nc -z localhost 3001; do sleep 1 && echo -n .; done
+        - ./prose subvert 3004 -i localhost:3001 |& tee log/4.log
+    - shell_command:
+        - printf '\033]2;%s\033\\' '[RELAY]3005/8080'
         - cd ../relay
         - go build || read
-        - while ! nc -z localhost 3003; do sleep 1 && echo -n .; done
-        - ./relay start 8080 3004 -i localhost:3000 |& tee ../prose/log/5.log
+        - while ! nc -z localhost 3004; do sleep 1 && echo -n .; done
+        - ./relay start 8080 3005 -i localhost:3001 |& tee ../prose/log/5.log

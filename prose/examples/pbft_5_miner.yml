@@ -3,7 +3,7 @@ windows:
   - window_name: dev window
     layout: tiled
     shell_command_before:
-      - cdf
+      - cd $ROOT_DIR
       - cd prose
     panes:
       - shell_command:

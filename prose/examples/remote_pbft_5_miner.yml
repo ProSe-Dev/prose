@@ -8,7 +8,7 @@ windows:
         - scp vars ${SERVER_1_USER}@${SERVER_1}:/tmp
         - ssh ${SERVER_1_USER}@${SERVER_1}
         - . /tmp/vars
-        - cdf
+        - cd $ROOT_DIR
         - git pull origin master || read
         - cd prose
         - ./gen-protoc.sh || read
@@ -19,7 +19,7 @@ windows:
         - scp vars ${SERVER_2_USER}@${SERVER_2}:/tmp
         - ssh ${SERVER_2_USER}@${SERVER_2}
         - . /tmp/vars
-        - cdf
+        - cd $ROOT_DIR
         - git pull origin master || read
         - cd prose
         - ./gen-protoc.sh || read
@@ -31,7 +31,7 @@ windows:
         - scp vars ${SERVER_1_USER}@${SERVER_1}:/tmp
         - ssh ${SERVER_1_USER}@${SERVER_1}
         - . /tmp/vars
-        - cdf
+        - cd $ROOT_DIR
         - git pull origin master || read
         - cd prose
         - ./gen-protoc.sh || read
@@ -43,7 +43,7 @@ windows:
         - scp vars ${SERVER_2_USER}@${SERVER_2}:/tmp
         - ssh ${SERVER_2_USER}@${SERVER_2}
         - . /tmp/vars
-        - cdf
+        - cd $ROOT_DIR
         - git pull origin master || read
         - cd prose
         - ./gen-protoc.sh || read
@@ -55,7 +55,7 @@ windows:
         - scp vars ${SERVER_2_USER}@${SERVER_2}:/tmp
         - ssh ${SERVER_2_USER}@${SERVER_2}
         - . /tmp/vars
-        - cdf
+        - cd $ROOT_DIR
         - git pull origin master || read
         - cd relay
         - go build || read

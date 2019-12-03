@@ -18,8 +18,6 @@ See the latest ProSe CLI binary under [releases](https://github.com/ProSe-Dev/pr
 
 Sample cluster configurations can be found in the examples directory at `prose/examples`.
 
-**TODO**: scripts currently make use of a macro `cdf` which changes to the correct directory. This should be fixed using `run.sh` and the passing of correct environment variables.
-
 ## Contributing
 
 To contribute to ProSe, a few special dependencies are required.
