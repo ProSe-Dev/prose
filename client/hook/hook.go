@@ -21,14 +21,6 @@ const (
 	configFile = ".prose"
 )
 
-func getenv(key, fallback string) string {
-	value := os.Getenv(key)
-	if len(value) == 0 {
-		return fallback
-	}
-	return value
-}
-
 func sign(data []byte) (signature string, err error) {
 	var usr *user.User
 	usr, err = user.Current()
@@ -66,14 +58,16 @@ func main() {
 
 	jsonFile, err := os.Open(".git/" + configFile)
 	if err != nil {
-		fmt.Println(err)
+		log.Printf("[ProSe] FAILED: could not open git:\n%v\n", err)
 	}
 	defer jsonFile.Close()
 
 	byteValue, _ := ioutil.ReadAll(jsonFile)
 
 	var result map[string]interface{}
-	json.Unmarshal([]byte(byteValue), &result)
+	if err = json.Unmarshal([]byte(byteValue), &result); err != nil {
+		log.Printf("[ProSe] FAILED: could not unmarshal:\n%v\n", err)
+	}
 
 	var trackedFiles = result["trackedFiles"].([]interface{})
 	var fileHashes = map[string]string{}

@@ -68,10 +68,12 @@ func (s *StateMachine) Enforce(state StateCode) (err error) {
 func (s *StateMachine) EnforceWait(state StateCode) {
 	for s.State != state {
 		s.Printf("[STATEMACHINE] waiting on state %s, current is %s", GetStateDebugName(state), GetStateDebugName(s.State))
-		stateCodeBrokerMap[state].WaitOnAnyTimeout(5)
+		_, err := stateCodeBrokerMap[state].WaitOnAnyTimeout(5)
+		if err != nil {
+			panic(err)
+		}
 	}
 	s.Printf("[STATEMACHINE] state %s was already enforced", GetStateDebugName(state))
-	return
 }
 
 // NextAvailableStateCode returns the next available state code

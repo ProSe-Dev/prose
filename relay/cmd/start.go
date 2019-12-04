@@ -16,9 +16,15 @@ func init() {
 	createRelayCmd.PersistentFlags().StringP("initNode", "i", "", "initialization node")
 	createRelayCmd.PersistentFlags().StringP("consensus", "c", "", "consensus mode")
 	createRelayCmd.PersistentFlags().StringP("remoteIP", "r", "127.0.0.1", "IP address accessible to remote nodes - used akin to an ID")
-	viper.BindPFlag("rinitNode", createRelayCmd.PersistentFlags().Lookup("initNode"))
-	viper.BindPFlag("rconsensus", createRelayCmd.PersistentFlags().Lookup("consensus"))
-	viper.BindPFlag("rremoteIP", createRelayCmd.PersistentFlags().Lookup("remoteIP"))
+	if err := viper.BindPFlag("rinitNode", createRelayCmd.PersistentFlags().Lookup("initNode")); err != nil {
+		panic(err)
+	}
+	if err := viper.BindPFlag("rconsensus", createRelayCmd.PersistentFlags().Lookup("consensus")); err != nil {
+		panic(err)
+	}
+	if err := viper.BindPFlag("rremoteIP", createRelayCmd.PersistentFlags().Lookup("remoteIP")); err != nil {
+		panic(err)
+	}
 	rootCmd.AddCommand(createRelayCmd)
 }
 
@@ -51,8 +57,11 @@ var createRelayCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 		log.Print("Initialized relay node")
-		go n.Serve()
+		go func() {
+			if err = n.Serve(); err != nil {
+				log.Fatal(err)
+			}
+		}()
 		server.Start(n, sport)
-		return
 	},
 }

@@ -76,7 +76,10 @@ func handleGetBlockchain(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	io.WriteString(w, string(bytes))
+	if _, err := io.WriteString(w, string(bytes)); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 func handleSearchBlockchain(w http.ResponseWriter, r *http.Request) {
@@ -96,7 +99,10 @@ func handleSearchBlockchain(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		io.WriteString(w, string(bytes))
+		if _, err := io.WriteString(w, string(bytes)); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 		return
 	}
 
@@ -109,8 +115,10 @@ func handleSearchBlockchain(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	io.WriteString(w, string(bytes))
-	return
+	if _, err := io.WriteString(w, string(bytes)); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 func handleWriteBlock(w http.ResponseWriter, r *http.Request) {
@@ -161,12 +169,14 @@ func handleWriteBlock(w http.ResponseWriter, r *http.Request) {
 func respondWithJSON(w http.ResponseWriter, r *http.Request, code int, payload interface{}) {
 	response, err := json.MarshalIndent(payload, "", "  ")
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("HTTP 500: Internal Server Error"))
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(code)
-	w.Write(response)
+	if _, err := w.Write(response); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 // Start begins the relay server using the specified relay node
@@ -182,13 +192,10 @@ func updateMaps() {
 		updateMapWithBlock(block)
 	}
 
-	for {
-		select {
-		case <-mining.BlockProcessedChan:
-			for index < len(relayNode.Blockchain.Blocks) {
-				updateMapWithBlock(relayNode.Blockchain.Blocks[index])
-				index++
-			}
+	for range mining.BlockProcessedChan {
+		for index < len(relayNode.Blockchain.Blocks) {
+			updateMapWithBlock(relayNode.Blockchain.Blocks[index])
+			index++
 		}
 	}
 }

@@ -348,9 +348,10 @@ func (p *PBFTConsensus) Commit(ctx context.Context, in *proto.CommitRequest) (a 
 		}
 		p.StateMachine.Printf("[PBFT] got last commit message from %s!", in.NodeID)
 		p.StateMachine.Printf("[PBFT] committed block: %v", p.Blockchain.StagedBlock)
-		mining.RemoveTransactionData(&p.Blockchain.StagedBlock.Data)
-		p.Blockchain.Commit()
-		if err != nil {
+		if err = mining.RemoveTransactionData(&p.Blockchain.StagedBlock.Data); err != nil {
+			panic(err)
+		}
+		if err = p.Blockchain.Commit(); err != nil {
 			panic(err)
 		}
 		p.StateMachine.Printf("[PBFT] completed consensus for view %d!", p.ViewNumber)
