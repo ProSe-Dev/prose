@@ -29,6 +29,8 @@
   "scripts": {
     "start": "concurrently \"BROWSER=none npm run react-start\" \"wait-on http://localhost:3000 && npm run electron-start\"",
     "startwin": "concurrently \"npm run react-start\" \"wait-on http://localhost:3000 && npm run electron-startwin\"",
+    "demo": "concurrently \"BROWSER=none npm run react-start\" \"wait-on http://localhost:3000 && npm run electron-demo\"",
+    "demo-win": "concurrently \"BROWSER=none npm run react-start\" \"wait-on http://localhost:3000 && npm run electron-demo-win\"",
     "package": "npm run prepackage && electron-builder build -c.extraMetadata.main=build/electron/main.js --publish never && npm run postpackage",
     "prepackage": "npm run react-build && npm run electron-build",
     "postpackage": "mkdir dist/hook && cp hook/hook dist/hook/. && cp hook/hook.exe dist/hook/.",
@@ -37,8 +39,10 @@
     "react-test": "react-scripts test",
     "react-eject": "react-scripts eject",
     "electron-build": "mkdir build/src && cp -r electron/. build/electron && cp -r src/shared/. build/src/shared",
-    "electron-start": "DEVELOPMENT='true' ELECTRON_START_URL='http://localhost:3000' electron ./electron/main.js",
-    "electron-startwin": "set ELECTRON_START_URL=http://localhost:3000 && electron ./electron/main.js"
+    "electron-start": "NODE_ENV='develpoment' electron ./electron/main.js",
+    "electron-startwin": "set NODE_ENV='develpoment' && electron ./electron/main.js",
+    "electron-demo": "NODE_ENV='demo' electron ./electron/main.js",
+    "electron-demo-win": "set NODE_ENV='demo' && electron ./electron/main.js"
   },
   "eslintConfig": {
     "extends": "react-app"

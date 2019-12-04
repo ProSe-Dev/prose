@@ -1,5 +1,8 @@
 const { platform } = require('os');
 const appRoot = process.env.PWD;
+const inDevelopment = process.env.NODE_ENV === 'develpoment';
+const inDemo = process.env.NODE_ENV === 'demo';
+const inProduction = !process.env.NODE_ENV;
 
 function getPlatform() {
   switch (platform()) {
@@ -20,6 +23,9 @@ function getPlatform() {
 }
 
 module.exports = {
+  inDevelopment,
+  inDemo,
+  inProduction,
   appRoot,
   getPlatform
 };

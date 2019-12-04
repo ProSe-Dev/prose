@@ -1,6 +1,6 @@
 const settings = require("electron-settings");
 const Log = require("./helpers/log");
-
+const { inDevelopment, inDemo } = require('./helpers/environment');
 let __state;
 
 /**
@@ -8,7 +8,11 @@ let __state;
  * should be called on start up
  */
 function start() {
-  __state = settings.getAll();
+  if (inDevelopment || inDemo) {
+    __state = {};
+  } else {
+    __state = settings.getAll();
+  }
   Log.debugLog('settings.start', JSON.stringify(__state));
 }
 

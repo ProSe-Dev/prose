@@ -12,7 +12,7 @@ const Log = require('./helpers/log');
 const APP_CONFIG_FOLDER = ".prose";
 const PRIVATE_KEY_FILE = "id_ed25519";
 const PUBLIC_KEY_FILE = "id_ed25519.pub";
-const inProduction = !process.env.DEVELOPMENT;
+const { inProduction, inDevelopment } = require('./helpers/environment');
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -40,11 +40,13 @@ function createWindow() {
       slashes: true
     });
   } else {
-    Log.debugLog('main.createWindow', '============================= starting development =============================');
+    Log.debugLog('main.createWindow', `============================= starting ${process.env.NODE_ENV} =============================`);
     Log.debugLog('main.createWindow', 'rootPath:', process.env.PWD);
     startUrl = process.env.ELECTRON_START_URL || 'http://localhost:3000';
+    if (inDevelopment) {
+      win.webContents.openDevTools();
+    }
     // Open the DevTools.
-    win.webContents.openDevTools();
   }
 
 

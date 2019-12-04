@@ -1,10 +1,10 @@
 const Log = require('./log');
-const inProduction = !process.env.DEVELOPMENT;
+const { inProduction, inDemo } = require('../helpers/environment');
 
 async function getAddress() {
   Log.debugLog('relay.getAddress', 'is production?', inProduction);
 
-  if (inProduction) {
+  if (inProduction || inDemo) {
     // app is in production! we should get a remote relay addresses
     let relayListUrl = require('../../src/shared/settings').PRODUCTION.RELAY_LIST_URL;
     Log.debugLog('relay.getAddress', 'fetching from:', relayListUrl);
