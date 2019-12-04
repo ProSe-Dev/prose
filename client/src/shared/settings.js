@@ -17,7 +17,7 @@ module.exports = {
     SECONDS_BETWEEN_PROJECT_UPDATE: "secondsBetweenProjectUpdate"
   },
   DEFAULTS: {
-    RELAY_HOST_ADDRESS: "http://localhost:8080",
+    RELAY_HOST_ADDRESS: "http://104.42.117.173:8080",
     SECONDS_BETWEEN_SYNC: 15,
     SECONDS_BETWEEN_PROJECT_UPDATE: 5
   }
