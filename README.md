@@ -1,4 +1,4 @@
-# ProSe: A Private Blockchain Service for Intellectual Property Protection
+# ProSe &mdash; intellectual property protection with blockchain
 
 [![Golang Documentation](https://godoc.org/github.com/ProSe-Dev/prose?status.svg)](https://godoc.org/github.com/ProSe-Dev/prose) [![Build Status](https://travis-ci.com/ProSe-Dev/prose.svg)](https://travis-ci.com/ProSe-Dev/prose) [![Go Report Card](https://goreportcard.com/badge/github.com/ProSe-Dev/prose)](https://goreportcard.com/report/github.com/ProSe-Dev/prose) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
