@@ -1,19 +1,22 @@
-const FUNCTION_FILTER = ['Project.commit', 'Project.initialize'];
-const LOG_HEADER = '>>';
+const log = require('electron-log');
+const FUNCTION_BLACK_LIST = ['updateFiles', 'projectStatus'];
+const inProduction = !process.env.DEVELOPMENT;
 
 function ipcLog(event, args) {
-  console.log(LOG_HEADER, 'IPC event:', event, 'is triggered with args:', args);
+  if (!inProduction) {
+    log.info('IPC event:', event, 'args:', args);
+  }
 }
 
 function debugLog(functionName, ...args) {
   // if function filter is set, only print if function name matches the filter
-  if (!FUNCTION_FILTER || FUNCTION_FILTER.indexOf(functionName) > -1) {
-    console.log(LOG_HEADER, `${functionName}()`, ':::', ...args);
+  if (FUNCTION_BLACK_LIST.indexOf(functionName) < 0) {
+    log.info(`${functionName}()`, ':::', ...args);
   }
 }
 
 function error(err) {
-  console.error(err);
+  log.error(err);
 }
 
 module.exports = {

@@ -8,9 +8,8 @@ let __state;
  * should be called on start up
  */
 function start() {
-  settings.setAll({});
   __state = settings.getAll();
-  console.log(__state);
+  Log.debugLog('settings.start', JSON.stringify(__state));
 }
 
 /**
@@ -62,7 +61,7 @@ function getVal(namespace, key, defaultVal) {
  * should be called on close
  */
 function end() {
-  Log.debugLog("end", "saving state:", __state);
+  Log.debugLog("setting.end", "saving state:", JSON.stringify(__state));
   settings.setAll(__state);
 }
 

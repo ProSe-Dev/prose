@@ -35,7 +35,7 @@ projectList.forEach(p => {
 
 ipcMain.handle(events.GET_EXISTING_PROJECTS, (event, ...args) => {
   Log.ipcLog(events.GET_EXISTING_PROJECTS, args);
-  Log.debugLog(JSON.stringify(projectList));
+  Log.debugLog(events.GET_EXISTING_PROJECTS, 'existing projects:', JSON.stringify(projectList));
   return projectList;
 });
 

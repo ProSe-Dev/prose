@@ -32,14 +32,14 @@ function createWindow() {
   // or else must be packaging, use load React's build path
   let startUrl;
   if (inProduction) {
-    console.log('production!, loading from index');
+    Log.debugLog('production!, loading from index');
     startUrl = url.format({
       pathname: path.join(__dirname, "../index.html"),
       protocol: "file:",
       slashes: true
     });
   } else {
-    console.log('starting development....');
+    Log.debugLog('starting development....');
     startUrl = process.env.ELECTRON_START_URL || 'http://localhost:3000';
     // Open the DevTools.
     win.webContents.openDevTools();
@@ -58,14 +58,14 @@ function createWindow() {
 }
 
 function getKeys() {
-  console.log("Getting keys...");
+  Log.debugLog("getKeys", "Getting keys...");
   let keyPair = settings.getVal(s.NAMESPACES.APP, s.KEYS.MASTER_KEYS);
   if (!keyPair) {
     keyPair = keygen.createKeyPair();
-    console.log("Generated keypair: ", keyPair);
+    Log.debugLog("getKeys", "Generated keypair: ", keyPair);
     settings.set(s.NAMESPACES.APP, s.KEYS.MASTER_KEYS, keyPair);
 
-    console.log(
+    Log.debugLog("getKeys",
       "Writing private key to: ",
       resolve(os.homedir(), APP_CONFIG_FOLDER)
     );
