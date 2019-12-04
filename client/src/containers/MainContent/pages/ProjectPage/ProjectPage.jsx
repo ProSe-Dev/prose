@@ -194,12 +194,16 @@ class ProjectPage extends React.Component {
       console.log(projectID);
       this.setState({
         project: await ipc.invoke(events.GET_PROJECT_INFO, projectID),
-        secondsBetweenSync: await ipc.invoke(
+        secondsBetweenProjectUpdate: await ipc.invoke(
           events.SETTINGS_GET,
           settings.NAMESPACES.PROJECT,
           settings.KEYS.SECONDS_BETWEEN_PROJECT_UPDATE,
           settings.DEFAULTS.SECONDS_BETWEEN_PROJECT_UPDATE
-        )
+        ),
+        secondsBetweenSync: await ipc.invoke(events.SETTINGS_GET,
+          settings.NAMESPACES.PROJECT,
+          settings.KEYS.SECONDS_BETWEEN_SYNC,
+          settings.DEFAULTS.SECONDS_BETWEEN_SYNC)
       });
       console.log(this.state.project);
       this.interval = setInterval(
@@ -210,7 +214,7 @@ class ProjectPage extends React.Component {
               this.state.project.projectID
             )
           }),
-        this.state.secondsBetweenSync * 1000
+        this.state.secondsBetweenProjectUpdate * 1000
       );
     })();
   }

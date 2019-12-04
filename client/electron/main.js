@@ -32,18 +32,21 @@ function createWindow() {
   // or else must be packaging, use load React's build path
   let startUrl;
   if (inProduction) {
-    Log.debugLog('production!, loading from index');
+    Log.debugLog('main.createWindow', '============================= starting production =============================');
+    Log.debugLog('main.createWindow', 'rootPath:', process.env.PWD);
     startUrl = url.format({
       pathname: path.join(__dirname, "../index.html"),
       protocol: "file:",
       slashes: true
     });
   } else {
-    Log.debugLog('starting development....');
+    Log.debugLog('main.createWindow', '============================= starting development =============================');
+    Log.debugLog('main.createWindow', 'rootPath:', process.env.PWD);
     startUrl = process.env.ELECTRON_START_URL || 'http://localhost:3000';
     // Open the DevTools.
     win.webContents.openDevTools();
   }
+
 
   // and load the index.html of the app.
   win.loadURL(startUrl);

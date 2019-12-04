@@ -3,6 +3,7 @@ to run the client app: `npm start`
 
 ## Packaging for production
 Running `npm run package` will create a executable of the app (in `/dist`) for the OS you're running on  
+To deliver the app, the folder should contain the executable and the `hook` directory  
 
 ## React Web Server
 To start only the react web server: `npm run react-start`

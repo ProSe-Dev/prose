@@ -1,5 +1,5 @@
 {
-  "name": "ProSe",
+  "name": "prose",
   "version": "1.0.0",
   "private": true,
   "main": "public/electron/main.js",
@@ -9,6 +9,7 @@
     "@material-ui/icons": "^4.5.1",
     "bluebird": "^3.7.1",
     "electron-log": "^3.0.9",
+    "electron-root-path": "^1.0.9",
     "electron-settings": "^3.2.0",
     "globby": "^10.0.1",
     "isomorphic-git": "^0.70.8",
@@ -28,8 +29,9 @@
   "scripts": {
     "start": "concurrently \"BROWSER=none npm run react-start\" \"wait-on http://localhost:3000 && npm run electron-start\"",
     "startwin": "concurrently \"npm run react-start\" \"wait-on http://localhost:3000 && npm run electron-startwin\"",
-    "package": "npm run prepackage && electron-builder build -c.extraMetadata.main=build/electron/main.js --publish never",
+    "package": "npm run prepackage && electron-builder build -c.extraMetadata.main=build/electron/main.js --publish never && npm run postpackage",
     "prepackage": "npm run react-build && npm run electron-build",
+    "postpackage": "mkdir dist/hook && cp hook/hook dist/hook/. && cp hook/hook.exe dist/hook/.",
     "react-start": "react-scripts start",
     "react-build": "react-scripts build",
     "react-test": "react-scripts test",

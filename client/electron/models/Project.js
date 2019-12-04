@@ -11,6 +11,7 @@ const child = require("child_process").execFile;
 var isWin = process.platform === "win32";
 const settings = require("../settings");
 const s = require("../../src/shared/settings");
+const { appRoot } = require('../helpers/environment');
 var hookFile = isWin ? "hook.exe" : "hook";
 var postCommitFile = isWin ? "post-commit.exe" : "post-commit";
 const inProduction = !process.env.DEVELOPMENT;
@@ -57,7 +58,7 @@ class Project {
     let hookDes = resolve(this.path, ".git", "hooks", postCommitFile)
     let hookSrc;
     if (inProduction) {
-      hookSrc = resolve(__dirname, "hook", hookFile);
+      hookSrc = resolve(appRoot, "hook", hookFile);
     } else {
       hookSrc = resolve(__dirname, "..", "..", "hook", hookFile);
     }
