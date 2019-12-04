@@ -1,5 +1,7 @@
 # ProSe
 
+[![Golang Documentation](https://godoc.org/github.com/ProSe-Dev/prose?status.svg)](https://godoc.org/github.com/ProSe-Dev/prose) [![Build Status](https://travis-ci.com/ProSe-Dev/prose.svg)](https://travis-ci.com/ProSe-Dev/prose) [![Go Report Card](https://goreportcard.com/badge/github.com/ProSe-Dev/prose)](https://goreportcard.com/report/github.com/ProSe-Dev/prose) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 ProSe is a prototype blockchain for online intellectual property protection. As a service, it provides an untamperable recording of idea ownership as files are modified over time. Ownership can be easily retrieved using verified timestamps. Additionally, ProSe does not receive or store actual file content; only [file hashes](https://en.wikipedia.org/wiki/Hash_function). We integrate with Git for local file versioning so that file changes are stored and versioned, though no knowledge of Git is required.
 
 ProSe is named as wordplay on "Pro Se", which is to represent oneself in court and "prose" being a mundane, prosaic application for its apparent simplicity to users.
@@ -15,8 +17,6 @@ See the FAQ page within the client for usage instructions.
 See the latest ProSe CLI binary under [releases](https://github.com/ProSe-Dev/prose/releases).
 
 Sample cluster configurations can be found in the examples directory at `prose/examples`.
-
-**TODO**: scripts currently make use of a macro `cdf` which changes to the correct directory. This should be fixed using `run.sh` and the passing of correct environment variables.
 
 ## Contributing
 

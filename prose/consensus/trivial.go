@@ -22,8 +22,12 @@ func (t *TrivialConsensus) Start() {
 		panic(err)
 	}
 	t.Blockchain.ProcessNewBlock(*data)
-	t.Blockchain.Commit()
-	mining.RemoveTransactionData(data)
+	if err = t.Blockchain.Commit(); err != nil {
+		panic(err)
+	}
+	if err = mining.RemoveTransactionData(data); err != nil {
+		panic(err)
+	}
 }
 
 // GetInfo returns the consensus info

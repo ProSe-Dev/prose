@@ -14,9 +14,15 @@ func init() {
 	createMinerCmd.PersistentFlags().StringP("initNode", "i", "", "initialization node")
 	createMinerCmd.PersistentFlags().StringP("consensus", "c", "", "consensus mode")
 	createMinerCmd.PersistentFlags().StringP("remoteIP", "r", "127.0.0.1", "IP address accessible to remote nodes - used akin to an ID")
-	viper.BindPFlag("minitNode", createMinerCmd.PersistentFlags().Lookup("initNode"))
-	viper.BindPFlag("mconsensus", createMinerCmd.PersistentFlags().Lookup("consensus"))
-	viper.BindPFlag("mremoteIP", createMinerCmd.PersistentFlags().Lookup("remoteIP"))
+	if err := viper.BindPFlag("minitNode", createMinerCmd.PersistentFlags().Lookup("initNode")); err != nil {
+		panic(err)
+	}
+	if err := viper.BindPFlag("mconsensus", createMinerCmd.PersistentFlags().Lookup("consensus")); err != nil {
+		panic(err)
+	}
+	if err := viper.BindPFlag("mremoteIP", createMinerCmd.PersistentFlags().Lookup("remoteIP")); err != nil {
+		panic(err)
+	}
 	rootCmd.AddCommand(createMinerCmd)
 }
 
@@ -48,6 +54,5 @@ var createMinerCmd = &cobra.Command{
 		if err = n.Serve(); err != nil {
 			log.Fatal(err)
 		}
-		return
 	},
 }

@@ -27,9 +27,15 @@ func init() {
 	createSubvertedMinerCmd.PersistentFlags().StringP("initNode", "i", "", "initialization node")
 	createSubvertedMinerCmd.PersistentFlags().StringP("consensus", "c", "", "consensus mode")
 	createSubvertedMinerCmd.PersistentFlags().StringP("remoteIP", "r", "127.0.0.1", "IP address accessible to remote nodes - used akin to an ID")
-	viper.BindPFlag("sinitNode", createSubvertedMinerCmd.PersistentFlags().Lookup("initNode"))
-	viper.BindPFlag("sconsensus", createSubvertedMinerCmd.PersistentFlags().Lookup("consensus"))
-	viper.BindPFlag("sremoteIP", createSubvertedMinerCmd.PersistentFlags().Lookup("remoteIP"))
+	if err := viper.BindPFlag("sinitNode", createSubvertedMinerCmd.PersistentFlags().Lookup("initNode")); err != nil {
+		panic(err)
+	}
+	if err := viper.BindPFlag("sconsensus", createSubvertedMinerCmd.PersistentFlags().Lookup("consensus")); err != nil {
+		panic(err)
+	}
+	if err := viper.BindPFlag("sremoteIP", createSubvertedMinerCmd.PersistentFlags().Lookup("remoteIP")); err != nil {
+		panic(err)
+	}
 	rootCmd.AddCommand(createSubvertedMinerCmd)
 }
 
@@ -61,7 +67,6 @@ var createSubvertedMinerCmd = &cobra.Command{
 		if err = n.Serve(); err != nil {
 			log.Fatal(err)
 		}
-		return
 	},
 }
 

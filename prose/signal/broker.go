@@ -75,11 +75,9 @@ func (b *Broker) Publish(msg interface{}) {
 // WaitOnSignal waits until the specified signal is broadcasted
 func (b *Broker) WaitOnSignal(signal interface{}) (err error) {
 	msgChan := b.Subscribe()
-	done := false
-	for !done {
-		select {
-		case data := <-msgChan:
-			done = data == signal
+	for data := range msgChan {
+		if data == signal {
+			break
 		}
 	}
 	b.Unsubscribe(msgChan)
@@ -105,9 +103,7 @@ func (b *Broker) WaitOnSignalTimeout(signal interface{}, timeout int64) (err err
 // WaitOnAny waits until any signal is broadcasted
 func (b *Broker) WaitOnAny() (data interface{}, err error) {
 	msgChan := b.Subscribe()
-	select {
-	case data = <-msgChan:
-	}
+	data = <-msgChan
 	b.Unsubscribe(msgChan)
 	return
 }
