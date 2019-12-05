@@ -1,5 +1,5 @@
 const { platform } = require("os");
-const appRoot = process.env.PWD;
+const appRoot = process.env.PWD || process.cwd();
 const inDevelopment = process.env.NODE_ENV === "development";
 const inDemo = process.env.NODE_ENV === "demo";
 const inProduction = !process.env.NODE_ENV;
