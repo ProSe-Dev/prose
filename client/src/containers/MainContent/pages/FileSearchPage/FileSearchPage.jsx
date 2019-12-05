@@ -83,7 +83,7 @@ class FileSearchPage extends React.Component {
     let projectName;
     if (projectData.IsOwnedByMe) {
       // things can get hairy if a project gets deleted
-      projectMatch = this.props.projectList.find(
+      let projectMatch = this.props.projectList.find(
         p => p.projectID === projectData.ProjectID
       );
       if (projectMatch) {
