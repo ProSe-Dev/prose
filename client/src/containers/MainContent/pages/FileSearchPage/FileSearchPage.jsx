@@ -80,17 +80,24 @@ class FileSearchPage extends React.Component {
 
   toProject(projectData, idx) {
     console.log(projectData);
+    let projectName;
+    if (projectData.IsOwnedByMe) {
+      // things can get hairy if a project gets deleted
+      projectMatch = this.props.projectList.find(
+        p => p.projectID === projectData.ProjectID
+      );
+      if (projectMatch) {
+        projectName = projectMatch.name;
+      }
+    }
     let heading = (
       <div>
         {projectData.IsOwnedByMe ? <FingerprintIcon /> : ""}
         {projectData.IsOwnedByMe ? " " : ""}
         {projectData.IsOwnedByMe ? <b>Belongs to you!</b> : ""}
         &nbsp;&nbsp;
-        {projectData.IsOwnedByMe
-          ? "Project Name: " +
-            this.props.projectList.find(
-              p => p.projectID === projectData.ProjectID
-            ).name
+        {projectName
+          ? "Project Name: " + projectName
           : "Project ID: " + projectData.ProjectID}
       </div>
     );
