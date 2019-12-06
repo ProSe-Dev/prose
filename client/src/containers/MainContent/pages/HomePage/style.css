@@ -1,5 +1,6 @@
 .mainContent {
-  margin: 50px;
+  margin: 50px 0 0 50px;
+  overflow-y: auto !important;
 }
 
 .textBlock {

@@ -1,3 +1,7 @@
+.main-content {
+  overflow: auto;
+}
+
 .inner-container {
   padding: 1em 6em 0em 6em;
 }
