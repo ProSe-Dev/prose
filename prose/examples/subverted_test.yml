@@ -1,0 +1,30 @@
+session_name: subverted stress test
+windows:
+  - window_name: dev window
+    layout: tiled
+    shell_command_before:
+      - cd $ROOT_DIR
+      - cd prose
+    panes:
+      - shell_command:
+          - printf '\033]2;%s\033\\' '[RELAY]3001/8080'
+          - cd ../relay
+          - go build || read
+          - ./relay start 8080 3001 |& tee ../prose/log/1.log
+      - shell_command:
+          - printf '\033]2;%s\033\\' 'MINER + SUBVERT'
+          - ./gen-protoc.sh
+          - go build || read
+          - while ! nc -z localhost 3001; do sleep 1 && echo -n .; done
+          - for i in {02..08}; do ./prose mine 30$i -i localhost:3001 > log/$i.log & done
+          - for i in {09..12}; do ./prose subvert 30$i -i localhost:3001 > log/$i.log & done
+      - shell_command:
+          - printf '\033]2;%s\033\\' 'TESTER'
+          - ./gen-protoc.sh
+          - go build || read
+          - for i in {01..12}; do echo "Waiting on 30$i" && while ! nc -z localhost 30$i; do sleep 1 && echo -n .; done; done
+          - sleep 15
+          - cd ../relay
+          - for i in {1..8}; do curl localhost:8080/transaction -X POST -d @sample_payload2.json && sleep 10; done
+          - while ! [[ $(curl -s localhost:8080 | grep "PublicKey" | wc -l) -eq 9 ]]; do sleep 1 && echo -n .; done
+          - if [ $(curl -s localhost:8080 | grep "foobar-pubkey" | wc -l) -eq 8 ]; then echo "PASSED!"; else echo "FAILED"; fi
