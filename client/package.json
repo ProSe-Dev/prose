@@ -16,7 +16,7 @@
     "lodash.template": "^4.5.0",
     "mdbreact": "^4.22.1",
     "mixin-deep": "^2.0.1",
-    "node-fetch": "^2.6.0",
+    "node-fetch": "^3.1.1",
     "node-sass": "^4.13.0",
     "react": "^16.11.0",
     "react-dom": "^16.11.0",
