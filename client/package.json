@@ -17,7 +17,7 @@
     "mdbreact": "^4.22.1",
     "mixin-deep": "^2.0.1",
     "node-fetch": "^2.6.0",
-    "node-sass": "^4.13.0",
+    "node-sass": "^7.0.0",
     "react": "^16.11.0",
     "react-dom": "^16.11.0",
     "react-dropzone": "^10.2.0",
