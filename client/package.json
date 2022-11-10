@@ -68,7 +68,7 @@
   "devDependencies": {
     "browserslist": "^4.7.2",
     "concurrently": "^5.0.0",
-    "electron": "^7.1.1",
+    "electron": "^18.3.7",
     "electron-builder": "^22.1.0",
     "wait-on": "^3.3.0"
   }
